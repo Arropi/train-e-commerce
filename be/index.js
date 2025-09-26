@@ -73,7 +73,7 @@ app.get('/check', (req,res) =>{
     const token = authorization.split(' ')[1]
     const jwtDecode = jwt.verify(token, secretToken)
     req.user = jwtDecode
-    res.json({
+    return res.json({
       user: jwtDecode
     }).status(200)
   } catch (error) {
