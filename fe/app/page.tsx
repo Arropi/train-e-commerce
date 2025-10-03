@@ -2,6 +2,7 @@
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import Link from 'next/link'
 
 
 export default function Home() {
