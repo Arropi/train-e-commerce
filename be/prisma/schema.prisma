@@ -139,9 +139,9 @@ model inventories {
   id                                  BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
   item_name                           String                @db.VarChar(255)
   no_item                             String?               @unique(map: "inventories_no_item_unique") @db.VarChar(255)
-  condition                           inventories_condition
+  condition                           inventories_condition 
   alat_bhp                            inventories_alat_bhp  @map("alat/bhp")
-  type                                inventories_usage?
+  type                                inventories_usage     
   no_inv_ugm                          String?               @db.VarChar(255)
   information                         String?               @db.Text
   special_session                     Boolean               @default(false)
@@ -159,6 +159,7 @@ model inventories {
   inventory_galleries                 inventory_galleries[]
   inventory_reserves                  inventory_reserves[]
   inventory_rooms                     inventory_rooms[]
+  inventory_subjects                  inventory_subjects[]
   item_pengadaans                     item_pengadaans[]
   reserves                            reserves[]
   carts                               carts[]
@@ -211,6 +212,18 @@ model inventory_rooms {
 
   @@index([inventory_id], map: "inventory_rooms_inventory_id_foreign")
   @@index([room_id], map: "inventory_rooms_room_id_foreign")
+}
+
+model inventory_subjects {
+  id    BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  inventory_id  BigInt    @db.UnsignedBigInt
+  subject_id    BigInt    @db.UnsignedBigInt
+  created_at   DateTime?   @db.Timestamp(0)
+  updated_at   DateTime?   @db.Timestamp(0)
+  deleted_at   DateTime?   @db.Timestamp(0)
+
+  inventories  inventories @relation(fields: [inventory_id], references: [id], onUpdate: Restrict, onDelete: Cascade, map: "inventory_subjects_inventory_id_foreign")
+  subjects  subjects  @relation(fields: [subject_id], references: [id], onUpdate: Restrict, map: "inventory_subjects_subject_id_foreign")
 }
 
 model item_pengadaans {
@@ -515,10 +528,11 @@ model students {
 model subjects {
   id           BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
   subject_name String      @db.VarChar(255)
-  lecturer     String      @db.VarChar(255)
+  lecturer     String?      @db.VarChar(255)
   created_at   DateTime?   @db.Timestamp(0)
   updated_at   DateTime?   @db.Timestamp(0)
   schedules    schedules[]
+  inventory_subjects inventory_subjects[]
 }
 
 model supervisors {

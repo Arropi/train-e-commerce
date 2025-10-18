@@ -39,7 +39,9 @@ const updateValidation = (req, res, next) =>{
      const nim = z.string('Invalid input on nim').optional().parse(req.body.nim)
      const prodi = z.string('Invalid input on prodi').optional().parse(req.body.prodi)
      if(!nim && !prodi){
-      throw Error('Must fill one of nim or prodi')
+      res.status(400).json({
+        'message': 'Invalid request please fill nim or prodi'
+      })
      }
      next()
   } catch (error) {

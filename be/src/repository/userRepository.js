@@ -9,12 +9,8 @@ const createUser = async (email, username, img_url) => {
                 img_url: img_url
             }
         })
-        const userInformation = {
-            'id': user.id,
-            'role': user.role,
-            'email': user.email
-        }
-        return userInformation
+        
+        return user
     } catch (error) {
         console.log('Create User Repository User', error)
         throw Error ('Database Server Error Dalam Membuat User')
@@ -35,15 +31,15 @@ const getUserByEmail = async (email)=>{
     }
 }
 
-const updateUserByEmail = async (email, nim, prodi) => {
+const updateUserByEmail = async (email, nim, prodi, oldData) => {
     try {
         const updated = await prisma.users.update({
             where:{
                 email: email
             },
             data: {
-                nim: nim,
-                prodi: prodi
+                nim: nim ?? oldData.nim,
+                prodi: prodi ?? oldData.prodi
             }
         })
         return updated

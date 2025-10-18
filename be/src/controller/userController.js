@@ -1,4 +1,4 @@
-const { getUserDataService } = require('../service/userService')
+const { getUserDataService, updateUserDataService } = require('../service/userService')
 
 const getUserData = async(req, res) => {
     try {
@@ -19,7 +19,7 @@ const updateUserData = async (req, res) => {
     try {
         const user = req.user
         const body = req.body
-        const datas = await getUserDataService(user.email, body.nim, body.prodi)
+        const datas = await updateUserDataService(user.email, body.nim, body.prodi)
         res.status(200).json({
             datas
         })

@@ -24,7 +24,7 @@ const authService = async (email, username, img_url)=>{
                 'status': 201,
                 'message': `Sign up berhasil dengan email ${user.email}`,
                 'token': token,
-                'id': id
+                'role': user.role
             }
         }
     } catch (error) {

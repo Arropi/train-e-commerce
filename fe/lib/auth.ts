@@ -38,7 +38,6 @@ export const authConfig: NextAuthOptions = {
           }),
         })
         const result = await fetching.json()
-        console.log(result)
         token.role = result.role
         token.accessToken = result.token
         token.email = user.email

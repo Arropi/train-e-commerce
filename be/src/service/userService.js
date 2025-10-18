@@ -19,9 +19,10 @@ const getUserDataService = async (email)=>{
     }
 }
 
-const updateUserDataService = async (email, nim = null, prodi= null) => {
+const updateUserDataService = async (email, nim, prodi) => {
     try {
-        const dataSensitive = await updateUserByEmail(email, nim, prodi)
+        const oldData = await getUserDataService(email)
+        const dataSensitive = await updateUserByEmail(email, nim, prodi, oldData)
         const role = dataSensitive.role == 'umum' ? 'Mahasiswa' : capitalize(dataSensitive.role)
         return {
             'id': Number(dataSensitive.id),

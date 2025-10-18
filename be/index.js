@@ -1,5 +1,6 @@
 require("dotenv").config();
 const userRoute = require('./src/routes/userRoute')
+const inventoriesRoute = require('./src/routes/inventoryRoute')
 const express = require("express");
 const cors = require("cors");
 const cookie = require("cookie-parser");
@@ -22,7 +23,8 @@ app.get('/', (_,res)=>{
   })
 })
 
-app.use('/', userRoute )
+app.use('/', userRoute)
+app.use('/inventories', inventoriesRoute)
 
 app.listen(port, () => {
   console.log(`Listening On Port ${port}`);
