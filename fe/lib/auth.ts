@@ -38,9 +38,7 @@ export const authConfig: NextAuthOptions = {
           }),
         })
         const result = await fetching.json()
-        console.log(result)
-        token.role = "Mahasiswa"
-        token.id = "2"
+        token.role = result.role
         token.accessToken = result.token
         token.email = user.email
       }
