@@ -3,16 +3,14 @@
 import { Providers } from "@/features/providers";
 import "./globals.css";
 import FooterComponent from "../components/Footer/footer";
+import Sidebar from "@/modules/SideBar";
+import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { usePathname } from "next/navigation";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
 
-  // Tambahkan path yang sesuai dengan halaman login Anda
   const noFooterPages = [
     "/",
     "/login",
@@ -22,17 +20,40 @@ export default function RootLayout({
     "/auth/login",
   ];
 
-  const shouldShowFooter = !noFooterPages.includes(pathname);
+  const sidebarPages = ["/dashboard", "/lab", "/viewall", "/home"];
 
-  // Debug console
-  console.log("Current pathname:", pathname);
-  console.log("Should show footer:", shouldShowFooter);
+  const shouldShowFooter = !noFooterPages.includes(pathname);
+  const shouldShowSidebar = sidebarPages.some((page) =>
+    pathname.startsWith(page)
+  );
 
   return (
-    <html lang="id">
-      <body>
-        <Providers>{children}</Providers>
+    <>
+      <div>
+        {children}
         {shouldShowFooter && <FooterComponent />}
+      </div>
+
+      {shouldShowSidebar && (
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      )}
+    </>
+  );
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="id">
+      <body className="overflow-x-hidden">
+        <Providers>
+          <SidebarProvider>
+            <LayoutContent>{children}</LayoutContent>
+          </SidebarProvider>
+        </Providers>
       </body>
     </html>
   );
