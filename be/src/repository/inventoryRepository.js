@@ -30,7 +30,7 @@ const getInventory = async (id) => {
 
 const getImageInventory = async (id) => {
     try {
-        const imageInventory = await prisma.inventory_galleries.findUnique({
+        const imageInventory = await prisma.inventory_galleries.findFirst({
             where: {
                 inventory_id: id,
                 deleted_at: null
@@ -69,7 +69,8 @@ const createInventory = async (user_id, item_name, no_inventory,room_id, conditi
                 condition: condition,
                 type: type,
                 created_by: user_id,
-                special_session: special_session
+                special_session: special_session,
+                created_at: new Date()
             }
         })
         return inventory
@@ -96,7 +97,8 @@ const createImageInventory = async (inventory_id, image_url) => {
         const inventory = await prisma.inventory_galleries.create({
             data: {
                 inventory_id: inventory_id,
-                filepath: image_url
+                filepath: image_url,
+                created_at: new Date()
             }
         })
         return inventory
@@ -121,14 +123,14 @@ const updateInventory = async (inventory_id, updatedData) => {
     }
 }
 
-const updateImageInventory = async (inventory_id, updatedData) => {
+const updateImageInventory = async (id, updatedData) => {
     try {
         const imageInventory = await prisma.inventory_galleries.update({
-            where:{
-                inventory_id: inventory_id,
+            data: updatedData,
+            where: {
+                id: id,
                 deleted_at: null
-            },
-            data: updatedData
+            }
         })
         return imageInventory
     } catch (error) {

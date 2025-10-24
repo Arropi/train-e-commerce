@@ -2,7 +2,7 @@ const { getInventoriesService, createInventoryService, addInventoriesSubjectServ
 
 const getInventories = async (req, res) => {
     try {
-        const inventories = await getInventoriesService()
+        const inventories = await getInventoriesService()       
         return res.status(200).json({
             message: 'Getting data inventory succesfull',
             inventories
@@ -12,6 +12,14 @@ const getInventories = async (req, res) => {
         return res.status(500).json({
             'message': 'Internal Server Error'
         })
+    }
+}
+
+const getInventory = async (params) => {
+    try {
+        
+    } catch (error) {
+        
     }
 }
 
@@ -94,7 +102,6 @@ const updateInventory = async (req, res) => {
 const deleteInventory = async (req, res) => {
     try {
         const user = req.user
-        const data = req.body
         const inventory_id = req.params.inventory_id
         const deletedInventory = await deleteInventoryService(inventory_id, user.id)
         const dataDeletedInventory = {

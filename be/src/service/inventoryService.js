@@ -4,7 +4,10 @@ const { getSubjectId, filterSubject } = require("../utils/functions")
 const getInventoriesService = async () => {
     try {
         const inventories = await getAllInventory()
-        const neededInformation = inventories.map((inventory)=>{
+        const neededInformation = await Promise.all(inventories.map(async (inventory)=>{
+            const img_url = await getImageInventory(inventory.id)
+            const subject = await getSubjectInventory(inventory.id)
+            const subject_id = subject.map((i)=> { return Number(i.subject_id) })
             return{
                 id: Number(inventory.id),
                 item_name: inventory.item_name,
@@ -12,9 +15,12 @@ const getInventoriesService = async () => {
                 condition: inventory.condition,
                 type: inventory.type,
                 special_session: inventory.special_session,
-                room_id: inventory.room_id? Number(inventory.room_id) : null
+                room_id: inventory.room_id? Number(inventory.room_id) : null,
+                laboratory_id: inventory.labolatory_id? Number(inventory.labolatory_id) : null,
+                img_url: img_url? img_url.filepath : null,
+                subject_id: subject_id
             }
-        })
+        }))
         return neededInformation
     } catch (error) {
         throw error
@@ -36,7 +42,7 @@ const createInventoryService = async (user_id, item_name, room_id, no_inventory,
 const addInventoriesSubjectService = async (subjects, inventory_id) => {
     try {
         const dataSubjects = subjects.map(function(subject) {
-            return { inventory_id: inventory_id, subject_id: subject }
+            return { inventory_id: inventory_id, subject_id: subject, created_at: new Date() }
         })
         const inventory_subjects = await createSubjectInventory(dataSubjects)  
         return inventory_subjects
@@ -103,9 +109,10 @@ const updateInventoriesImageService = async (id, img_url) => {
         }
         const updatedData = {
             ...oldData,
+            updated_at: new Date(),
             filepath: img_url?? oldData.filepath
         }
-        const updatedImage = await updateImageInventory(inventory_id, updatedData)
+        const updatedImage = await updateImageInventory(oldData.id, updatedData)
         return updatedImage
     } catch (error) {
         throw error
