@@ -1,20 +1,24 @@
-import { it } from "node:test";
+"use client"
 import { useState } from "react";
 import ItemModal from "../../components/Modal/ItemModal";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
 import { useSidebar } from "../../contexts/SidebarContext";
+import { Inventory } from "@/types";
+
 
 interface LabPageProps {
   slug: string;
+  inventories: Inventory[]; // terima data inventories dari server page
 }
 
-export default function LabPage({ slug }: LabPageProps) {
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+export default function LabPage({ slug, inventories }: LabPageProps) {
+  const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openSidebar, isSidebarOpen } = useSidebar();
+
   const handleOpenSidebar = () => {
     openSidebar(null);
   };
-  const { openSidebar, isSidebarOpen } = useSidebar();
 
   const dataLab = [
     { id: 1, name: "Elektronika" },
@@ -24,15 +28,7 @@ export default function LabPage({ slug }: LabPageProps) {
     { id: 5, name: "TL" },
   ];
 
-  const dummyCards = Array(15).fill(null);
-
-  const handleItemClick = (index: number) => {
-    const item = {
-      name: "Osiloskop Analog GW Instek GOS 620",
-      image: "/icons/osiloskop.png",
-      lab: "Lab RPL",
-      available: index % 7 !== 0,
-    };
+  const handleItemClick = (item: Inventory) => {
     setSelectedItem(item);
     setIsModalOpen(true);
   };
@@ -41,7 +37,7 @@ export default function LabPage({ slug }: LabPageProps) {
     setIsModalOpen(false);
     setSelectedItem(null);
   };
-
+  
   return (
     <>
       <div
@@ -56,38 +52,42 @@ export default function LabPage({ slug }: LabPageProps) {
 
           {/* Grid Kartu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {dummyCards.map((_, index) => (
+            {(inventories ?? []).map((item) => (
               <div
-                key={index}
+                key={item.id}
                 className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => handleItemClick(index)}
+                onClick={() => handleItemClick(item)}
               >
                 <div className="p-4">
                   <div className="flex justify-center items-center mb-3">
                     <div className="w-full h-24 flex items-center justify-center">
                       <img
-                        src="/icons/osiloskop.png"
-                        alt="Item preview"
+                        src={
+                          item.img_url
+                            ? item.img_url
+                            : "/icons/osiloskop.png"
+                        }
+                        alt={item.item_name}
                         className="max-h-full object-contain"
                       />
                     </div>
                   </div>
 
                   <h3 className="text-sm font-medium text-gray-800 mb-1">
-                    Osiloskop Analog GW Instek GOS 620
+                    {item.item_name}
                   </h3>
-                  <p className="text-xs text-gray-500 mb-3">Lab RPL</p>
+                  <p className="text-xs text-gray-500 mb-3">{item.no_item}</p>
 
                   <div>
-                    {index % 7 === 0 ? (
-                      <span className="inline-block px-3 py-1 rounded-full text-xs bg-[#FE9696] text-[#C70000]">
-                        Not Available
-                      </span>
-                    ) : (
-                      <span className="inline-block px-3 py-1 rounded-full text-xs bg-[#B2FD9E] text-[#1F8E00]">
-                        Available
-                      </span>
-                    )}
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs ${
+                        item.condition === "good"
+                          ? "bg-[#B2FD9E] text-[#1F8E00]"
+                          : "bg-[#FE9696] text-[#C70000]"
+                      }`}
+                    >
+                      {item.condition}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -96,16 +96,9 @@ export default function LabPage({ slug }: LabPageProps) {
         </div>
       </div>
 
-      <ItemModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        item={selectedItem}
-      />
+      <ItemModal isOpen={isModalOpen} onClose={closeModal} item={selectedItem} />
 
-      <FloatingButton
-        onClick={handleOpenSidebar}
-        isSidebarOpen={isSidebarOpen}
-      />
+      <FloatingButton onClick={handleOpenSidebar} isSidebarOpen={isSidebarOpen} />
     </>
   );
 }

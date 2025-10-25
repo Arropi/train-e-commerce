@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { Inventory } from "@/types";
 
 interface ItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: {
-    name: string;
-    image: string;
-    lab: string;
-    available: boolean;
-  } | null;
+  item: Inventory | null;
 }
 
 export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
@@ -22,7 +18,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
   const handleAddItem = () => {
     if (selectedRoom && selectedTime) {
       console.log("Adding item:", {
-        item: item.name,
+        item: item.item_name,
         room: selectedRoom,
         time: selectedTime,
       });
@@ -34,7 +30,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+      <div className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh">
         <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
@@ -47,8 +43,8 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-lg">
             <img
-              src={item.image}
-              alt={item.name}
+              src={item.img_url?? '/images/osiloskop.png'}
+              alt={item.item_name}
               className="max-h-full object-contain"
             />
           </div>
@@ -56,7 +52,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
 
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-[#004CB0] mb-2 text-center max-w-48 mx-auto leading-tight">
-            {item.name}
+            {item.item_name}
           </h2>
 
           {/* jam milih */}
@@ -92,7 +88,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
                 <span className="text-sm text-black font-bold">
                   Ruang HU 20{room}
                   <br />
-                  <span className="text-xs text-black font-medium">728781347819397</span>
+                  <span className="text-xs text-black font-medium">{item.no_item}</span>
                 </span>
                 <input
                   type="radio"
