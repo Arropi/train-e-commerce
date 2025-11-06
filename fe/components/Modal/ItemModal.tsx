@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Inventory } from "@/types";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 interface ItemModalProps {
   isOpen: boolean;
@@ -10,22 +11,39 @@ interface ItemModalProps {
 }
 
 export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
-  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  // selectedRoom is an object { id, name } or null
+  const [selectedRoom, setSelectedRoom] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const { addItem } = useSidebar();
+
+  // daftar ruang (ganti dengan data dari backend jika ada)
+  const rooms = [
+    { id: 1, name: "Ruang HU 201" },
+    { id: 2, name: "Ruang HU 202" },
+    { id: 3, name: "Ruang HU 203" },
+    { id: 4, name: "Ruang HU 204" },
+  ];
 
   if (!isOpen || !item) return null;
 
   const handleAddItem = () => {
-    if (selectedRoom && selectedTime) {
-      console.log("Adding item:", {
-        item: item.item_name,
-        room: selectedRoom,
-        time: selectedTime,
-      });
-      onClose();
-    } else {
-      alert("Pilih ruang dan waktu terlebih dahulu");
+    if (!selectedRoom || !selectedTime) {
+      alert("Please select room and time");
+      return;
     }
+
+    const payload = {
+      ...item,
+      selectedRoom: selectedRoom.id,
+      selectedRoomName: selectedRoom.name,
+      selectedTime,
+    };
+
+    addItem(payload);
+    onClose();
   };
 
   return (
@@ -43,7 +61,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-lg">
             <img
-              src={item.img_url?? '/images/osiloskop.png'}
+              src={item.img_url ?? "/images/osiloskop.png"}
               alt={item.item_name}
               className="max-h-full object-contain"
             />
@@ -56,23 +74,25 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
           </h2>
 
           {/* jam milih */}
-          <div className="flex justify-between items-center mb-4 text-sm">
+          <div className="flex justify-center items-center gap-12 mb-4 text-sm">
             <button
               onClick={() => setSelectedTime("07.30")}
+              type="button"
               className={`px-4 py-2 font-bold transition-all border-b-2 ${
                 selectedTime === "07.30"
                   ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0]"
+                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
               }`}
             >
               07.30
             </button>
             <button
               onClick={() => setSelectedTime("13.30")}
+              type="button"
               className={`px-4 py-2 font-bold transition-all border-b-2 ${
                 selectedTime === "13.30"
                   ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0]"
+                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
               }`}
             >
               13.30
@@ -80,26 +100,27 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
           </div>
 
           <div className="space-y-2 mb-6">
-            {[1, 2, 3, 4].map((room) => (
-              <div
-                key={room}
-                className="flex items-center justify-between p-2"
+            {rooms.map((r) => (
+              <label
+                key={r.id}
+                className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100"
               >
-                <span className="text-sm text-black font-bold">
-                  Ruang HU 20{room}
-                  <br />
-                  <span className="text-xs text-black font-medium">{item.no_item}</span>
-                </span>
+                <div>
+                  <div className="text-sm text-black font-bold">{r.name}</div>
+                  <div className="text-xs text-black font-medium">
+                    {item.no_item}
+                  </div>
+                </div>
                 <input
                   type="radio"
                   name="room"
-                  value={room}
-                  checked={selectedRoom === room}
-                  onChange={() => setSelectedRoom(room)}
+                  value={r.id}
+                  checked={selectedRoom?.id === r.id}
+                  onChange={() => setSelectedRoom(r)}
                   className="w-4 h-4 text-[#004CB0]"
-                  style={{ accentColor: '#004CB0' }}
+                  style={{ accentColor: "#004CB0" }}
                 />
-              </div>
+              </label>
             ))}
           </div>
 

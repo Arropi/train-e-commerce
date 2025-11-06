@@ -1,7 +1,8 @@
-"use client"
+"use client";
 import { useState } from "react";
 import ItemModal from "../../components/Modal/ItemModal";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
+import FilterBar from "../../components/FilterBar/FilterBar";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { Inventory } from "@/types";
 
@@ -14,6 +15,7 @@ interface LabPageProps {
 export default function LabPage({ slug, inventories }: LabPageProps) {
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filteredInventories, setFilteredInventories] = useState(inventories);
   const { openSidebar, isSidebarOpen } = useSidebar();
 
   const handleOpenSidebar = () => {
@@ -37,7 +39,44 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
     setIsModalOpen(false);
     setSelectedItem(null);
   };
-  
+
+  // Handle filter changes
+  const handleFilterChange = (filters: any) => {
+    let filtered = inventories;
+
+    // Filter by location
+    if (filters.location) {
+      filtered = filtered.filter(
+        (item) => item.location?.toLowerCase() === filters.location.toLowerCase()
+      );
+    }
+
+    // Filter by lab
+    if (filters.lab && filters.lab !== "semua") {
+      filtered = filtered.filter(
+        (item) => item.lab?.toLowerCase() === filters.lab.toLowerCase()
+      );
+    }
+
+    // Filter by date (jika ada field date di inventory)
+    if (filters.date) {
+      filtered = filtered.filter((item) => item.date === filters.date);
+    }
+
+    // Filter by search term
+    if (filters.search) {
+      filtered = filtered.filter(
+        (item) =>
+          item.item_name
+            ?.toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          item.no_item?.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    setFilteredInventories(filtered);
+  };
+
   return (
     <>
       <div
@@ -50,9 +89,12 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
             Lab {dataLab.find((item) => item.id === Number(slug))?.name}
           </h1>
 
+          {/* FilterBar Component */}
+          <FilterBar onFilterChange={handleFilterChange} />
+
           {/* Grid Kartu */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {(inventories ?? []).map((item) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-8">
+            {(filteredInventories ?? []).map((item) => (
               <div
                 key={item.id}
                 className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
@@ -93,12 +135,28 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
               </div>
             ))}
           </div>
+
+          {/* No results message */}
+          {filteredInventories.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                Tidak ada barang yang sesuai dengan filter
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      <ItemModal isOpen={isModalOpen} onClose={closeModal} item={selectedItem} />
+      <ItemModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        item={selectedItem}
+      />
 
-      <FloatingButton onClick={handleOpenSidebar} isSidebarOpen={isSidebarOpen} />
+      <FloatingButton
+        onClick={handleOpenSidebar}
+        isSidebarOpen={isSidebarOpen}
+      />
     </>
   );
 }
