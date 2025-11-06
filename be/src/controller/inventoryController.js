@@ -27,12 +27,13 @@ const createInventory = async (req, res) => {
     try {
         const user = req.user
         const data = req.body
-        const inventory = await createInventoryService(user.id, data.item_name, data.room_id, data.no_inventory, data.type, data.condition, data.special_session)
+        const inventory = await createInventoryService(user.id, data.item_name, data.room_id, data.no_inventory, data.type, data.condition, data.special_session, data.laboratory_id)
         const inventory_subject = await addInventoriesSubjectService(data.subjects, inventory.id)
         let dataSend = { 
             ...inventory,
             id: inventory.id? Number(inventory.id) : null,
             room_id: inventory.room_id? Number(inventory.room_id) : null,
+            labolatory_id : inventory.labolatory_id? Number(inventory.labolatory_id) : null,
             created_by: inventory.created_by? Number(inventory.created_by) : null ,
             updated_by: inventory.updated_by? Number(inventory.updated_by) : null ,
             subject_added: inventory_subject.count
@@ -62,8 +63,9 @@ const updateInventory = async (req, res) => {
         const data = req.body
         const inventory_id = req.params.inventory_id
         let allUpdated = {}
-        if(data.item_name || data.room_id || data.no_inventory || data.type || data.condition || data.special_session){
-            const updateInventory = await updateInventoryService(inventory_id, user.id, data.item_name,data.room_id, data.no_inventory, data.type, data.condition, data.special_session)
+        console.log(data.laboratory_id)
+        if(data.item_name || data.room_id || data.no_inventory || data.type || data.condition || data.special_session || data.laboratory_id){
+            const updateInventory = await updateInventoryService(inventory_id, user.id, data.item_name,data.room_id, data.no_inventory, data.type, data.condition, data.special_session, data.laboratory_id)
             allUpdated = {
                 ...updateInventory,
                 id: updateInventory.id? Number(updateInventory.id) : null,

@@ -1,14 +1,12 @@
+const { subjects } = require("../config/dbConfig")
 const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory } = require("../repository/inventoryRepository")
 const { getSubjectId, filterSubject } = require("../utils/functions")
 
 const getInventoriesService = async () => {
     try {
         const inventories = await getAllInventory()
-        const neededInformation = await Promise.all(inventories.map(async (inventory)=>{
-            const img_url = await getImageInventory(inventory.id)
-            const subject = await getSubjectInventory(inventory.id)
-            const subject_id = subject.map((i)=> { return Number(i.subject_id) })
-            return{
+        const information = inventories.map((inventory) => {
+            return {
                 id: Number(inventory.id),
                 item_name: inventory.item_name,
                 no_item: inventory.no_item,
@@ -17,19 +15,19 @@ const getInventoriesService = async () => {
                 special_session: inventory.special_session,
                 room_id: inventory.room_id? Number(inventory.room_id) : null,
                 laboratory_id: inventory.labolatory_id? Number(inventory.labolatory_id) : null,
-                img_url: img_url? img_url.filepath : null,
-                subject_id: subject_id
+                img_url: inventory.inventory_galleries.find(galleries => galleries.deleted_at===null)?.filepath ?? null,
+                subject_id: inventory.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)])
             }
-        }))
-        return neededInformation
+        })
+        return information
     } catch (error) {
         throw error
     }
 }
 
-const createInventoryService = async (user_id, item_name, room_id, no_inventory, type, condition,special_session) => {
+const createInventoryService = async (user_id, item_name, room_id, no_inventory, type, condition,special_session, laboratory_id) => {
     try {
-        const createInven = await createInventory(user_id, item_name, no_inventory, room_id, condition, type, special_session)
+        const createInven = await createInventory(user_id, item_name, no_inventory, room_id, condition, type, special_session, laboratory_id)
         return {
             id: Number(createInven.id),
             ...createInven
@@ -60,7 +58,7 @@ const addInventoriesImageService = async (img_url, inventory_id) => {
     }
 }
 
-const updateInventoryService = async (id, user_id, item_name, room_id, no_inventory, type, condition,special_session) => {
+const updateInventoryService = async (id, user_id, item_name, room_id, no_inventory, type, condition,special_session, labolatory_id) => {
     try {
         const oldData = await getInventory(id)
         if (!oldData) {
@@ -76,6 +74,7 @@ const updateInventoryService = async (id, user_id, item_name, room_id, no_invent
             no_item: no_inventory?? oldData.no_item,
             condition: condition?? oldData.condition,
             special_session: special_session?? oldData.special_session,
+            labolatory_id: labolatory_id?? oldData.labolatory_id
         }
         
         const updatedInven = await updateInventory(id, updateData)

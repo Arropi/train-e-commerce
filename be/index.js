@@ -2,6 +2,8 @@ require("dotenv").config();
 const userRoute = require('./src/routes/userRoute')
 const inventoriesRoute = require('./src/routes/inventoryRoute')
 const laboratoriesRoute = require('./src/routes/laboratoryRoute')
+const cartRoute = require('./src/routes/cartRoute')
+const reservesRoute = require('./src/routes/reservesRoute')
 const express = require("express");
 const cors = require("cors");
 const cookie = require("cookie-parser");
@@ -27,6 +29,8 @@ app.get('/', (_,res)=>{
 app.use('/', userRoute)
 app.use('/inventories', inventoriesRoute)
 app.use('/laboratories', laboratoriesRoute)
+app.use('/cart', cartRoute)
+app.use('/reserves', reservesRoute)
 
 app.listen(port, () => {
   console.log(`Listening On Port ${port}`);

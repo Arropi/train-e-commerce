@@ -45,9 +45,16 @@ const inventCreateValidation = (req, res, next) => {
     const session = z.boolean({
       error: (iss) =>
         iss.input === undefined
-          ? "Field Room Cannot Be Empty"
+          ? "Field Session Cannot Be Empty"
           : "Invalid input on Session",
     }).parse(req.body.special_session)
+    const labolatory_id = z
+      .number({
+        error: (iss) =>
+          iss.input === undefined
+            ? "Field Laboratory Cannot Be Empty"
+            : "Invalid input on Laboratory Id",
+      }).parse(req.body.laboratory_id)
     const subject = z.array(z.number('Invalid input should be Number'), {
       error: (iss) =>
         iss.input === undefined
@@ -117,6 +124,13 @@ const inventUpdateValidation = (req, res, next) =>{
           ? "Field Room Cannot Be Empty"
           : "Invalid input on Session",
     }).optional().parse(req.body.special_session)
+    const labolatory_id = z
+      .number({
+        error: (iss) =>
+          iss.input === undefined
+            ? "Field Laboratory Cannot Be Empty"
+            : "Invalid input on Laboratory Id",
+      }).optional().parse(req.body.laboratory_id)
     const subject = z.array(z.number('Invalid input should be Number'), {
       error: (iss) =>
         iss.input === undefined
@@ -124,7 +138,7 @@ const inventUpdateValidation = (req, res, next) =>{
           : "Invalid input on Subjects",
     }).optional().parse(req.body.subjects)
     const img_url = z.string('Invalid input on img_url').optional().parse(req.body.img_url)
-    if(!item_name && !no_inven && !type && !condition && !room_id && !session && !subject && !img_url) {
+    if(!item_name && !no_inven && !type && !condition && !room_id && !session && !subject && !img_url && !labolatory_id) {
       res.status(400).json({
         'message': 'At least fill one of the field'
       })
