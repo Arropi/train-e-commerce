@@ -26,6 +26,26 @@ export default function RequestForm({
 
   const [showNotification, setShowNotification] = useState(false);
 
+  // ✅ Lock body scroll ketika modal terbuka
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflowY = "scroll";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflowY = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   // Function untuk menentukan sesi berdasarkan jam
   const getSessionFromTime = (time: string) => {
     if (!time) return "";
@@ -163,7 +183,10 @@ export default function RequestForm({
 
       {/* Modal Form */}
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto scrollbar-hide"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="p-6 border-b">
             <h2 className="text-2xl font-bold text-[#1E40AF]">Request Form</h2>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Inventory } from "@/types";
 import { useSidebar } from "@/contexts/SidebarContext";
 
@@ -27,6 +27,26 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
     { id: 4, name: "Ruang HU 204" },
   ];
 
+  // ✅ Lock body scroll ketika modal terbuka
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflowY = "scroll";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflowY = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !item) return null;
 
   const handleAddItem = () => {
@@ -47,8 +67,14 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50">
-      <div className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh">
+    <div
+      className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
