@@ -1,7 +1,8 @@
-const { createReservesService, getReservesUserService, updateReserveService } = require("../service/reservesService")
+const { createReservesService, getReservesUserService, updateReserveService, getReservesAdminService, getReservesInUseService, getReservesLaboratoryInUseService } = require("../service/reservesService")
 
 const getReservesUser = async (req, res) => {
     try {
+        console.log('Aku User')
         const user = req.user
         const reserves = await getReservesUserService(user.id)
         res.status(200).json({
@@ -13,6 +14,74 @@ const getReservesUser = async (req, res) => {
         res.status(500).json({
             'message': error.message
         })
+    }
+}
+
+const getReservesAdmin = async (req, res) => {
+    try {
+        const reserves = await getReservesAdminService()
+        return res.status(200).json({
+            'message': 'Getting data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        if (error.cause == 'Bad Request') {
+            res.status(400).json({
+                'message': error.message
+            })
+        } else {
+            res.status(500).json({
+                'message': error.message
+            })
+        }
+    }
+}
+
+const getReservesInUse = async (req, res) => {
+    try {
+        const tanggal = req.query.tanggal
+        console.log(tanggal)
+        const reserves = await getReservesInUseService(tanggal)
+        return res.status(200).json({
+            'message': 'Getting reserve data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        if (error.cause == 'Bad Request') {
+            res.status(400).json({
+                'message': error.message
+            })
+        } else {
+            res.status(500).json({
+                'message': error.message
+            })
+        }
+    }
+}
+
+const getReservesLaboratoryInUse = async (req, res) => {
+    try {
+        const laboratory_id = req.params.laboratory_id
+        const tanggal = req.query.tanggal
+        console.log(laboratory_id, tanggal)
+        const reserves = await getReservesLaboratoryInUseService(tanggal, laboratory_id)
+        return res.status(200).json({
+            'message': 'Getting reserve data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        if (error.cause == 'Bad Request') {
+            res.status(400).json({
+                'message': error.message
+            })
+        } else {
+            res.status(500).json({
+                'message': error.message
+            })
+        }
     }
 }
 
@@ -64,6 +133,9 @@ const updateReserveUser = async (req, res) => {
 
 module.exports = {
     getReservesUser,
+    getReservesAdmin,
+    getReservesInUse,
+    getReservesLaboratoryInUse,
     createReservesUser,
     updateReserveUser
 }

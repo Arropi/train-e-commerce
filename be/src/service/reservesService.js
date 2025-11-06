@@ -1,5 +1,5 @@
 const { getSpecificInventories, getImageInventory, getSubjectInventory } = require("../repository/inventoryRepository")
-const { getReservesUser, createReserves, updateReserve, deleteReserve, getReservesUserOnProcess } = require("../repository/reservesRepository")
+const { getReservesUser, createReserves, updateReserve, deleteReserve, getReservesUserOnProcess, getReservesAdmin, getReservesInSpesificDate, getReservesLaboratoryInSpesificDate } = require("../repository/reservesRepository")
 const { getInventoryId } = require("../utils/functions")
 
 const getReservesUserService = async (user_id) => {
@@ -30,6 +30,96 @@ const getReservesUserService = async (user_id) => {
         throw error
     }
 }
+
+const getReservesAdminService = async () => {
+    try {
+        const reserves = await getReservesAdmin()
+        const inventories_id = getInventoryId(reserves)
+        const inventories = await getSpecificInventories(inventories_id)
+        const information = reserves.map((reserve) =>{
+            const match = inventories.find(inventory => inventory.id === reserve.inventories_id)
+            return {
+                id: Number(reserve.inventories.id),
+                item_name: reserve.inventories.item_name,
+                no_item: reserve.inventories.no_item,
+                condition: reserve.inventories.condition,
+                type: reserve.inventories.type,
+                special_session: reserve.inventories.special_session,
+                room_id: reserve.inventories.room_id? Number(reserve.inventories.room_id) : null,
+                laboratory_id: reserve.inventories.labolatory_id? Number(reserve.inventories.labolatory_id) : null,
+                img_url: match.inventory_galleries.find(galleries => galleries.deleted_at===null)?.filepath ?? null,
+                subject_id: match.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)]),
+                status: reserve.status,
+                reserve_id: Number(reserve.id),
+                tanggal: reserve.tanggal
+            }
+        })
+        return information
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesInUseService = async (tanggal) => {
+    try {
+        const validTanggal = new Date(tanggal)
+        const reserves = await getReservesInSpesificDate(validTanggal)
+        const inventories_id = getInventoryId(reserves)
+        const inventories = await getSpecificInventories(inventories_id)
+        const information = reserves.map((reserve) =>{
+            const match = inventories.find(inventory => inventory.id === reserve.inventories_id)
+            return {
+                id: Number(reserve.inventories.id),
+                item_name: reserve.inventories.item_name,
+                no_item: reserve.inventories.no_item,
+                condition: reserve.inventories.condition,
+                type: reserve.inventories.type,
+                special_session: reserve.inventories.special_session,
+                room_id: reserve.inventories.room_id? Number(reserve.inventories.room_id) : null,
+                laboratory_id: reserve.inventories.labolatory_id? Number(reserve.inventories.labolatory_id) : null,
+                img_url: match.inventory_galleries.find(galleries => galleries.deleted_at===null)?.filepath ?? null,
+                subject_id: match.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)]),
+                status: reserve.status,
+                reserve_id: Number(reserve.id),
+                tanggal: reserve.tanggal
+            }
+        })
+        return information
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesLaboratoryInUseService = async (tanggal, lab_id) => {
+    try {
+        const validTanggal = new Date(tanggal)
+        const reserves = await getReservesLaboratoryInSpesificDate(validTanggal, lab_id)
+        const inventories_id = getInventoryId(reserves)
+        const inventories = await getSpecificInventories(inventories_id)
+        const information = reserves.map((reserve) =>{
+            const match = inventories.find(inventory => inventory.id === reserve.inventories_id)
+            return {
+                id: Number(reserve.inventories.id),
+                item_name: reserve.inventories.item_name,
+                no_item: reserve.inventories.no_item,
+                condition: reserve.inventories.condition,
+                type: reserve.inventories.type,
+                special_session: reserve.inventories.special_session,
+                room_id: reserve.inventories.room_id? Number(reserve.inventories.room_id) : null,
+                laboratory_id: reserve.inventories.labolatory_id? Number(reserve.inventories.labolatory_id) : null,
+                img_url: match.inventory_galleries.find(galleries => galleries.deleted_at===null)?.filepath ?? null,
+                subject_id: match.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)]),
+                status: reserve.status,
+                reserve_id: Number(reserve.id),
+                tanggal: reserve.tanggal
+            }
+        })
+        return information
+    } catch (error) {
+        throw error
+    }
+}
+
 
 const createReservesService = async (dataInput, user_id) => {
     try {
@@ -85,6 +175,9 @@ const updateReserveService = async (dataInput, user_id, reserve_id) => {
 
 module.exports = {
     getReservesUserService,
+    getReservesAdminService,
+    getReservesInUseService,
+    getReservesLaboratoryInUseService,
     createReservesService,
     updateReserveService
 }

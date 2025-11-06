@@ -1,10 +1,33 @@
 const { subjects } = require("../config/dbConfig")
-const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory } = require("../repository/inventoryRepository")
+const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory, getInventoriesLaboratory } = require("../repository/inventoryRepository")
 const { getSubjectId, filterSubject } = require("../utils/functions")
 
 const getInventoriesService = async () => {
     try {
         const inventories = await getAllInventory()
+        const information = inventories.map((inventory) => {
+            return {
+                id: Number(inventory.id),
+                item_name: inventory.item_name,
+                no_item: inventory.no_item,
+                condition: inventory.condition,
+                type: inventory.type,
+                special_session: inventory.special_session,
+                room_id: inventory.room_id? Number(inventory.room_id) : null,
+                laboratory_id: inventory.labolatory_id? Number(inventory.labolatory_id) : null,
+                img_url: inventory.inventory_galleries.find(galleries => galleries.deleted_at===null)?.filepath ?? null,
+                subject_id: inventory.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)])
+            }
+        })
+        return information
+    } catch (error) {
+        throw error
+    }
+}
+
+const getInventoriesLaboratoryService = async (lab_id) => {
+    try {
+        const inventories = await getInventoriesLaboratory(lab_id)
         const information = inventories.map((inventory) => {
             return {
                 id: Number(inventory.id),
@@ -133,6 +156,7 @@ const deleteInventoryService = async (id, user_id) => {
 
 module.exports = {
     getInventoriesService,
+    getInventoriesLaboratoryService,
     createInventoryService,
     addInventoriesImageService,
     addInventoriesSubjectService, 

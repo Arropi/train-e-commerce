@@ -18,6 +18,25 @@ const getAllInventory = async () => {
     }
 }
 
+const getInventoriesLaboratory = async (labolatory_id) => {
+    try {
+        const inventories = await prisma.inventories.findMany({
+            where: {
+                labolatory_id: labolatory_id,
+                deleted_at: null
+            },
+            include: {
+                inventory_subjects: true,
+                inventory_galleries: true
+            }
+        })
+        return inventories
+    } catch (error) {
+        console.log('Inventory Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
 const getSpecificInventories = async (dataInventoriesId) => {
     try {
         const inventories = await prisma.inventories.findMany({
@@ -208,6 +227,7 @@ module.exports = {
     getImageInventory,
     getInventory,
     getSpecificInventories,
+    getInventoriesLaboratory,
     createInventory,
     createSubjectInventory,
     createImageInventory,
