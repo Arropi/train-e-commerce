@@ -18,13 +18,14 @@ const authService = async (email, username, img_url)=>{
             }
         } else {
             const user = await createUser(email, username, img_url)
+            const role = user.role == 'umum' ? 'Mahasiswa' : capitalize(user.role)
             const id = Number(user.id)
             const token = jwt.sign({id: id, email: user.email}, process.env.SECRET_TOKEN, {expiresIn: 60*60*24})
             return {
                 'status': 201,
                 'message': `Sign up berhasil dengan email ${user.email}`,
                 'token': token,
-                'role': user.role
+                'role': role
             }
         }
     } catch (error) {

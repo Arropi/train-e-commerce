@@ -59,11 +59,13 @@ model reserves {
   session_id     BigInt      @db.UnsignedBigInt
   inventories_id BigInt      @db.UnsignedBigInt
   user_id        BigInt      @db.UnsignedBigInt
+  subject_id     BigInt      @db.UnsignedBigInt
   updated_by     BigInt?     @db.UnsignedBigInt
   created_at     DateTime?   @db.Timestamp(0)
   updated_at     DateTime?   @db.Timestamp(0)
   deleted_at     DateTime?   @db.Timestamp(0)
 
+  subjects            subjects      @relation(fields: [subject_id], references: [id], map: "reserves_subject_foreign")
   inventories         inventories   @relation(fields: [inventories_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reserves_user_foreign")
   reserve_users_updated_by   users?      @relation("reserves_updated_by",fields: [updated_by], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reserves_user_update_foreign")
   reserve_user_created               users         @relation("reserves_created_by",fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reserves_user_id_foreign_key")
@@ -115,11 +117,11 @@ model contents {
 model carts {
   id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   user_id           BigInt    @db.UnsignedBigInt
-  invetories_id     BigInt    @db.UnsignedBigInt
+  inventories_id     BigInt    @db.UnsignedBigInt
   created_at        DateTime? @db.Timestamp(0)
   updated_at        DateTime? @db.Timestamp(0)
 
-  inventories       inventories @relation(fields: [invetories_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_inventories_foreign")
+  inventories       inventories @relation(fields: [inventories_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_inventories_foreign")
   users_cart_toUser users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_user_foreign")
 
   @@index([user_id], map: "carts_id_user_index")
@@ -531,6 +533,9 @@ model subjects {
   lecturer     String?      @db.VarChar(255)
   created_at   DateTime?   @db.Timestamp(0)
   updated_at   DateTime?   @db.Timestamp(0)
+  
+
+  reserves      reserves[]
   schedules    schedules[]
   inventory_subjects inventory_subjects[]
 }
@@ -661,12 +666,12 @@ enum periods_status {
 }
 
 enum book_status {
-  process
-  approve
-  rejected
-  canceled
+  process @map("Process")
+  approve @map("Approve")
+  rejected @map("Rejected")
+  canceled @map("Canceled")
   waiting_to_be_return @map("Waiting to be return")
-  done
+  done @map("Done")
 }
 
 enum contents_tipe_konten {

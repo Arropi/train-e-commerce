@@ -5,12 +5,58 @@ const getAllInventory = async () => {
         const inventories = await prisma.inventories.findMany({
             where: {
                 deleted_at: null
+            },
+            include: {
+                inventory_subjects: true,
+                inventory_galleries: true
             }
         })
         return inventories
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
         throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
+const getInventoriesLaboratory = async (labolatory_id) => {
+    try {
+        const inventories = await prisma.inventories.findMany({
+            where: {
+                labolatory_id: labolatory_id,
+                deleted_at: null
+            },
+            include: {
+                inventory_subjects: true,
+                inventory_galleries: true
+            }
+        })
+        return inventories
+    } catch (error) {
+        console.log('Inventory Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
+const getSpecificInventories = async (dataInventoriesId) => {
+    try {
+        const inventories = await prisma.inventories.findMany({
+            where: {
+                id: {
+                    in: dataInventoriesId
+                },
+                deleted_at: null
+            },
+            include: {
+                inventory_subjects: true,
+                inventory_galleries: true
+            }
+        })
+        return inventories
+    } catch (error) {
+        console.log('Error: ', error.message)
+        return res.status(500).json({
+            'message': 'Internal Server Database Error :('
+        })
     }
 }
 
@@ -24,7 +70,7 @@ const getInventory = async (id) => {
         return inventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -39,7 +85,7 @@ const getImageInventory = async (id) => {
         return imageInventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -54,11 +100,11 @@ const getSubjectInventory = async (id) => {
         return getSubjectInventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
-const createInventory = async (user_id, item_name, no_inventory,room_id, condition, type, special_session ) => {
+const createInventory = async (user_id, item_name, no_inventory,room_id, condition, type, special_session, labolatory_id ) => {
     try {
         const inventory = await prisma.inventories.create({
             data: {
@@ -68,6 +114,7 @@ const createInventory = async (user_id, item_name, no_inventory,room_id, conditi
                 room_id: room_id,
                 condition: condition,
                 type: type,
+                labolatory_id: labolatory_id,
                 created_by: user_id,
                 special_session: special_session,
                 created_at: new Date()
@@ -76,7 +123,7 @@ const createInventory = async (user_id, item_name, no_inventory,room_id, conditi
         return inventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -88,7 +135,7 @@ const createSubjectInventory = async(dataSubject) =>{
         return inventories
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -104,7 +151,7 @@ const createImageInventory = async (inventory_id, image_url) => {
         return inventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -119,7 +166,7 @@ const updateInventory = async (inventory_id, updatedData) => {
         return inventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -135,7 +182,7 @@ const updateImageInventory = async (id, updatedData) => {
         return imageInventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -153,7 +200,7 @@ const deleteInventory = async (inventory_id, user_id) => {
         return inventory
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -170,7 +217,7 @@ const deleteSubjectInventory = async (dataSubject) => {
         return inventories
     } catch (error) {
         console.log('Inventory Repository Error: ', error)
-        throw Error('Internal Server Database Not Respond :(')
+        throw Error('Internal Server Database Error :(')
     }
 }
 
@@ -178,10 +225,12 @@ module.exports = {
     getAllInventory,
     getSubjectInventory,
     getImageInventory,
+    getInventory,
+    getSpecificInventories,
+    getInventoriesLaboratory,
     createInventory,
     createSubjectInventory,
     createImageInventory,
-    getInventory,
     updateInventory,
     updateImageInventory,
     deleteInventory,

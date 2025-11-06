@@ -1,4 +1,4 @@
-const { getInventoriesService, createInventoryService, addInventoriesSubjectService, addInventoriesImageService, updateInventoryService, updateInventoriesSubjectService, updateInventoriesImageService, deleteInventoryService } = require("../service/inventoryService")
+const { getInventoriesService, createInventoryService, addInventoriesSubjectService, addInventoriesImageService, updateInventoryService, updateInventoriesSubjectService, updateInventoriesImageService, deleteInventoryService, getInventoriesLaboratoryService } = require("../service/inventoryService")
 
 const getInventories = async (req, res) => {
     try {
@@ -15,11 +15,19 @@ const getInventories = async (req, res) => {
     }
 }
 
-const getInventory = async (params) => {
+const getInventoryLaboratory = async (req, res) => {
     try {
-        
+        const lab_id = req.params.laboratory_id
+        const inventories = await getInventoriesLaboratoryService(lab_id)
+        return res.status(200).json({
+            'message': 'Getting data inventory in lab successfully',
+            inventories
+        })
     } catch (error) {
-        
+        console.log('Error: ', error.message)
+        return res.status(500).json({
+            'message': 'Internal Server Error'
+        })
     }
 }
 
@@ -27,12 +35,13 @@ const createInventory = async (req, res) => {
     try {
         const user = req.user
         const data = req.body
-        const inventory = await createInventoryService(user.id, data.item_name, data.room_id, data.no_inventory, data.type, data.condition, data.special_session)
+        const inventory = await createInventoryService(user.id, data.item_name, data.room_id, data.no_inventory, data.type, data.condition, data.special_session, data.laboratory_id)
         const inventory_subject = await addInventoriesSubjectService(data.subjects, inventory.id)
         let dataSend = { 
             ...inventory,
             id: inventory.id? Number(inventory.id) : null,
             room_id: inventory.room_id? Number(inventory.room_id) : null,
+            labolatory_id : inventory.labolatory_id? Number(inventory.labolatory_id) : null,
             created_by: inventory.created_by? Number(inventory.created_by) : null ,
             updated_by: inventory.updated_by? Number(inventory.updated_by) : null ,
             subject_added: inventory_subject.count
@@ -62,8 +71,9 @@ const updateInventory = async (req, res) => {
         const data = req.body
         const inventory_id = req.params.inventory_id
         let allUpdated = {}
-        if(data.item_name || data.room_id || data.no_inventory || data.type || data.condition || data.special_session){
-            const updateInventory = await updateInventoryService(inventory_id, user.id, data.item_name,data.room_id, data.no_inventory, data.type, data.condition, data.special_session)
+        console.log(data.laboratory_id)
+        if(data.item_name || data.room_id || data.no_inventory || data.type || data.condition || data.special_session || data.laboratory_id){
+            const updateInventory = await updateInventoryService(inventory_id, user.id, data.item_name,data.room_id, data.no_inventory, data.type, data.condition, data.special_session, data.laboratory_id)
             allUpdated = {
                 ...updateInventory,
                 id: updateInventory.id? Number(updateInventory.id) : null,
@@ -130,6 +140,7 @@ const deleteInventory = async (req, res) => {
 }
 module.exports = {
     getInventories,
+    getInventoryLaboratory,
     createInventory,
     updateInventory,
     deleteInventory
