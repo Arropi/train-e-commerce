@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -26,13 +26,24 @@ interface FilterBarProps {
 export default function FilterBar({ onFilterChange }: FilterBarProps) {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedLab, setSelectedLab] = useState("");
-  const [date, setDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // filter akan mengubah ke tanggal real time
+  useEffect(() => {
+    onFilterChange?.({
+      location: selectedLocation,
+      lab: selectedLab,
+      date: format(new Date(), "yyyy-MM-dd"),
+      search: searchTerm,
+    });
+  }, []); // hanya jalan sekali saat mount
 
   const handleLocationChange = (value: string) => {
-    setSelectedLocation(value);
+    const locationValue = value === "all" ? "" : value;
+    setSelectedLocation(locationValue);
     onFilterChange?.({
-      location: value,
+      location: locationValue,
       lab: selectedLab,
       date: date ? format(date, "yyyy-MM-dd") : "",
       search: searchTerm,
@@ -75,11 +86,12 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
       {/* Filter Group - Kiri */}
       <div className="flex flex-wrap gap-4 items-center">
         {/* Filter Lokasi */}
-        <Select onValueChange={handleLocationChange}>
-          <SelectTrigger className="w-[180px] !h-10 border-[#1E40AF] border-2 text-blue-700 rounded-xl">
+        <Select onValueChange={handleLocationChange} value={selectedLocation || "all"}>
+          <SelectTrigger className="w-[180px] !h-10 border-[#1E40AF] border-2 text-gray-500 rounded-xl">
             <SelectValue placeholder="Lokasi" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">All Locations</SelectItem>
             <SelectItem value="hy">Herman Yohanes</SelectItem>
             <SelectItem value="grafika">Grafika</SelectItem>
           </SelectContent>
@@ -98,6 +110,12 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               mode="single"
               selected={date}
               onSelect={handleDateChange}
+              // disable tanggal sebelume
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // set ke awal hari
+                return date < today;
+              }}
               initialFocus
             />
           </PopoverContent>

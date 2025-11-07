@@ -51,7 +51,7 @@ export default function Sidebar({
           <div className="flex items-center gap-2">
             <button
               onClick={handleToggle}
-              className="p-1 hover:bg-blue-600 rounded"
+              className="p-1 hover:bg-blue-900 rounded-full"
             >
               <svg
                 className="w-6 h-6"

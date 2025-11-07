@@ -50,14 +50,15 @@ export default function Hero({ session }: { session: Session }) {
     },
   ];
 
-  // ✅ Update data dengan field lengkap untuk modal
+  // ✅ Pastikan SEMUA item memiliki image
   const ongoingItems = [
     {
       id: 1,
       title: "Osiloskop Analog GW Instek GOS 620",
       status: "Approved",
       type: "approve" as const,
-      image: "/images/oscilloscope.jpg",
+      image:
+        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
       serialNumber: "728878134781397",
       date: "1/10/2025",
       lab: "Lab Elektronika",
@@ -74,6 +75,7 @@ export default function Hero({ session }: { session: Session }) {
       title: "Multimeter Digital Fluke 87V",
       status: "Rejected",
       type: "rejected" as const,
+      image: "/images/logoUGM.png",
       serialNumber: "MLT-2023-002",
       date: "2/10/2025",
       lab: "Lab Elektronika",
@@ -90,6 +92,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Function Generator 20MHz",
       status: "Process",
       type: "process" as const,
+      image:
+        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
       serialNumber: "FGN-2023-003",
       date: "3/10/2025",
       lab: "Lab Telekomunikasi",
@@ -106,6 +110,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Logic Analyzer 16 Channel",
       status: "Waiting to be Return",
       type: "waiting_to_be_return" as const,
+      image:
+        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
       serialNumber: "LGA-2023-004",
       date: "4/10/2025",
       lab: "Lab Komputer",
@@ -122,6 +128,7 @@ export default function Hero({ session }: { session: Session }) {
       title: "Signal Generator RF",
       status: "Approved",
       type: "approve" as const,
+      image: "/images/logoUGM.png",
       serialNumber: "SGN-2023-005",
       date: "5/10/2025",
       lab: "Lab IDK",
@@ -138,6 +145,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Spectrum Analyzer",
       status: "Rejected",
       type: "rejected" as const,
+      image:
+        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
       serialNumber: "SPA-2023-006",
       date: "6/10/2025",
       lab: "Lab Telekomunikasi",
@@ -154,6 +163,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Power Supply DC 0-30V",
       status: "Waiting to be Return",
       type: "waiting_to_be_return" as const,
+      image:
+        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
       serialNumber: "PWS-2023-007",
       date: "7/10/2025",
       lab: "Lab Elektronika",
@@ -173,6 +184,7 @@ export default function Hero({ session }: { session: Session }) {
       title: "Oscilloscope Digital 200MHz",
       status: "Done",
       type: "done" as const,
+      image: "/images/logoUGM.png",
       serialNumber: "OSD-2023-008",
       date: "20/09/2025",
       lab: "Lab IDK",
@@ -189,6 +201,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Network Analyzer",
       status: "Done",
       type: "done" as const,
+      image:
+        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
       serialNumber: "NWA-2023-009",
       date: "21/09/2025",
       lab: "Lab Telekomunikasi",
@@ -205,6 +219,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Signal Generator 6GHz",
       status: "Done",
       type: "done" as const,
+      image:
+        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
       serialNumber: "SGN-2023-010",
       date: "22/09/2025",
       lab: "Lab Elektronika",
@@ -221,6 +237,7 @@ export default function Hero({ session }: { session: Session }) {
       title: "Logic Probe Digital",
       status: "Done",
       type: "done" as const,
+      image: "/images/logoUGM.png",
       serialNumber: "LGP-2023-011",
       date: "23/09/2025",
       lab: "Lab Komputer",
@@ -237,6 +254,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Function Generator 50MHz",
       status: "Done",
       type: "done" as const,
+      image:
+        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
       serialNumber: "FGN-2023-012",
       date: "24/09/2025",
       lab: "Lab IDK",
@@ -253,6 +272,8 @@ export default function Hero({ session }: { session: Session }) {
       title: "Multimeter Analog",
       status: "Done",
       type: "done" as const,
+      image:
+        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
       serialNumber: "MLA-2023-013",
       date: "25/09/2025",
       lab: "Lab Elektronika",
@@ -269,6 +290,7 @@ export default function Hero({ session }: { session: Session }) {
       title: "Digital Caliper Precision",
       status: "Done",
       type: "done" as const,
+      image: "/images/logoUGM.png", 
       serialNumber: "DCP-2023-014",
       date: "26/09/2025",
       lab: "Lab Telekomunikasi",
