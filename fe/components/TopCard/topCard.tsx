@@ -17,25 +17,10 @@ export default function TopCard({
   onHover,
   labPath = "/dashboard", // Default path jika tidak ada
 }: TopCardProps) {
-  // Split title menjadi "Laboratorium" dan nama lab
-  const formatTitle = (text: string) => {
-    const parts = text.split(" ");
-    if (parts.length >= 2 && parts[0] === "Laboratorium") {
-      return (
-        <>
-          {parts[0]}
-          <br />
-          {parts.slice(1).join(" ")}
-        </>
-      );
-    }
-    return text;
-  };
-
   return (
     <Link
       href={labPath}
-      className={`bg-white rounded-xl shadow-md cursor-pointer transition-all duration-400 ease-in-out
+      className={`bg-white rounded-xl shadow-md cursor-pointer transition-all duration-500 ease-in-out
         flex-1 block
         ${
           isActive
@@ -46,7 +31,7 @@ export default function TopCard({
       onMouseEnter={() => onHover(id)}
     >
       <div
-        className={`p-6 h-full flex flex-col justify-center items-center transition-all duration-400 ${
+        className={`p-6 h-full flex flex-col justify-center items-center transition-all duration-500 ${
           isActive ? "gap-2" : "gap-0"
         }`}
       >
@@ -71,7 +56,7 @@ export default function TopCard({
           whitespace-nowrap
           ${isActive ? "text-[#004CB0] rotate-0" : "text-gray-700 rotate-90"}`}
         >
-          {formatTitle(title)}
+          {title}
         </h3>
       </div>
     </Link>

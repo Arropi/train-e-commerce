@@ -8,11 +8,9 @@ import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { usePathname } from "next/navigation";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname() ?? "";
-  const normalizedPath = pathname.toLowerCase();
+  const pathname = usePathname();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
 
-  // ✅ Halaman tanpa footer
   const noFooterPages = [
     "/",
     "/login",
@@ -20,15 +18,13 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     "/auth/signin",
     "/auth/signup",
     "/auth/login",
-    "/admin",
   ];
 
-  // ✅ Halaman dengan Sidebar User (bukan Sidebar Admin!)
-  const sidebarPages = ["/home", "/lab", "/viewall"];
+  const sidebarPages = ["/dashboard", "/lab", "/viewall", "/home"];
 
   const shouldShowFooter = !noFooterPages.includes(pathname);
   const shouldShowSidebar = sidebarPages.some((page) =>
-    normalizedPath.startsWith(page)
+    pathname.startsWith(page)
   );
 
   return (
@@ -38,7 +34,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         {shouldShowFooter && <FooterComponent />}
       </div>
 
-      {/* Sidebar User - hanya tampil di /home, /lab, /viewall */}
       {shouldShowSidebar && (
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       )}
@@ -52,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <body className="overflow-x-hidden">
         <Providers>
           <SidebarProvider>

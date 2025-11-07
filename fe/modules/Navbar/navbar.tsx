@@ -18,7 +18,7 @@ export default function Navbar() {
     }
 
     // kalo gada role
-    return "Pengguna";
+    return "Mahasiswa";
   };
 
   const handleLogout = async () => {
@@ -47,10 +47,18 @@ export default function Navbar() {
         <ul className="hidden md:flex space-x-10">
           <li>
             <Link
-              href="/home"
+              href="/dashboard"
               className="text-gray-700 hover:text-[#004CB0] font-medium text-base"
             >
               Dashboard
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/about"
+              className="text-gray-700 hover:text-[#004CB0] font-medium text-base"
+            >
+              About
             </Link>
           </li>
         </ul>

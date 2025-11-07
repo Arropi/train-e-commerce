@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Inventory } from "@/types";
-import { useSidebar } from "@/contexts/SidebarContext";
 
 interface ItemModalProps {
   isOpen: boolean;
@@ -11,70 +10,27 @@ interface ItemModalProps {
 }
 
 export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
-  // selectedRoom is an object { id, name } or null
-  const [selectedRoom, setSelectedRoom] = useState<{
-    id: number;
-    name: string;
-  } | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const { addItem } = useSidebar();
-
-  // daftar ruang (ganti dengan data dari backend jika ada)
-  const rooms = [
-    { id: 1, name: "Ruang HU 201" },
-    { id: 2, name: "Ruang HU 202" },
-    { id: 3, name: "Ruang HU 203" },
-    { id: 4, name: "Ruang HU 204" },
-  ];
-
-  // ✅ Lock body scroll ketika modal terbuka
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.overflowY = "scroll";
-
-      return () => {
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        document.body.style.overflowY = "";
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [isOpen]);
 
   if (!isOpen || !item) return null;
 
   const handleAddItem = () => {
-    if (!selectedRoom || !selectedTime) {
-      alert("Please select room and time");
-      return;
+    if (selectedRoom && selectedTime) {
+      console.log("Adding item:", {
+        item: item.item_name,
+        room: selectedRoom,
+        time: selectedTime,
+      });
+      onClose();
+    } else {
+      alert("Pilih ruang dan waktu terlebih dahulu");
     }
-
-    const payload = {
-      ...item,
-      selectedRoom: selectedRoom.id,
-      selectedRoomName: selectedRoom.name,
-      selectedTime,
-    };
-
-    addItem(payload);
-    onClose();
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50">
+      <div className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh">
         <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
@@ -87,7 +43,7 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-lg">
             <img
-              src={item.img_url ?? "/images/osiloskop.png"}
+              src={item.img_url?? '/images/osiloskop.png'}
               alt={item.item_name}
               className="max-h-full object-contain"
             />
@@ -100,25 +56,23 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
           </h2>
 
           {/* jam milih */}
-          <div className="flex justify-center items-center gap-12 mb-4 text-sm">
+          <div className="flex justify-between items-center mb-4 text-sm">
             <button
               onClick={() => setSelectedTime("07.30")}
-              type="button"
               className={`px-4 py-2 font-bold transition-all border-b-2 ${
                 selectedTime === "07.30"
                   ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
+                  : "border-transparent text-gray-600 hover:text-[#004CB0]"
               }`}
             >
               07.30
             </button>
             <button
               onClick={() => setSelectedTime("13.30")}
-              type="button"
               className={`px-4 py-2 font-bold transition-all border-b-2 ${
                 selectedTime === "13.30"
                   ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
+                  : "border-transparent text-gray-600 hover:text-[#004CB0]"
               }`}
             >
               13.30
@@ -126,27 +80,26 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
           </div>
 
           <div className="space-y-2 mb-6">
-            {rooms.map((r) => (
-              <label
-                key={r.id}
-                className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100"
+            {[1, 2, 3, 4].map((room) => (
+              <div
+                key={room}
+                className="flex items-center justify-between p-2"
               >
-                <div>
-                  <div className="text-sm text-black font-bold">{r.name}</div>
-                  <div className="text-xs text-black font-medium">
-                    {item.no_item}
-                  </div>
-                </div>
+                <span className="text-sm text-black font-bold">
+                  Ruang HU 20{room}
+                  <br />
+                  <span className="text-xs text-black font-medium">{item.no_item}</span>
+                </span>
                 <input
                   type="radio"
                   name="room"
-                  value={r.id}
-                  checked={selectedRoom?.id === r.id}
-                  onChange={() => setSelectedRoom(r)}
+                  value={room}
+                  checked={selectedRoom === room}
+                  onChange={() => setSelectedRoom(room)}
                   className="w-4 h-4 text-[#004CB0]"
-                  style={{ accentColor: "#004CB0" }}
+                  style={{ accentColor: '#004CB0' }}
                 />
-              </label>
+              </div>
             ))}
           </div>
 
