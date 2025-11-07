@@ -8,24 +8,20 @@ interface ItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: Inventory | null;
+  allInventories?: Inventory[]; // ✅ NEW: untuk ambil semua unit yang sama
 }
 
-export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
-  // selectedRoom is an object { id, name } or null
-  const [selectedRoom, setSelectedRoom] = useState<{
-    id: number;
-    name: string;
-  } | null>(null);
+export default function ItemModal({
+  isOpen,
+  onClose,
+  item,
+  allInventories = [], // ✅ NEW
+}: ItemModalProps) {
+  const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(
+    null
+  ); // ✅ NEW
   const [selectedTime, setSelectedTime] = useState<string>("");
   const { addItem } = useSidebar();
-
-  // daftar ruang (ganti dengan data dari backend jika ada)
-  const rooms = [
-    { id: 1, name: "Ruang HU 201" },
-    { id: 2, name: "Ruang HU 202" },
-    { id: 3, name: "Ruang HU 203" },
-    { id: 4, name: "Ruang HU 204" },
-  ];
 
   // ✅ Lock body scroll ketika modal terbuka
   useEffect(() => {
@@ -47,18 +43,31 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
     }
   }, [isOpen]);
 
+  // ✅ NEW: Reset selection saat modal dibuka
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedInventory(null);
+      setSelectedTime("");
+    }
+  }, [isOpen, item]);
+
   if (!isOpen || !item) return null;
 
+  // ✅ NEW: Get all available units dengan nama yang sama
+  const availableUnits = allInventories.filter(
+    (inv) =>
+      inv.item_name?.toLowerCase() === item.item_name?.toLowerCase() &&
+      inv.condition?.toLowerCase() === "good"
+  );
+
   const handleAddItem = () => {
-    if (!selectedRoom || !selectedTime) {
-      alert("Please select room and time");
+    if (!selectedInventory || !selectedTime) {
+      alert("Please select inventory unit and time");
       return;
     }
 
     const payload = {
-      ...item,
-      selectedRoom: selectedRoom.id,
-      selectedRoomName: selectedRoom.name,
+      ...selectedInventory,
       selectedTime,
     };
 
@@ -125,38 +134,43 @@ export default function ItemModal({ isOpen, onClose, item }: ItemModalProps) {
             </button>
           </div>
 
+          {/* ✅ NEW: Pilihan Ruang + Nomor Inventaris (ganti room list) */}
           <div className="space-y-2 mb-6">
-            {rooms.map((r) => (
+            {availableUnits.map((inv) => (
               <label
-                key={r.id}
+                key={inv.id}
                 className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100"
               >
                 <div>
-                  <div className="text-sm text-black font-bold">{r.name}</div>
+                  <div className="text-sm text-black font-bold">
+                    {inv.location || "Ruang HU 201"}
+                  </div>
                   <div className="text-xs text-black font-medium">
-                    {item.no_item}
+                    {inv.no_item}
                   </div>
                 </div>
                 <input
                   type="radio"
-                  name="room"
-                  value={r.id}
-                  checked={selectedRoom?.id === r.id}
-                  onChange={() => setSelectedRoom(r)}
+                  name="inventory"
+                  value={inv.id}
+                  checked={selectedInventory?.id === inv.id}
+                  onChange={() => setSelectedInventory(inv)}
                   className="w-4 h-4 text-[#004CB0]"
                   style={{ accentColor: "#004CB0" }}
                 />
               </label>
             ))}
           </div>
-
+          
+          <div className="flex justify-end">
           <button
             onClick={handleAddItem}
-            className="w-full bg-[#004CB0] text-white py-2 px-4 rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300"
-            disabled={!selectedRoom || !selectedTime}
+            className="w-25 bg-[#004CB0] text-white py-0 text-md rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300"
+            disabled={!selectedInventory || !selectedTime}
           >
             Add
           </button>
+          </div>
         </div>
       </div>
     </div>
