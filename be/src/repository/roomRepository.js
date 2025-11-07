@@ -14,7 +14,7 @@ const getRoomById = async (id) => {
     try {
         const room = await prisma.rooms.findUnique({
             where: {
-                id: id
+                id: id,
             }
         })
         return room

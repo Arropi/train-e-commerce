@@ -5,6 +5,7 @@ const laboratoriesRoute = require('./src/routes/laboratoryRoute')
 const cartRoute = require('./src/routes/cartRoute')
 const reservesRoute = require('./src/routes/reservesRoute')
 const subjectRoute = require('./src/routes/subjectRoute')
+const roomRoute = require('./src/routes/roomRoute')
 const express = require("express");
 const cors = require("cors");
 const cookie = require("cookie-parser");
@@ -28,6 +29,7 @@ app.get('/', (_,res)=>{
 })
 
 app.use('/', userRoute)
+app.use('/rooms', roomRoute)
 app.use('/subjects', subjectRoute)
 app.use('/inventories', inventoriesRoute)
 app.use('/laboratories', laboratoriesRoute)
