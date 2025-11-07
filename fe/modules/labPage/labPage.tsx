@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import ItemModal from "../../components/Modal/ItemModal";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
 import FilterBar from "../../components/FilterBar/FilterBar";
@@ -14,7 +15,7 @@ interface LabPageProps {
 export default function LabPage({ slug, inventories }: LabPageProps) {
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filteredInventories, setFilteredInventories] = useState(inventories);
+  const [filteredInventories, setFilteredInventories] = useState<Inventory[]>(inventories);
   const { openSidebar, isSidebarOpen } = useSidebar();
 
   const handleOpenSidebar = () => {
@@ -40,42 +41,42 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
   };
 
   // Handle filter changes
-  const handleFilterChange = (filters: any) => {
-    let filtered = inventories;
+  // const handleFilterChange = (filters: any) => {
+  //   let filtered = inventories;
 
-    // Filter by location
-    if (filters.location) {
-      filtered = filtered.filter(
-        (item) =>
-          item.location?.toLowerCase() === filters.location.toLowerCase()
-      );
-    }
+  //   // Filter by location
+  //   if (filters.location) {
+  //     filtered = filtered.filter(
+  //       (item) =>
+  //         item.location?.toLowerCase() === filters.location.toLowerCase()
+  //     );
+  //   }
 
-    // Filter by lab
-    if (filters.lab && filters.lab !== "semua") {
-      filtered = filtered.filter(
-        (item) => item.lab?.toLowerCase() === filters.lab.toLowerCase()
-      );
-    }
+  //   // Filter by lab
+  //   if (filters.lab && filters.lab !== "semua") {
+  //     filtered = filtered.filter(
+  //       (item) => item.lab?.toLowerCase() === filters.lab.toLowerCase()
+  //     );
+  //   }
 
-    // Filter by date (jika ada field date di inventory)
-    if (filters.date) {
-      filtered = filtered.filter((item) => item.date === filters.date);
-    }
+  //   // Filter by date (jika ada field date di inventory)
+  //   if (filters.date) {
+  //     filtered = filtered.filter((item) => item.date === filters.date);
+  //   }
 
-    // Filter by search term
-    if (filters.search) {
-      filtered = filtered.filter(
-        (item) =>
-          item.item_name
-            ?.toLowerCase()
-            .includes(filters.search.toLowerCase()) ||
-          item.no_item?.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
+  //   // Filter by search term
+  //   if (filters.search) {
+  //     filtered = filtered.filter(
+  //       (item) =>
+  //         item.item_name
+  //           ?.toLowerCase()
+  //           .includes(filters.search.toLowerCase()) ||
+  //         item.no_item?.toLowerCase().includes(filters.search.toLowerCase())
+  //     );
+  //   }
 
-    setFilteredInventories(filtered);
-  };
+  //   setFilteredInventories(filtered);
+  // };
 
   // Function untuk determine availability
   const getAvailabilityStatus = (item: Inventory) => {
@@ -128,7 +129,7 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
           </h1>
 
           {/* FilterBar Component */}
-          <FilterBar onFilterChange={handleFilterChange} />
+          {/* <FilterBar onFilterChange={handleFilterChange} /> */}
 
           {/* Grid Kartu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-8">
@@ -145,11 +146,13 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
                   <div className="p-4">
                     <div className="flex justify-center items-center mb-3">
                       <div className="w-full h-24 flex items-center justify-center">
-                        <img
+                        <Image
                           src={
-                            item.img_url ? item.img_url : "/icons/osiloskop.png"
+                            item.img_url ? "/"+item.img_url : "/icons/osiloskop.png"
                           }
                           alt={item.item_name}
+                          width={90}
+                          height={90}
                           className="max-h-full object-contain"
                         />
                       </div>

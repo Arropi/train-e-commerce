@@ -4,7 +4,6 @@ import LabPage from "@/modules/labPage/labPage";
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import FilterBar from "../../../components/FilterBar/FilterBar";
 
 export default async function ItemPage({ params }: { params: { slug: string } }) {
   const { slug } = (await params) as { slug: string };
