@@ -334,7 +334,7 @@ export default function Hero({ session }: { session: Session }) {
         <div className="min-h-screen bg-gray-50 p-6">
           <div className="max-w-7xl mx-auto">
             {/* Top Cards Section */}
-            <div className="flex gap-4 mb-8 h-64">
+            <div className="flex gap-4 mb-8 h-64 overflow-x-auto scrollbar-hide">
               {topCards.map((card) => (
                 <TopCard
                   key={card.id}

@@ -12,7 +12,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const normalizedPath = pathname.toLowerCase();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
 
-  // ✅ Halaman tanpa footer
+  // ✅ Halaman tanpa footer (termasuk semua route admin)
   const noFooterPages = [
     "/",
     "/login",
@@ -20,16 +20,19 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     "/auth/signin",
     "/auth/signup",
     "/auth/login",
-    "/admin",
   ];
+
+  // ✅ Check jika route adalah admin route
+  const isAdminRoute = normalizedPath.startsWith("/admin");
 
   // ✅ Halaman dengan Sidebar User (bukan Sidebar Admin!)
   const sidebarPages = ["/home", "/lab", "/viewall"];
 
-  const shouldShowFooter = !noFooterPages.includes(pathname);
-  const shouldShowSidebar = sidebarPages.some((page) =>
-    normalizedPath.startsWith(page)
-  );
+  const shouldShowFooter = !noFooterPages.includes(pathname) && !isAdminRoute; // ✅ Tidak tampil footer di semua route admin
+
+  const shouldShowSidebar =
+    sidebarPages.some((page) => normalizedPath.startsWith(page)) &&
+    !isAdminRoute; // ✅ Tidak tampil sidebar user di route admin
 
   return (
     <>
@@ -38,7 +41,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         {shouldShowFooter && <FooterComponent />}
       </div>
 
-      {/* Sidebar User - hanya tampil di /home, /lab, /viewall */}
+      {/* Sidebar User - hanya tampil di /home, /lab, /viewall (bukan di admin) */}
       {shouldShowSidebar && (
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       )}

@@ -1,19 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import HeroAdmin from "../../modules/homeAdmin/heroAdmin";
 import SidebarAdmin from "../../modules/sideBarAdmin/sideBarAdmin";
+import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const { isSidebarOpen } = useAdminSidebar();
 
   // Redirect jika belum login
   useEffect(() => {
@@ -33,25 +30,24 @@ export default function AdminPage() {
   }
 
   return (
-    <>
+    <div className="flex min-h-screen bg-white">
+      {/* Sidebar */}
       <SidebarAdmin
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
         user={{
           name: session?.user?.name || "Admin",
           role: "Admin",
-          avatar: session?.user?.image,
+          avatar: session?.user?.image || undefined,
         }}
       />
 
-      {/* Main Content - with margin to account for sidebar */}
+      {/* Main Content - responsive dengan margin berdasarkan sidebar state */}
       <div
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? "ml-64" : "ml-20"
+        className={`flex-1 transition-all duration-300 ${
+          isSidebarOpen ? "lg:ml-74" : "lg:ml-16"
         }`}
       >
-        <HeroAdmin />
+        <HeroAdmin orders={[]} borrowedItems={[]} />
       </div>
-    </>
+    </div>
   );
 }
