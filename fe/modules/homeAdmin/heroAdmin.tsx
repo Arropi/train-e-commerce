@@ -6,6 +6,7 @@ import Image from "next/image";
 import ModalAdminDashboard from "@/components/Modal/ModalAdminDashboard";
 import ModalBorrowedItem from "@/components/Modal/ModalBorrowedItem";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
+import { Reserve } from "../../types";
 
 interface Order {
   id: number;
@@ -52,7 +53,7 @@ interface BorrowedItemDetail extends BorrowedItem {
 }
 
 interface HeroAdminProps {
-  orders: Order[];
+  orders: Reserve[];
   borrowedItems: BorrowedItem[];
 }
 
@@ -67,7 +68,7 @@ export default function HeroAdmin({
   const [selectedBorrowedItem, setSelectedBorrowedItem] =
     useState<BorrowedItemDetail | null>(null);
 
-
+  console.log("Orders in HeroAdmin:", orders);
   const ordersDetail: OrderDetail[] = [
     {
       id: 1,

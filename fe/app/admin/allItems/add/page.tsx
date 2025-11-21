@@ -10,5 +10,10 @@ export default async function AddItemPage() {
     redirect("/");
   }
 
-  return <AddItemForm session={session} />;
+  return (
+    <>
+      
+      <AddItemForm session={session} />;
+    </>
+  )
 }

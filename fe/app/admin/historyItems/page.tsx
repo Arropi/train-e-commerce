@@ -3,6 +3,20 @@ import { redirect } from "next/navigation";
 import { authConfig } from "@/lib/auth";
 import HistoryAdmin from "@/modules/History/historyAdmin";
 
+interface ReserveData {
+  reserve_id: number;
+  item_name: string;
+  img_url: string | null;
+  borrower_name: string;
+  borrower_nim: string;
+  lab: string;
+  tanggal: string;
+  status: string;
+  subject: string;
+  session: string;
+  purpose: string;
+}
+
 export default async function HistoryItemsPage() {
   const session = await getServerSession(authConfig);
 
@@ -11,72 +25,28 @@ export default async function HistoryItemsPage() {
     redirect("/");
   }
 
-  // TODO: Fetch data dari API
-  // const historyData = await fetch('...')
-
-  // Dummy data sementara
-  const historyData = [
-    {
-      id: 1,
-      itemName: "Arduino Uno R3",
-      itemImage: "https://placehold.co/150x150/png?text=Arduino",
-      borrowerName: "John Doe",
-      borrowerNim: "1234567890",
-      lab: "Lab Elektronika",
-      borrowDate: "2024-11-01",
-      returnDate: "2024-11-05",
-      purpose: "Practical Class",
-      status: "returned" as const,
+  // Fetch data dari API
+  const today = new Date().toISOString().split('T')[0];
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reserves/?tanggal=${today}`, {
+    headers: {
+      Authorization: `Bearer ${session.user.accessToken}`,
     },
-    {
-      id: 2,
-      itemName: "Raspberry Pi 4",
-      itemImage: "https://placehold.co/150x150/png?text=RaspberryPi",
-      borrowerName: "Jane Smith",
-      borrowerNim: "0987654321",
-      lab: "Lab RPL",
-      borrowDate: "2024-11-02",
-      returnDate: "2024-11-08",
-      purpose: "Project",
-      status: "late" as const,
-    },
-    {
-      id: 3,
-      itemName: "Oscilloscope Digital",
-      itemImage: "https://placehold.co/150x150/png?text=Oscilloscope",
-      borrowerName: "Bob Johnson",
-      borrowerNim: "1122334455",
-      lab: "Lab Elektronika",
-      borrowDate: "2024-10-28",
-      returnDate: "2024-11-01",
-      purpose: "Practical Class",
-      status: "damaged" as const,
-    },
-    {
-      id: 4,
-      itemName: "Multimeter Fluke",
-      itemImage: "https://placehold.co/150x150/png?text=Multimeter",
-      borrowerName: "Alice Brown",
-      borrowerNim: "5566778899",
-      lab: "Lab IDK",
-      borrowDate: "2024-11-03",
-      returnDate: "2024-11-07",
-      purpose: "Project",
-      status: "returned" as const,
-    },
-    {
-      id: 5,
-      itemName: "Soldering Station",
-      itemImage: "https://placehold.co/150x150/png?text=Soldering",
-      borrowerName: "Charlie Wilson",
-      borrowerNim: "9988776655",
-      lab: "Lab TAJ",
-      borrowDate: "2024-10-30",
-      returnDate: "2024-11-04",
-      purpose: "Practical Class",
-      status: "returned" as const,
-    },
-  ];
+  });
+  const data = await res.json();
+  const historyData = data.data
+    .filter((item: ReserveData) => item.status === 'done')
+    .map((item: ReserveData) => ({
+      id: item.reserve_id,
+      itemName: item.item_name,
+      itemImage: item.img_url || "https://placehold.co/150x150/png?text=Item",
+      borrowerName: item.borrower_name,
+      borrowerNim: item.borrower_nim,
+      lab: item.lab,
+      borrowDate: new Date(item.tanggal).toISOString().split('T')[0],
+      returnDate: new Date(item.tanggal).toISOString().split('T')[0], // assume same
+      purpose: item.purpose,
+      status: 'returned' as const,
+    }));
 
   return <HistoryAdmin session={session} historyData={historyData} />;
 }
