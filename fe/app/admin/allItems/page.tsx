@@ -1,131 +1,77 @@
-import { redirect } from "next/dist/server/api-utils";
+import { redirect } from "next/navigation";
 import { authConfig } from "../../../lib/auth";
 import { getServerSession } from "next-auth/next";
 import AllItemsAdmin from "../../../modules/AllItemsAdmin/allItems";
+
+interface InventoryData {
+  id: number;
+  item_name: string;
+  no_item: string;
+  condition: string;
+  type: string;
+  special_session: string;
+  room_id: number | null;
+  laboratory_id: number | null;
+  img_url: string | null;
+  subject_id: number[];
+}
 
 export default async function AllItemsPage() {
   const session = await getServerSession(authConfig);
 
   // akan redirect jika blm login
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/");
   }
 
   // tempat buat fetch data
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.user.accessToken}`,
+    },
+    cache: "no-store",
+  });
 
-  // dummy data sementara
-  const item = [
-    {
-      id: 1,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW08",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 2,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW09",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "on_loan" as const,
-    },
-    {
-      id: 3,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW10",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 4,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW11",
-      category: "Measurement",
-      condition: "excellent" as const,
-      status: "available" as const,
-    },
-    {
-      id: 5,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW12",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 6,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW13",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "maintenance" as const,
-    },
-    {
-      id: 7,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW14",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 8,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW15",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 9,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW16",
-      category: "Measurement",
-      condition: "good" as const,
-      status: "available" as const,
-    },
-    {
-      id: 10,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      lab: "Lab RPL",
-      image:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop",
-      serialNumber: "IDK-KACIIW17",
-      category: "Measurement",
-      condition: "fair" as const,
-      status: "available" as const,
-    },
-  ];
+  if (!res.ok) {
+    redirect("/");
+  }
 
-  return <AllItemsAdmin session={session} items={item} />;
+  const result = await res.json();
+
+  // Map API data to component format
+  const items = result.inventories?.map((inventory: InventoryData) => ({
+    id: inventory.id,
+    name: inventory.item_name,
+    lab: inventory.laboratory_id ? getLabName(inventory.laboratory_id) : "Unknown Lab",
+    image: inventory.img_url || "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400&h=400&fit=crop", // fallback image
+    serialNumber: inventory.no_item,
+    category: inventory.type || "Unknown",
+    condition: mapCondition(inventory.condition),
+    status: "available" as const, // Default status, you might want to add status logic later
+  })) || [];
+
+  // Helper function to map lab ID to lab name
+  function getLabName(labId: number): string {
+    const labMap: { [key: number]: string } = {
+      1: "Lab IDK",
+      2: "Lab Elektronika", 
+      3: "Lab RPL",
+      4: "Lab TAJ",
+    };
+    return labMap[labId] || "Unknown Lab";
+  }
+
+  // Helper function to map condition
+  function mapCondition(condition: string): "good" | "bad" | "fair" | "excellent" {
+    const conditionMap: { [key: string]: "good" | "bad" | "fair" | "excellent" } = {
+      "good": "good",
+      "bad": "bad", 
+      "fair": "fair",
+      "excellent": "excellent",
+    };
+    return conditionMap[condition.toLowerCase()] || "good";
+  }
+
+  return <AllItemsAdmin session={session} items={items} />;
 }

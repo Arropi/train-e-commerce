@@ -40,7 +40,14 @@ const getReservesAdmin = async () => {
     try {
         const reserves = await prisma.reserves.findMany({
             include: {
-                inventories: true
+                inventories: {
+                    include: {
+                        inventory_galleries: true,
+                        inventory_subjects: true
+                    }
+                },
+                laboratory: true,
+                reserve_user_created: true
             }
         })
         return reserves

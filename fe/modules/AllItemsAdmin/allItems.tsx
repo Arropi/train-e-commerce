@@ -66,6 +66,27 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
     }
   }, [searchParams, router]);
 
+  // Filter and sort items
+  const filteredAndSortedItems = items
+    .filter((item) => {
+      if (selectedLab === "semua") return true;
+      return item.lab === selectedLab;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "lab":
+          return a.lab.localeCompare(b.lab);
+        case "condition":
+          return a.condition.localeCompare(b.condition);
+        case "status":
+          return a.status.localeCompare(b.status);
+        default:
+          return 0;
+      }
+    });
+
   const handleAddClick = () => {
     router.push("/admin/allItems/add");
   };
@@ -115,10 +136,10 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
                     className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
                     <option value="semua">Semua lab</option>
-                    <option value="idk">Lab IDK</option>
-                    <option value="elektronika">Lab Elektronika</option>
-                    <option value="rpl">Lab RPL</option>
-                    <option value="taj">Lab TAJ</option>
+                    <option value="Lab IDK">Lab IDK</option>
+                    <option value="Lab Elektronika">Lab Elektronika</option>
+                    <option value="Lab RPL">Lab RPL</option>
+                    <option value="Lab TAJ">Lab TAJ</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
                 </div>
@@ -142,7 +163,7 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
 
             {/* Items Grid */}
             <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
-              {items.map((item) => (
+              {filteredAndSortedItems.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleEditClick(item.id)}

@@ -9,62 +9,166 @@ interface PageProps {
   };
 }
 
+interface InventoryData {
+  id: number;
+  item_name: string;
+  no_item: string;
+  condition: string;
+  type: string;
+  special_session: string;
+  room_id: number | null;
+  laboratory_id: number | null;
+  img_url: string | null;
+  subject_id: number[];
+}
+
 export default async function EditItemPage({ params }: PageProps) {
   const session = await getServerSession(authConfig);
 
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/");
   }
 
-  // TODO: Fetch item data dari API berdasarkan ID
-  // const itemData = await fetch(`/api/items/${params.id}`)
+  // Await params in Next.js 15
+  const { id } = await params;
 
-  // Dummy data sementara
-  const dummyItems = [
-    {
-      id: 1,
-      name: "Osiloskop Analog GW Instek GOS 620",
-      inventoryNumber: "INV-2024-001",
-      room: "R301",
-      laboratory: "Lab Elektronika",
-      subject: ["Praktikum Elektronika Dasar", "Praktikum Instrumentasi"],
-      session: "2 Session",
-      purpose: "Practical Class",
-      condition: "Good",
-      image: "https://placehold.co/150x150/png?text=Oscilloscope",
-    },
-    {
-      id: 2,
-      name: "Multimeter Digital Fluke 87V",
-      inventoryNumber: "INV-2024-002",
-      room: "R302",
-      laboratory: "Lab IDK",
-      subject: ["Praktikum Pemrograman Komputer"],
-      session: "Session per Hour",
-      purpose: "Project",
-      condition: "Good",
-      image: "https://placehold.co/150x150/png?text=Multimeter",
-    },
-    {
-      id: 3,
-      name: "Function Generator 20MHz",
-      inventoryNumber: "INV-2024-003",
-      room: "R303",
-      laboratory: "Lab RPL",
-      subject: ["Praktikum Basis Data", "Praktikum Web Programming"],
-      session: "2 Session",
-      purpose: "Practical Class",
-      condition: "Bad",
-      image: "https://placehold.co/150x150/png?text=Generator",
-    },
-  ];
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
-  // Find item berdasarkan ID
-  const itemData = dummyItems.find((item) => item.id === parseInt(params.id));
+  // Fetch all inventories
+  const inventoryRes = await fetch(`${backendUrl}/inventories`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.user.accessToken}`,
+    },
+    cache: "no-store",
+  });
 
-  if (!itemData) {
+  if (!inventoryRes.ok) {
+    redirect("/");
+  }
+
+  const inventoryResult = await inventoryRes.json();
+
+  // Find item by ID
+  const inventory = inventoryResult.inventories?.find((item: InventoryData) => item.id === parseInt(id));
+
+  if (!inventory) {
     redirect("/admin/allItems");
   }
 
-  return <EditItems session={session} itemData={itemData} />;
+  // Fetch dropdown data
+  const [labsRes, roomsRes, subjectsRes] = await Promise.all([
+    fetch(`${backendUrl}/laboratories`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: "no-store",
+    }),
+    fetch(`${backendUrl}/rooms`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: "no-store",
+    }),
+    fetch(`${backendUrl}/subjects`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: "no-store",
+    }),
+  ]);
+
+  // Handle potential fetch failures gracefully
+  let labs = [];
+  let rooms = [];
+  let subjects = [];
+
+  try {
+    labs = labsRes.ok ? (await labsRes.json()).data || (await labsRes.json()).laboratories || [] : [];
+  } catch (error) {
+    console.error("Failed to fetch laboratories:", error);
+  }
+
+  try {
+    rooms = roomsRes.ok ? (await roomsRes.json()).rooms || [] : [];
+  } catch (error) {
+    console.error("Failed to fetch rooms:", error);
+  }
+
+  try {
+    subjects = subjectsRes.ok ? (await subjectsRes.json()).subjects || [] : [];
+  } catch (error) {
+    console.error("Failed to fetch subjects:", error);
+  }
+
+  // Fallback dummy data if API fails (for testing)
+  if (labs.length === 0) {
+    labs = [
+      { id: 1, name: "Lab Elektronika" },
+      { id: 2, name: "Lab RPL" },
+      { id: 3, name: "Lab IDK" },
+      { id: 4, name: "Lab TAJ" }
+    ];
+  }
+
+  if (rooms.length === 0) {
+    rooms = [
+      { id: 1, name: "Room 301" },
+      { id: 2, name: "Room 302" },
+      { id: 3, name: "Room 303" },
+      { id: 4, name: "Room 304" }
+    ];
+  }
+
+  if (subjects.length === 0) {
+    subjects = [
+      { id: 1, name: "Praktikum Pemrograman Komputer" },
+      { id: 2, name: "Praktikum Basis Data" },
+      { id: 3, name: "Praktikum Jaringan Komputer" },
+      { id: 4, name: "Praktikum Sistem Operasi" }
+    ];
+  }
+
+  console.log("Fetched data:", { labs, rooms, subjects });
+
+  // Map inventory data to component format
+  const itemData = {
+    id: inventory.id,
+    name: inventory.item_name,
+    inventoryNumber: inventory.no_item,
+    room: inventory.room_id?.toString() || "",
+    laboratory: inventory.laboratory_id?.toString() || "",
+    subject: inventory.subject_id.map((id: number) => {
+      const subject = subjects.find((s: { id: number; name: string }) => s.id === id);
+      return subject ? subject.name : `Subject ${id}`;
+    }),
+    session: inventory.special_session ? "2 Session" : "1 Session",
+    purpose: inventory.type === "praktikum" ? "Practical Class" : "Project",
+    condition: mapCondition(inventory.condition),
+    image: inventory.img_url || "https://placehold.co/150x150/png?text=Item",
+  };
+
+  return (
+    <EditItems
+      session={session}
+      itemData={itemData}
+      labs={labs}
+      rooms={rooms}
+      subjects={subjects}
+    />
+  );
+}
+
+// Helper functions
+function mapCondition(condition: string): "Good" | "Bad" | "Fair" | "Excellent" {
+  const conditionMap: { [key: string]: "Good" | "Bad" | "Fair" | "Excellent" } = {
+    "good": "Good",
+    "bad": "Bad", 
+    "fair": "Fair",
+    "excellent": "Excellent",
+  };
+  return conditionMap[condition.toLowerCase()] || "Good";
 }
