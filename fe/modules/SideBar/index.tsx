@@ -35,7 +35,7 @@ export default function Sidebar({
   return (
     <>
       <div
-        className={`fixed top-4 bottom-4 w-96 bg-white shadow-2xl z-50 transition-all duration-300 ease-in-out border border-gray-200 rounded-lg ${
+        className={`fixed top-4 bottom-4 w-80 sm:w-96 bg-white shadow-2xl z-50 transition-all duration-300 ease-in-out border border-gray-200 rounded-lg ${
           sidebarOpen ? "right-4" : "-right-full"
         }`}
       >

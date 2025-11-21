@@ -1,10 +1,9 @@
-import Profile from "@/modules/profile";
 import { authConfig } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import Navbar from "@/modules/Navbar/navbar";
+import SuperAdminProfile from "../../../modules/profileAdmin/superAdmin";
 
-export default async function ProfilePage() {
+export default async function AdminProfile() {
   const session = await getServerSession(authConfig);
           const backendUrl =
           process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
@@ -32,8 +31,7 @@ export default async function ProfilePage() {
   
   return (
     <>
-      <Navbar />
-      <Profile nim={user.nim} email={session.user.email ?? ''} name={session.user.name ?? ''} prodi={user.prodi} />
+        <SuperAdminProfile nim={user.nim} email={session.user.email ?? ''} name={session.user.name ?? ''} prodi={user.prodi} />
     </>
   );
 }
