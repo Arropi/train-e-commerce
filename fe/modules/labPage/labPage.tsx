@@ -148,7 +148,7 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
                       <div className="w-full h-24 flex items-center justify-center">
                         <Image
                           src={
-                            item.img_url ? "/"+item.img_url : "/icons/osiloskop.png"
+                            item.img_url ? item.img_url : "/icons/osiloskop.png"
                           }
                           alt={item.item_name}
                           width={90}

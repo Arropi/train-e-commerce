@@ -3,7 +3,7 @@ interface ItemCardProps {
     id: number;
     title: string;
     status: string;
-    type: "done" | "approve" | "rejected" | "process" | "waiting_to_be_return";
+    type: "done" | "approve" | "rejected" | "process" | "waiting_to_be_return" | "canceled";
     image?: string; // ✅ Tambahkan image field
   };
   onClick: (item: any) => void;
@@ -21,6 +21,7 @@ export default function ItemCard({
     rejected: "text-[#C70000] bg-[#FE9696]",
     process: "text-[#817D24] bg-[#FFF876]",
     waiting_to_be_return: "text-[#5D00AE] bg-[#C17CFE]",
+    canceled: "text-gray-600 bg-gray-300",
   };
 
   return (
