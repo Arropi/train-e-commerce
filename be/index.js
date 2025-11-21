@@ -6,6 +6,7 @@ const cartRoute = require('./src/routes/cartRoute')
 const reservesRoute = require('./src/routes/reservesRoute')
 const subjectRoute = require('./src/routes/subjectRoute')
 const roomRoute = require('./src/routes/roomRoute')
+const timeSessionRoute = require('./src/routes/timeSessionRoute')
 const express = require("express");
 const cors = require("cors");
 const cookie = require("cookie-parser");
@@ -35,6 +36,7 @@ app.use('/inventories', inventoriesRoute)
 app.use('/laboratories', laboratoriesRoute)
 app.use('/cart', cartRoute)
 app.use('/reserves', reservesRoute)
+app.use('/time-sessions', timeSessionRoute)
 
 app.listen(port, () => {
   console.log(`Listening On Port ${port}`);

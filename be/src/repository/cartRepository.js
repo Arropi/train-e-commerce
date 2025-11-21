@@ -5,6 +5,14 @@ const getCartById = async (id) => {
         const cart = await prisma.carts.findMany({
             where: {
                 user_id: id
+            },
+            include: {
+                inventories: {
+                    include: {
+                        inventory_galleries: true,
+                        inventory_subjects: true
+                    }
+                }
             }
         })
         return cart

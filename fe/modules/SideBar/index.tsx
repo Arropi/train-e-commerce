@@ -21,12 +21,16 @@ export default function Sidebar({
     isSidebarOpen,
     toggleSidebar: ctxToggle,
     items = [],
+    timeSessions = [],
+    rooms = [],
     removeItem,
   } = useSidebar();
-
+  
   // fallback: props jika diberikan, else gunakan context
   const sidebarOpen = typeof isOpen === "boolean" ? isOpen : isSidebarOpen;
   const handleToggle = toggleSidebar ?? ctxToggle;
+  const itemsToCheckout = items.map((i) => i.inventories)
+  console.log(items)
 
   return (
     <>
@@ -84,42 +88,47 @@ export default function Sidebar({
               </div>
             ) : (
               <div className="space-y-3">
-                {items.map((it) => (
+                {items.map((it) => {
+                  const roomName = rooms.find(room => room.id === it.inventories.room_id)?.name;
+                  const timeSession = timeSessions.find(ts => ts.id === it.session_id)?.start
+                  return (
                   <div
-                    key={`${it.id}-${it.selectedRoom ?? "nr"}-${
-                      it.selectedTime ?? "nt"
+                    key={`${it.id}-${it.inventories.no_item ?? "nr"}-${
+                      it.inventories.no_item ?? "nt"
                     }`}
                     className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border"
                   >
                     <div className="w-14 h-14 bg-white rounded overflow-hidden flex items-center justify-center">
                       <img
-                        src={it.img_url ?? "/images/osiloskop.png"}
-                        alt={it.item_name}
+                        src={it.inventories.inventory_galleries[0]?.filepath ?? "/images/osiloskop.png"}
+                        alt={it.inventories.item_name}
                         className="object-contain max-h-full"
                       />
                     </div>
 
                     <div className="flex-1">
                       <div className="text-sm font-semibold text-gray-800">
-                        {it.item_name ?? it.no_item}
+                        {it.inventories.item_name ?? it.inventories.no_item}
                       </div>
-                      <div className="text-xs text-gray-500">{it.no_item}</div>
+                      <div className="text-xs text-gray-500">{it.inventories.no_item}</div>
                       <div className="text-xs text-gray-600 mt-1">
-                        Ruang: {it.selectedRoomName ?? it.selectedRoom ?? "-"} ·
-                        Jam: {it.selectedTime ?? "-"}
+                        Ruang: {roomName ?? "-"} ·
+                        Jam: {timeSession ?? "-"}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
                       <button
-                        onClick={() => removeItem(it.id)}
+                        onClick={() => removeItem(it.inventories.id)}
                         className="text-xs text-red-600 hover:underline"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                }
+                )}
               </div>
             )}
           </div>
@@ -137,8 +146,10 @@ export default function Sidebar({
 
       <RequestForm
         isOpen={isFormOpen}
+        rooms={rooms}
         onClose={() => setIsFormOpen(false)}
         items={items}
+        timeSession={timeSessions}
       />
     </>
   );

@@ -9,5 +9,5 @@ export const getDataRooms = async(accessToken: string) => {
     }
   });
   const rooms = await res.json()
-  return rooms;
+  return rooms.data;
 }

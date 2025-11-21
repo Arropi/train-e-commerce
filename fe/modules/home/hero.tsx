@@ -7,50 +7,18 @@ import ItemCard from "@/components/ItemCard/ItemCard";
 import Section from "../../components/Section/Section";
 import FloatingButton from "@/components/FloatingButton/FloatingButton";
 import { useSidebar } from "@/contexts/SidebarContext";
-import ModalViewAll from "@/components/Modal/ModalViewAll"; // ✅ Import modal
+import ModalViewAll from "@/components/Modal/ModalViewAll";
+import { Laboratory } from "@/types";
 
-export default function Hero({ session }: { session: Session }) {
-  const [activeCard, setActiveCard] = useState(0);
+export default function Hero({ session, laboratories }: { session: Session, laboratories: Laboratory[] }) {
+  const [activeCard, setActiveCard] = useState(1);
   const { openSidebar, isSidebarOpen } = useSidebar();
 
-  // ✅ State untuk modal
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const topCards = [
-    {
-      id: 0,
-      title: "Laboratorium Elektronika",
-      iconPath: "/icons/logo elektronika.svg",
-      labPath: "/lab/1",
-    },
-    {
-      id: 1,
-      title: "Laboratorium IDK",
-      iconPath: "/icons/lab_idk.svg",
-      labPath: "/lab/2",
-    },
-    {
-      id: 2,
-      title: "Laboratorium TAJ",
-      iconPath: "/icons/lab_taj.svg",
-      labPath: "/lab/3",
-    },
-    {
-      id: 3,
-      title: "Laboratorium RPL",
-      iconPath: "/icons/lab_rpl.svg",
-      labPath: "/lab/4",
-    },
-    {
-      id: 4,
-      title: "Laboratorium TL",
-      iconPath: "/icons/lab_tl.svg",
-      labPath: "/lab/5",
-    },
-  ];
 
-  // ✅ Pastikan SEMUA item memiliki image
+
   const ongoingItems = [
     {
       id: 1,
@@ -335,13 +303,13 @@ export default function Hero({ session }: { session: Session }) {
           <div className="max-w-7xl mx-auto">
             {/* Top Cards Section */}
             <div className="flex gap-4 mb-8 h-64">
-              {topCards.map((card) => (
+              {laboratories.map((card) => (
                 <TopCard
                   key={card.id}
                   id={card.id}
                   title={card.title}
                   iconPath={card.iconPath}
-                  labPath={card.labPath}
+                  labPath={`/lab/${card.id}`}
                   isActive={activeCard === card.id}
                   onHover={handleCardHover}
                 />
