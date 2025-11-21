@@ -46,7 +46,6 @@ const getReservesAdmin = async () => {
                         inventory_subjects: true
                     }
                 },
-                laboratory: true,
                 reserve_user_created: true
             }
         })

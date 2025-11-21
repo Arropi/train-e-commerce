@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import Image from "next/image";
 
 interface FilterBarProps {
-  onFilterChange?: (filters: any) => void;
+  onFilterChange?: (filters: { location: string; lab: string; date: string; search: string }) => void;
 }
 
 export default function FilterBar({ onFilterChange }: FilterBarProps) {

@@ -1,4 +1,5 @@
 "use client"
+import { Link } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 export default function ErrorPage() {
@@ -15,9 +16,9 @@ export default function ErrorPage() {
       <div className="p-8 bg-zinc-900 rounded-md shadow-md">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
         <p>{message}</p>
-        <a href="/" className="mt-4 inline-block text-blue-400 hover:underline">
+        <Link href="/" className="mt-4 inline-block text-blue-400 hover:underline">
           Go back to sign in
-        </a>
+        </Link>
       </div>
     </div>
   );

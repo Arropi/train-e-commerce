@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
+import { useAdminSidebar } from "../../contexts/AdminSidebarContext";
 
 interface AddItemFormProps {
   session: Session;
@@ -13,7 +14,7 @@ interface AddItemFormProps {
 
 export default function AddItemForm({ session }: AddItemFormProps) {
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { isSidebarOpen } = useAdminSidebar();
   const [formData, setFormData] = useState({
     name: "",
     inventoryNumber: "",
@@ -27,10 +28,22 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   });
 
   const [imagePreview, setImagePreview] = useState<string>("");
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  useEffect(()=> {
+    const fetchData = async() => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session?.user.accessToken}`,
+        },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const result = await res.json();
+        console.log("Inventories Data: ", result)
+      }
+    }
+    fetchData();
+  }, [])
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,19 +80,17 @@ export default function AddItemForm({ session }: AddItemFormProps) {
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <SidebarAdmin
-        isOpen={isSidebarOpen}
-        toggleSidebar={toggleSidebar}
         user={{
           name: session?.user?.name || "Admin",
           role: "Admin",
-          avatar: session?.user?.image,
+          avatar: session?.user?.image?? undefined,
         }}
       />
 
       {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "ml-48" : "ml-12"
+          isSidebarOpen ? "ml-96" : "ml-36"
         }`}
       >
         <div className="min-h-screen p-2 pt-20 bg-gray-50">

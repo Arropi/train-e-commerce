@@ -37,7 +37,7 @@ export default async function ItemPage({ params }: { params: { slug: string } })
       cache: "no-store",
     }).then((res) => res.json()),
   ]);
-  const result = {} as any
+  const result = {} as { [key: string]: { item_name: string; details: { id: number; no_item: string; special_session: boolean | null }[]; status: string } };
   inventories.inventories.forEach((items: Inventory)=>{
     // console.log("Items Iterasi: ", items)
     if(!result[items.item_name.toLowerCase()]){
