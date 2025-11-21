@@ -1,28 +1,6 @@
 const { book_status } = require('@prisma/client')
 const { z, ZodError} = require('zod')
 
-const reserveGetFilterValidation = async (req, res, next) => {
-    try {
-        const tanggal = z.coerce.date({
-            error: (iss) =>
-                iss.input === undefined
-            ? "Field Tanggal Cannot Be Empty"
-            : "Invalid Query Tanggal"
-        }).parse(req.query.tanggal) 
-        next()
-    } catch (error) {
-        if (error instanceof ZodError) {
-            res.status(400).json({
-                message: error.issues[0].message,
-            });
-        } else {
-            res.status(500).json({
-                message: error.message,
-            });
-        }
-    }
-}
-
 const reservesCreateValidation = async (req, res, next) => {
     try {
         const pic = z.string({
@@ -144,7 +122,6 @@ const reservesUpdateValidation = async (req, res, next) => {
 }
 
 module.exports = {
-    reserveGetFilterValidation,
     reservesCreateValidation,
     reservesUpdateValidation
 }

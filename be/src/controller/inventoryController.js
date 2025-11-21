@@ -1,4 +1,4 @@
-const { getInventoriesService, createInventoryService, addInventoriesSubjectService, addInventoriesImageService, updateInventoryService, updateInventoriesSubjectService, updateInventoriesImageService, deleteInventoryService, getInventoriesLaboratoryService } = require("../service/inventoryService")
+const { getInventoriesService, createInventoryService, addInventoriesSubjectService, addInventoriesImageService, updateInventoryService, updateInventoriesSubjectService, updateInventoriesImageService, deleteInventoryService, getInventoriesLaboratoryService, getInventoriesLaboratoryAvailableService } = require("../service/inventoryService")
 
 const getInventories = async (req, res) => {
     try {
@@ -18,7 +18,13 @@ const getInventories = async (req, res) => {
 const getInventoryLaboratory = async (req, res) => {
     try {
         const lab_id = req.params.laboratory_id
-        const inventories = await getInventoriesLaboratoryService(lab_id)
+        let inventories
+        const tanggal = req.query.tanggal
+        if(tanggal){
+            inventories = await getInventoriesLaboratoryAvailableService(lab_id, tanggal)
+        } else {
+            inventories = await getInventoriesLaboratoryService(lab_id)
+        }
         return res.status(200).json({
             'message': 'Getting data inventory in lab successfully',
             inventories

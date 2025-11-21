@@ -1,38 +1,47 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Inventory } from "@/types";
+import { Inventory, InventoryCart, Reserve, Rooms, TimeSession } from "@/types";
 import { useSidebar } from "@/contexts/SidebarContext";
 
 interface ItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: Inventory | null;
-  allInventories?: Inventory[]; // ✅ NEW: untuk ambil semua unit yang sama
+  tanggal: Date
+  allInventories?: Inventory[];
+  reservesItem: Reserve[] | null
+  rooms: Rooms[] 
+  timeSessions: TimeSession[]
 }
+
 
 export default function ItemModal({
   isOpen,
   onClose,
   item,
-  allInventories = [], // ✅ NEW
+  tanggal,
+  allInventories = [], 
+  reservesItem,
+  rooms,
+  timeSessions
 }: ItemModalProps) {
   const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(
     null
   ); // ✅ NEW
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [selectedTime, setSelectedTime] = useState<number | undefined>();
   const { addItem } = useSidebar();
-
+  
   // ✅ Lock body scroll ketika modal terbuka
   useEffect(() => {
     if (isOpen) {
       const scrollY = window.scrollY;
-
+    
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = "100%";
       document.body.style.overflowY = "scroll";
-
+      
       return () => {
         document.body.style.position = "";
         document.body.style.top = "";
@@ -42,24 +51,24 @@ export default function ItemModal({
       };
     }
   }, [isOpen]);
-
+  
   // ✅ NEW: Reset selection saat modal dibuka
   useEffect(() => {
     if (isOpen) {
       setSelectedInventory(null);
-      setSelectedTime("");
+      setSelectedTime(timeSessions.find(ts => ts.special_session === item?.special_session)?.id)
     }
   }, [isOpen, item]);
-
+  
   if (!isOpen || !item) return null;
 
+  const sessionHere = timeSessions.filter(ts => ts.special_session === item.special_session)
   // ✅ NEW: Get all available units dengan nama yang sama
   const availableUnits = allInventories.filter(
     (inv) =>
-      inv.item_name?.toLowerCase() === item.item_name?.toLowerCase() &&
-      inv.condition?.toLowerCase() === "good"
+      inv.item_name?.toLowerCase() === item.item_name?.toLowerCase() 
   );
-
+  
   const handleAddItem = () => {
     if (!selectedInventory || !selectedTime) {
       alert("Please select inventory unit and time");
@@ -68,13 +77,15 @@ export default function ItemModal({
 
     const payload = {
       ...selectedInventory,
-      selectedTime,
+      session_id: selectedTime
     };
 
-    addItem(payload);
+    addItem(selectedInventory.id, selectedTime, tanggal);
     onClose();
   };
-
+  const checkAvailability = (invId: number) => {
+    return reservesItem?.some(reserve => reserve.inventories.id === invId && reserve.session_id === selectedTime);
+  }
   return (
     <div
       className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
@@ -96,7 +107,7 @@ export default function ItemModal({
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-lg">
             <img
-              src={item.img_url ?? "/images/osiloskop.png"}
+              src={item.inventory_galleries[0]?.filepath ?? "/images/osiloskop.png"}
               alt={item.item_name}
               className="max-h-full object-contain"
             />
@@ -110,7 +121,26 @@ export default function ItemModal({
 
           {/* jam milih */}
           <div className="flex justify-center items-center gap-12 mb-4 text-sm">
-            <button
+            {
+              sessionHere.map((ts) => {
+                return (
+                  <button
+                  key={ts.id}
+                  onClick={() => setSelectedTime(ts.id)}
+                  type="button"
+                  className={`px-4 py-2 font-bold transition-all border-b-2 ${
+                    selectedTime === ts.id
+                      ? "border-[#004CB0] text-[#004CB0]"
+                      : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
+                  }`}
+                >
+                  {ts.start}
+                </button>
+                )
+              }
+            )
+            }
+            {/* <button
               onClick={() => setSelectedTime("07.30")}
               type="button"
               className={`px-4 py-2 font-bold transition-all border-b-2 ${
@@ -131,37 +161,39 @@ export default function ItemModal({
               }`}
             >
               13.30
-            </button>
+            </button> */}
           </div>
 
           {/* ✅ NEW: Pilihan Ruang + Nomor Inventaris (ganti room list) */}
           <div className="space-y-2 mb-6">
-            {availableUnits.map((inv) => (
+            {availableUnits.map((inv) => {
+              const roomName = rooms.find(room => room.id === inv.room_id)?.name;
+              return (
               <label
                 key={inv.id}
                 className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100"
               >
                 <div>
                   <div className="text-sm text-black font-bold">
-                    {inv.location || "Ruang HU 201"}
+                    {roomName || "Ruang HU 201"}
                   </div>
                   <div className="text-xs text-black font-medium">
                     {inv.no_item}
                   </div>
                 </div>
                 <input
+                  disabled={checkAvailability(inv.id)}
                   type="radio"
                   name="inventory"
                   value={inv.id}
                   checked={selectedInventory?.id === inv.id}
-                  onChange={() => setSelectedInventory(inv)}
+                  onChange={() => setSelectedInventory(inv as Inventory)}
                   className="w-4 h-4 text-[#004CB0]"
                   style={{ accentColor: "#004CB0" }}
                 />
               </label>
-            ))}
+            )})}
           </div>
-          
           <div className="flex justify-end">
           <button
             onClick={handleAddItem}

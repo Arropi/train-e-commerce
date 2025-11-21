@@ -1,10 +1,12 @@
 const { subjects } = require("../config/dbConfig")
-const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory, getInventoriesLaboratory } = require("../repository/inventoryRepository")
-const { getSubjectId, filterSubject } = require("../utils/functions")
+const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory, getInventoriesLaboratory, getInventoriesLaboratoryAvailable } = require("../repository/inventoryRepository")
+const { getReservesInSpesificDate } = require("../repository/reservesRepository")
+const { getSubjectId, filterSubject, bigintToNumber } = require("../utils/functions")
 
 const getInventoriesService = async () => {
     try {
         const inventories = await getAllInventory()
+        const info = bigintToNumber(inventories)
         const information = inventories.map((inventory) => {
             return {
                 id: Number(inventory.id),
@@ -19,7 +21,7 @@ const getInventoriesService = async () => {
                 subject_id: inventory.inventory_subjects.flatMap(subjects => subjects.deleted_at? [] : [Number(subjects.subject_id)])
             }
         })
-        return information
+        return info
     } catch (error) {
         throw error
     }
@@ -43,6 +45,34 @@ const getInventoriesLaboratoryService = async (lab_id) => {
             }
         })
         return information
+    } catch (error) {
+        throw error
+    }
+}
+const getInventoriesLaboratoryAvailableService = async (lab_id, tanggal) => {
+    try {
+        const tanggalFormat = new Date(tanggal)
+        const inventoriesReserve = await getReservesInSpesificDate(tanggalFormat)
+        console.log(inventoriesReserve)
+        const inventoriesLab = await getInventoriesLaboratory(lab_id)
+        const information = inventoriesLab.map((inventori)=>{
+            const inventoryInReserve = inventoriesReserve.filter((reserve) => reserve.inventories.id === inventori.id)
+            let status
+            if(inventori.special_session){
+                if(inventoryInReserve.length < 8) status = "Available"
+                else status = "Not Available"
+            }
+            else{
+                if (inventoryInReserve.length === 2) status = "Not Available"
+                else status = "Available"
+            }
+            return {
+                ...inventori,
+                status: status
+            }
+        })
+        const info = bigintToNumber(information)
+        return info
     } catch (error) {
         throw error
     }
@@ -157,6 +187,7 @@ const deleteInventoryService = async (id, user_id) => {
 module.exports = {
     getInventoriesService,
     getInventoriesLaboratoryService,
+    getInventoriesLaboratoryAvailableService,
     createInventoryService,
     addInventoriesImageService,
     addInventoriesSubjectService, 

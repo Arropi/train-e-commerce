@@ -117,13 +117,15 @@ model contents {
 model carts {
   id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
   user_id           BigInt    @db.UnsignedBigInt
+  session_id        BigInt?    @db.UnsignedBigInt
+  tanggal              DateTime?   @db.Date
   inventories_id     BigInt    @db.UnsignedBigInt
   created_at        DateTime? @db.Timestamp(0)
   updated_at        DateTime? @db.Timestamp(0)
 
   inventories       inventories @relation(fields: [inventories_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_inventories_foreign")
   users_cart_toUser users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_user_foreign")
-
+  session           time_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_id_session_foreign")
   @@index([user_id], map: "carts_id_user_index")
 }
 
@@ -568,6 +570,7 @@ model time_sessions {
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
 
+  carts      carts[]
   reserves reserves[]
 }
 

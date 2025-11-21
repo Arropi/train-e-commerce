@@ -15,7 +15,7 @@ export default function TopCard({
   iconPath,
   isActive,
   onHover,
-  labPath = "/dashboard", // Default path jika tidak ada
+  labPath = "/dashboard", 
 }: TopCardProps) {
   // Split title menjadi "Laboratorium" dan nama lab
   const formatTitle = (text: string) => {
@@ -71,7 +71,7 @@ export default function TopCard({
           whitespace-nowrap
           ${isActive ? "text-[#004CB0] rotate-0" : "text-gray-700 rotate-90"}`}
         >
-          {formatTitle(title)}
+          Laboratorium <br />{title}
         </h3>
       </div>
     </Link>

@@ -2,7 +2,6 @@ const { createReservesService, getReservesUserService, updateReserveService, get
 
 const getReservesUser = async (req, res) => {
     try {
-        console.log('Aku User')
         const user = req.user
         const reserves = await getReservesUserService(user.id)
         res.status(200).json({
@@ -65,8 +64,12 @@ const getReservesLaboratoryInUse = async (req, res) => {
     try {
         const laboratory_id = req.params.laboratory_id
         const tanggal = req.query.tanggal
-        console.log(laboratory_id, tanggal)
-        const reserves = await getReservesLaboratoryInUseService(tanggal, laboratory_id)
+        let reserves
+        if(tanggal){
+            reserves = await getReservesLaboratoryInUseService(tanggal, laboratory_id)
+        } else {
+            reserves = await getReservesLaboratoryInUseService(laboratory_id)
+        }
         return res.status(200).json({
             'message': 'Getting reserve data successfully',
             'data': reserves

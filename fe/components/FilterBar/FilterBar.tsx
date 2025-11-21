@@ -92,8 +92,8 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Locations</SelectItem>
-            <SelectItem value="hy">Herman Yohanes</SelectItem>
-            <SelectItem value="grafika">Grafika</SelectItem>
+            <SelectItem value="h">Herman Yohanes</SelectItem>
+            <SelectItem value="g">Grafika</SelectItem>
           </SelectContent>
         </Select>
 

@@ -19,12 +19,13 @@ const createInventoryToCart= async (req, res) => {
     try {
         const user = req.user
         const data = req.body
-        const cart = await createInventoryToCartService(data.inventory_id, user.id)
+        const cart = await createInventoryToCartService(data.inventories, user.id)
         res.status(201).json({
             'message': 'Insert inventories to cart successfully',
             'data': cart
         })
     } catch (error) {
+        console.log('error:', error.message)
         if (error.cause == 'Bad Request') {
             res.status(400).json({
                 'message': error.message

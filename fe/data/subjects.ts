@@ -8,5 +8,5 @@ export const getDataSubjects = async(accessToken: string) => {
     }
   });
   const subjects = await res.json()
-  return subjects;
+  return subjects.data;
 }

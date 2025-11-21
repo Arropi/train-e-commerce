@@ -1,34 +1,68 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import ItemModal from "../../components/Modal/ItemModal";
 import FloatingButton from "../../components/FloatingButton/FloatingButton";
 import FilterBar from "../../components/FilterBar/FilterBar";
 import { useSidebar } from "../../contexts/SidebarContext";
-import { Inventory } from "@/types";
+import { Inventory, Laboratory, Reserve, Rooms, Subject, TimeSession } from "@/types";
+import { useSession } from "next-auth/react";
 
 interface LabPageProps {
   slug: string;
   inventories: Inventory[];
+  laboratories: Laboratory[];
+  subjects: Subject[];
+  rooms: Rooms[];
+  timeSessions: TimeSession[];
+  reserves: Reserve[]
 }
 
-export default function LabPage({ slug, inventories }: LabPageProps) {
+export default function LabPage({ slug, inventories, laboratories, subjects, rooms, timeSessions, reserves }: LabPageProps) {
+  const {data: session, status} = useSession()
   const [selectedItem, setSelectedItem] = useState<Inventory | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reservesItem, setReservesItem] = useState<Reserve[] | null>(reserves);
   const [filteredInventories, setFilteredInventories] = useState<Inventory[]>(inventories);
+  const [date, setDate] = useState<Date>(new Date());
   const { openSidebar, isSidebarOpen } = useSidebar();
-
   const handleOpenSidebar = () => {
     openSidebar(null);
   };
+  console.log("Tanggal terpili: ", date)
+  useEffect(() => {
+    const res = fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories/${slug}?tanggal=${date}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${session?.user.accessToken}`,
+      },
+      cache: "no-store",
+    });
+    res.then(async(response) => {
+      if (response.ok) {
+        const result = await response.json();
+        setFilteredInventories(result.inventories);
+      }
+    });
 
-  const dataLab = [
-    { id: 1, name: "Elektronika" },
-    { id: 2, name: "IDK" },
-    { id: 3, name: "TAJ" },
-    { id: 4, name: "RPL" },
-    { id: 5, name: "TL" },
-  ];
+    const fetchReserves = async() => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/reserves/${slug}?tanggal=${date}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session?.user.accessToken}`,
+        },
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const result = await res.json();
+        console.log(result)
+        setReservesItem(result.data);
+      }
+    };
+    fetchReserves();
+  }, [date])
+  console.log(filteredInventories)
+  console.log(reservesItem)
 
   const handleItemClick = (item: Inventory) => {
     setSelectedItem(item);
@@ -41,46 +75,44 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
   };
 
   // Handle filter changes
-  // const handleFilterChange = (filters: any) => {
-  //   let filtered = inventories;
+  const handleFilterChange = (filters: any) => {
+    let filtered = inventories;
 
-  //   // Filter by location
-  //   if (filters.location) {
-  //     filtered = filtered.filter(
-  //       (item) =>
-  //         item.location?.toLowerCase() === filters.location.toLowerCase()
-  //     );
-  //   }
+    // Filter by location
+    if (filters.location) {
+      filtered = filtered.filter(
+        (item) =>{
+          const room_name = rooms.find((room) => room.id === item.room_id);
+          return room_name?.name.toLowerCase().charAt(0) === filters.location.toLowerCase().charAt(0)
+        }
+      );
+    }
 
-  //   // Filter by lab
-  //   if (filters.lab && filters.lab !== "semua") {
-  //     filtered = filtered.filter(
-  //       (item) => item.lab?.toLowerCase() === filters.lab.toLowerCase()
-  //     );
-  //   }
+    // Filter by lab
+    
 
-  //   // Filter by date (jika ada field date di inventory)
-  //   if (filters.date) {
-  //     filtered = filtered.filter((item) => item.date === filters.date);
-  //   }
+    // Filter by date (jika ada field date di inventory)
+    if (filters.date) {
+      setDate(filters.date);
+    }
 
-  //   // Filter by search term
-  //   if (filters.search) {
-  //     filtered = filtered.filter(
-  //       (item) =>
-  //         item.item_name
-  //           ?.toLowerCase()
-  //           .includes(filters.search.toLowerCase()) ||
-  //         item.no_item?.toLowerCase().includes(filters.search.toLowerCase())
-  //     );
-  //   }
+    // Filter by search term
+    if (filters.search) {
+      filtered = filtered.filter(
+        (item) =>
+          item.item_name
+            ?.toLowerCase()
+            .includes(filters.search.toLowerCase()) ||
+          item.no_item?.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
 
-  //   setFilteredInventories(filtered);
-  // };
+    setFilteredInventories(filtered);
+  };
 
   // Function untuk determine availability
   const getAvailabilityStatus = (item: Inventory) => {
-    const isAvailable = item.condition?.toLowerCase() === "good";
+    const isAvailable = item.status === "Available";
 
     return {
       text: isAvailable ? "Available" : "Not Available",
@@ -91,17 +123,29 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
 
   // nampilin satu barang nya
   const getUniqueItems = (items: Inventory[]) => {
-    const uniqueMap = new Map<string, Inventory>();
+    const result: Inventory[] = []
+    let uniqueMap = new Map<string, Inventory>();
 
     items.forEach((item) => {
       const itemName = item.item_name?.toLowerCase() || "";
-
+      if(!result.includes(item)) {
+        result.push(item)
+      }
       // Hanya simpan item pertama dengan nama yang sama
       if (!uniqueMap.has(itemName)) {
         uniqueMap.set(itemName, item);
+      } else {
+        if (item.status === "Available") {
+          const data = uniqueMap.get(itemName)
+          if(data?.status !== "Available"){
+            uniqueMap.set(itemName, item);
+          }
+        }
+        
+        const existingItem = uniqueMap.get(itemName)
       }
     });
-
+    console.log("Unique Map: ", uniqueMap)
     return Array.from(uniqueMap.values());
   };
 
@@ -113,8 +157,9 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
   };
 
   const uniqueItems = getUniqueItems(filteredInventories);
+  console.log(uniqueItems)
 
-  const currentLab = dataLab.find((lab) => lab.id === Number(slug));
+  const currentLab = laboratories.find((lab) => lab.id === Number(slug));
 
   return (
     <>
@@ -125,11 +170,11 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
       >
         <div className="p-6 min-h-screen bg-gray-50">
           <h1 className="text-2xl font-bold text-[#004CB0] mb-6">
-            Lab {dataLab.find((item) => item.id === Number(slug))?.name}
+            Lab {currentLab?.title}
           </h1>
 
           {/* FilterBar Component */}
-          {/* <FilterBar onFilterChange={handleFilterChange} /> */}
+          <FilterBar onFilterChange={handleFilterChange} />
 
           {/* Grid Kartu */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-8">
@@ -148,7 +193,7 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
                       <div className="w-full h-24 flex items-center justify-center">
                         <Image
                           src={
-                            item.img_url ? item.img_url : "/icons/osiloskop.png"
+                            item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
                           }
                           alt={item.item_name}
                           width={90}
@@ -162,7 +207,7 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
                       {item.item_name}
                     </h3>
                     <p className="text-xs text-gray-500 mb-3">
-                        {currentLab?.name || "No Lab"}
+                        {currentLab?.title || "No Lab"}
                     </p>
 
                     {/* ✅ Tampilkan Available/Not Available */}
@@ -191,10 +236,14 @@ export default function LabPage({ slug, inventories }: LabPageProps) {
       </div>
 
       <ItemModal
+        tanggal={date}
         isOpen={isModalOpen}
         onClose={closeModal}
         item={selectedItem}
         allInventories={filteredInventories}
+        rooms={rooms}
+        reservesItem={reservesItem}
+        timeSessions={timeSessions}
       />
 
       <FloatingButton
