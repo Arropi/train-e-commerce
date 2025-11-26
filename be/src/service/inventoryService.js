@@ -1,4 +1,3 @@
-const { subjects } = require("../config/dbConfig")
 const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory, getInventoriesLaboratory, getInventoriesLaboratoryAvailable } = require("../repository/inventoryRepository")
 const { getReservesInSpesificDate } = require("../repository/reservesRepository")
 const { getSubjectId, filterSubject, bigintToNumber } = require("../utils/functions")
@@ -53,7 +52,6 @@ const getInventoriesLaboratoryAvailableService = async (lab_id, tanggal) => {
     try {
         const tanggalFormat = new Date(tanggal)
         const inventoriesReserve = await getReservesInSpesificDate(tanggalFormat)
-        console.log(inventoriesReserve)
         const inventoriesLab = await getInventoriesLaboratory(lab_id)
         const information = inventoriesLab.map((inventori)=>{
             const inventoryInReserve = inventoriesReserve.filter((reserve) => reserve.inventories.id === inventori.id)

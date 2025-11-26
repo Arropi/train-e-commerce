@@ -1,13 +1,41 @@
-const { getSpecificInventories, getImageInventory, getSubjectInventory } = require("../repository/inventoryRepository")
-const { getReservesUser, createReserves, updateReserve, deleteReserve, getReservesUserOnProcess, getReservesAdmin, getReservesInSpesificDate, getReservesLaboratoryInSpesificDate } = require("../repository/reservesRepository")
+const { getReservesUser, getReserveOnGoingUser, getReserveOnGoingAdmin, createReserves, updateReserve,  getReservesUserOnProcess, getReservesAdmin, getReservesInSpesificDate, getReservesLaboratoryInSpesificDate, getReserveHistoryAdmin, getReserveHistoryUser } = require("../repository/reservesRepository")
 const { getInventoryId, bigintToNumber } = require("../utils/functions")
 
 const getReservesUserService = async (user_id) => {
     try {
         const reserves = await getReservesUser(user_id)
-        console.log(reserves)
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesUserOngoingService = async (user_id) => {
+    try {
+        const reserves = await getReserveOnGoingUser(user_id)
+        const clearReserves = bigintToNumber(reserves)
+        return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesAdminOngoingService = async () => {
+    try {
+        const reserves = await getReserveOnGoingAdmin()
+        const clearReserves = bigintToNumber(reserves)
+        return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesUserHistoryService = async (user_id) => {
+    try {
+        const reserves = await getReserveHistoryUser(user_id)
+        const reserveClear = bigintToNumber(reserves)
+        return reserveClear
     } catch (error) {
         throw error
     }
@@ -18,6 +46,16 @@ const getReservesAdminService = async () => {
         const reserves = await getReservesAdmin()
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesAdminHistoryService = async () => {
+    try {
+        const reserves = await getReserveHistoryAdmin()
+        const reserveClear = bigintToNumber(reserves)
+        return reserveClear
     } catch (error) {
         throw error
     }
@@ -101,7 +139,11 @@ const updateReserveService = async (dataInput, user_id, reserve_id) => {
 
 module.exports = {
     getReservesUserService,
+    getReservesUserOngoingService,
+    getReservesUserHistoryService,
     getReservesAdminService,
+    getReservesAdminOngoingService,
+    getReservesAdminHistoryService,
     getReservesInUseService,
     getReservesLaboratoryInUseService,
     createReservesService,

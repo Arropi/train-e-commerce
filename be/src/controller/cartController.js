@@ -1,4 +1,4 @@
-const { getCartService, createInventoryToCartService, deleteInventoryInCartService } = require("../service/cartService")
+const { getCartService, createInventoryToCartService, deleteInventoryInCartService, checkoutCartService } = require("../service/cartService")
 
 const getCart = async (req, res) => {
     try {
@@ -64,4 +64,26 @@ module.exports = {
     getCart,
     createInventoryToCart,
     deleteInventoryCart
+}
+
+const checkoutCart = async (req, res) => {
+    try {
+        const user = req.user
+        const result = await checkoutCartService(user.id)
+        // result from deleteMany is { count: number }
+        return res.status(200).json({
+            message: 'Checkout successful',
+            deleted: result.count
+        })
+    } catch (error) {
+        console.log('Error during checkout: ', error.message)
+        return res.status(500).json({ message: 'Internal Server Error' })
+    }
+}
+
+module.exports = {
+    getCart,
+    createInventoryToCart,
+    deleteInventoryCart,
+    checkoutCart
 }

@@ -1,6 +1,5 @@
-const { getCartById, createCartInventory, deleteCartInventory, getSingleInventory } = require("../repository/cartRepository")
-const { getSpecificInventories, getImageInventory, getSubjectInventory } = require("../repository/inventoryRepository")
-const { getInventoryId, bigintToNumber } = require("../utils/functions")
+const { getCartById, createCartInventory, deleteCartInventory, getSingleInventory, deleteCartByUserId } = require("../repository/cartRepository")
+const { bigintToNumber } = require("../utils/functions")
 
 const getCartService = async (user_id) => {
     try {
@@ -47,8 +46,19 @@ const deleteInventoryInCartService = async (inventory_id, user_id) => {
     }
 }
 
+
+const checkoutCartService = async (user_id) => {
+    try {
+        const result = await deleteCartByUserId(user_id)
+        return result
+    } catch (error) {
+        throw error
+    }
+}
+
 module.exports = { 
     getCartService,
     createInventoryToCartService,
-    deleteInventoryInCartService
+    deleteInventoryInCartService,
+    checkoutCartService
 }

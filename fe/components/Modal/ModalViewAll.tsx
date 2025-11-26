@@ -1,41 +1,25 @@
 "use client";
 
+import { updateReserves } from "@/action/action";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { Reserve, Subject } from "@/types";
 import { X, Check } from "lucide-react";
 import { useEffect } from "react";
 
 interface ModalViewAllProps {
   isOpen: boolean;
   onClose: () => void;
-  item: {
-    id: number;
-    title: string;
-    status: string;
-    type:
-      | "process"
-      | "approve"
-      | "waiting_to_be_return"
-      | "rejected"
-      | "done"
-      | "canceled";
-    serialNumber?: string;
-    image?: string;
-    date?: string;
-    lab?: string;
-    purpose?: string;
-    session?: string;
-    borrower?: string;
-    room?: string;
-    personInCharge?: string;
-    condition?: string;
-    subject?: string;
-  };
+  item: Reserve
+  subjects: Subject[]
 }
 
 export default function ModalViewAll({
   isOpen,
   onClose,
   item,
+  subjects
 }: ModalViewAllProps) {
+  const { rooms, timeSessions } = useSidebar()
   // Lock body scroll ketika modal terbuka
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +40,25 @@ export default function ModalViewAll({
     }
   }, [isOpen]);
 
+  const switchStatus = (status: string) => {
+    switch (status) {
+      case "approve":
+        return "Approve";
+      case "done":
+        return "Done";
+      case "rejected":
+        return "Rejected";
+      case "process":
+        return "Process";
+      case "waiting_to_be_return":
+        return "Waiting to be Return";
+      case "canceled":
+        return "Canceled";
+      default:
+        return status;
+    }
+  };
+
   if (!isOpen) return null;
 
   // Status colors - ✅ Update key sesuai dengan type
@@ -70,19 +73,25 @@ export default function ModalViewAll({
 
   // Fungsi untuk render button berdasarkan type
   const renderActionButtons = () => {
-    switch (item.type) {
+    switch (item.status) {
       case "process": // in Form Review
         return (
           <div className="flex items-center justify-between">
             <span
               className={`text-sm font-semibold px-6 py-2 rounded-full ${
-                statusColors[item.type] || statusColors.process
+                statusColors[item.status] || statusColors.process
               }`}
             >
-              {item.status}
+              {switchStatus(item.status)}
             </span>
             <button
-              onClick={onClose}
+              onClick={
+                () => {
+                  // Handle cancel action
+                  console.log("Cancel item:", item.id);
+                  updateReserves(item.id, "canceled");
+              }
+            }
               className="px-6 py-1 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-semibold"
             >
               Cancel
@@ -95,16 +104,16 @@ export default function ModalViewAll({
           <div className="flex items-center justify-between">
             <span
               className={`text-sm font-semibold px-6 py-2 rounded-full ${
-                statusColors[item.type] || statusColors.approve
+                statusColors[item.status] || statusColors.approve
               }`}
             >
-              {item.status}
+              {switchStatus(item.status)}
             </span>
             <button
               onClick={() => {
                 // Handle bring back item
                 console.log("Bring back item:", item.id);
-                onClose();
+                updateReserves(item.id, "waiting_to_be_return");
               }}
               className="px-6 py-1 border-2 border-[#004CB0] text-[#004CB0] rounded-lg hover:bg-[#004CB0] hover:text-white transition-colors font-semibold"
             >
@@ -118,10 +127,10 @@ export default function ModalViewAll({
           <div className="flex justify-start items-center gap-4">
             <span
               className={`text-sm font-semibold px-6 py-2 rounded-full ${
-                statusColors[item.type] || statusColors.waiting_to_be_return
+                statusColors[item.status] || statusColors.waiting_to_be_return
               }`}
             >
-              {item.status}
+              {switchStatus(item.status)}
             </span>
           </div>
         );
@@ -131,10 +140,10 @@ export default function ModalViewAll({
           <div className="flex justify-start items-center gap-4">
             <span
               className={`text-sm font-semibold px-6 py-2 rounded-full ${
-                statusColors[item.type] || statusColors.rejected
+                statusColors[item.status] || statusColors.rejected
               }`}
             >
-              {item.status}
+              {switchStatus(item.status)}
             </span>
           </div>
         );
@@ -144,10 +153,10 @@ export default function ModalViewAll({
           <div className="flex justify-start items-center gap-4">
             <span
               className={`text-sm font-semibold px-6 py-2 rounded-full ${
-                statusColors[item.type] || statusColors.done
+                statusColors[item.status] || statusColors.done
               }`}
             >
-              {item.status}
+              {switchStatus(item.status)}
             </span>
           </div>
         );
@@ -177,10 +186,10 @@ export default function ModalViewAll({
         {/* Header dengan Image */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 flex items-center justify-center mb-6">
-            {item.image ? (
+            {item.inventories.inventory_galleries[0].filepath ? (
               <img
-                src={item.image}
-                alt={item.title}
+                src={item.inventories.inventory_galleries[0].filepath}
+                alt={item.inventories.item_name}
                 className="max-w-full max-h-full object-contain"
               />
             ) : (
@@ -190,10 +199,10 @@ export default function ModalViewAll({
             )}
           </div>
 
-          <h2 className="text-xl font-bold text-center mb-2">{item.title}</h2>
+          <h2 className="text-xl font-bold text-center mb-2">{item.inventories.item_name}</h2>
 
-          {item.serialNumber && (
-            <p className="text-base text-gray-600">{item.serialNumber}</p>
+          {item.inventories.no_item && (
+            <p className="text-base text-gray-600">{item.inventories.no_item}</p>
           )}
         </div>
 
@@ -203,11 +212,11 @@ export default function ModalViewAll({
           <div className="grid grid-cols-2 gap-8">
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">Date</p>
-              <p className="text-base text-gray-700">{item.date || "-"}</p>
+              <p className="text-base text-gray-700">{item.tanggal.split("T")[0] || "-"}</p>
             </div>
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">Lab</p>
-              <p className="text-base text-gray-700">{item.lab || "-"}</p>
+              <p className="text-base text-gray-700">{item.inventories.labolatories.name || "-"}</p>
             </div>
           </div>
 
@@ -217,13 +226,13 @@ export default function ModalViewAll({
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Purpose
               </p>
-              <p className="text-base text-gray-700">{item.purpose || "-"}</p>
+              <p className="text-base text-gray-700">{item.inventories.type || "-"}</p>
             </div>
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Session
               </p>
-              <p className="text-base text-gray-700">{item.session || "-"}</p>
+              <p className="text-base text-gray-700">{timeSessions.find(session => session.id === item.session_id)?.start || "-"}</p>
             </div>
           </div>
 
@@ -233,11 +242,11 @@ export default function ModalViewAll({
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Peminjam
               </p>
-              <p className="text-base text-gray-700">{item.borrower || "-"}</p>
+              <p className="text-base text-gray-700">{item.reserve_user_created.username || "-"}</p>
             </div>
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">Room</p>
-              <p className="text-base text-gray-700">{item.room || "-"}</p>
+              <p className="text-base text-gray-700">{rooms.find(room => room.id === item.inventories.room_id)?.name || "-"}</p>
             </div>
           </div>
 
@@ -248,24 +257,24 @@ export default function ModalViewAll({
                 Person In Charge
               </p>
               <p className="text-base text-gray-700">
-                {item.personInCharge || "-"}
+                {item.pic || "-"}
               </p>
             </div>
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Condition
               </p>
-              <p className="text-base text-gray-700">{item.condition || "-"}</p>
+              <p className="text-base text-gray-700">{item.inventories.condition || "-"}</p>
             </div>
           </div>
 
           {/* Subject (Full Width) */}
-          {item.subject && (
+          {item.subject_id && (
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Subject
               </p>
-              <p className="text-base text-gray-700">{item.subject}</p>
+              <p className="text-base text-gray-700">{subjects.find(subject => subject.id === item.subject_id)?.subject_name || "-"}</p>
             </div>
           )}
         </div>

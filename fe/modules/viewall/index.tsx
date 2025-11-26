@@ -5,6 +5,7 @@ import ItemCard from "@/components/ItemCard/ItemCard";
 import FloatingButton from "@/components/FloatingButton/FloatingButton";
 import { useSidebar } from "@/contexts/SidebarContext";
 import ModalViewAll from "@/components/Modal/ModalViewAll";
+import { Reserve, Subject } from "@/types";
 
 // ✅ Tambahkan field type ke interface
 interface Item {
@@ -33,12 +34,13 @@ interface Item {
 
 interface ViewAllPageProps {
   slug: string;
-  inventories: Item[];
+  inventories: Reserve[];
+  subjects: Subject[];
 }
 
-export default function ViewAllPage({ slug, inventories }: ViewAllPageProps) {
+export default function ViewAllPage({ slug, inventories, subjects }: ViewAllPageProps) {
   const { openSidebar, isSidebarOpen } = useSidebar();
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Reserve | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const pageConfig = {
@@ -54,7 +56,7 @@ export default function ViewAllPage({ slug, inventories }: ViewAllPageProps) {
 
   const config = pageConfig[slug as keyof typeof pageConfig];
 
-  const handleItemClick = (item: Item) => {
+  const handleItemClick = (item: Reserve) => {
     setSelectedItem(item);
     setIsModalOpen(true);
   };
@@ -107,6 +109,7 @@ export default function ViewAllPage({ slug, inventories }: ViewAllPageProps) {
       {/* Modal ViewAll - Modal baru */}
       {selectedItem && (
         <ModalViewAll
+          subjects={subjects}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           item={selectedItem}

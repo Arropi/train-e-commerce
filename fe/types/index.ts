@@ -32,6 +32,10 @@ export interface Inventory {
   deleted_at: string | null
   inventory_subjects: InventorySubject[]
   inventory_galleries: InventoryGallery[]
+  labolatories: {
+    id: number;
+    name: string;
+  }
   status: string
 }
 
@@ -84,18 +88,19 @@ export interface Inventory {
 }
 export interface Reserve {
   id: number;
-  pic: string;
-  status: "waiting_to_be_return" | "done" | "process" | "canceled" | "approved" | "rejected"; 
-  tanggal: string; // ISO date string
+  pic: string | null;
+  status: "waiting_to_be_return" | "done" | "process" | "canceled" | "approve" | "rejected"; 
+  tanggal: string; 
   session_id: number;
   inventories_id: number;
   user_id: number;
-  subject_id: number;
+  subject_id: number | null;
   updated_by: number | null;
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
   inventories: Inventory;
+  reserve_user_created: Profile
 }
 
 export interface TimeSession { 
@@ -114,6 +119,14 @@ export interface InventoryCart {
   created_at: string | null;
   updated_at: string | null;
   inventories: Inventory;
+}
+
+export interface ReserveFormInput {
+  inventories_id: number;
+  pic: string | null;
+  subject_id: number | null;
+  tanggal: Date;
+  session_id: number;
 }
 
 export interface InventoryReserves {

@@ -80,4 +80,16 @@ const deleteCartInventory = async (cart_id) => {
     }
 }
 
-module.exports = { getCartById, getSingleInventory, createCartInventory, deleteCartInventory, getSpecificCart }
+const deleteCartByUserId = async (user_id) => {
+    try {
+        const result = await prisma.carts.deleteMany({
+            where: { user_id }
+        })
+        return result
+    } catch (error) {
+        console.log('Cart Repository Error: ', error)
+        throw Error('Internal Server Database Error :(')
+    }
+}
+
+module.exports = { getCartById, getSingleInventory, createCartInventory, deleteCartInventory, getSpecificCart, deleteCartByUserId }
