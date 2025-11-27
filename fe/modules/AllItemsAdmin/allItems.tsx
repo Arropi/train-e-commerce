@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronDown, Plus, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import { Session } from "next-auth";
@@ -8,20 +8,38 @@ import { useRouter, useSearchParams } from "next/navigation";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 
+const dataLab = [
+  { id: 1, name: "Elektronika" },
+  { id: 2, name: "IDK" },
+  { id: 3, name: "TAJ" },
+  { id: 4, name: "RPL" },
+  { id: 5, name: "TL" },
+];
+
+interface RawInventory {
+  id: number;
+  item_name: string;
+  no_item: string;
+  condition: string;
+  alat_bhp: string;
+  labolatory_id: number;
+  inventory_galleries: { filepath: string }[];
+}
+
 interface Item {
   id: number;
   name: string;
   lab: string;
+  labId: number;
   image: string;
   serialNumber: string;
   category: string;
-  condition: "good" | "bad" | "fair" | "excellent";
-  status: "available" | "on_loan" | "maintenance";
+  condition: string;
 }
 
 interface AllItemsAdminProps {
   session: Session;
-  items: Item[];
+  inventories: RawInventory[];
 }
 
 // Success Notification Component (inline)
@@ -50,13 +68,25 @@ function SuccessNotification({
   );
 }
 
-export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
+export default function AllItemsAdmin({ session, inventories }: AllItemsAdminProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isSidebarOpen } = useAdminSidebar();
   const [selectedLab, setSelectedLab] = useState("semua");
   const [sortBy, setSortBy] = useState("name");
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [fetchedItems, setFetchedItems] = useState<Item[]>([]);
+
+  const mappedInventories = useMemo(() => (Array.isArray(inventories) ? inventories : []).map((inv: RawInventory) => ({
+    id: inv.id,
+    name: inv.item_name,
+    lab: dataLab.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+    labId: inv.labolatory_id,
+    image: inv.inventory_galleries?.[0]?.filepath || "",
+    serialNumber: inv.no_item,
+    category: inv.alat_bhp || "alat",
+    condition: inv.condition || "good",
+  })), [inventories]);
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -65,6 +95,62 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
       router.replace("/admin/allItems");
     }
   }, [searchParams, router]);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories`, {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const mappedItems: Item[] = data.inventories.map((inv: RawInventory) => ({
+            id: inv.id,
+            name: inv.item_name,
+            lab: dataLab.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+            labId: inv.labolatory_id,
+            image: inv.inventory_galleries?.[0]?.filepath || "",
+            serialNumber: inv.no_item,
+            category: inv.alat_bhp || "alat",
+            condition: inv.condition || "good",
+          }));
+          setFetchedItems(mappedItems);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+    fetchItems();
+  }, [session]);
+
+  const displayItems = fetchedItems.length > 0 ? fetchedItems : mappedInventories;
+
+  const filteredItems = useMemo(() => {
+    if (selectedLab === "semua") return displayItems;
+    return displayItems.filter(item => item.labId === parseInt(selectedLab));
+  }, [displayItems, selectedLab]);
+
+  const sortedItems = useMemo(() => {
+    const sorted = [...filteredItems];
+    switch (sortBy) {
+      case "name":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "lab":
+        sorted.sort((a, b) => a.labId - b.labId);
+        break;
+      case "condition":
+        sorted.sort((a, b) => a.condition.localeCompare(b.condition));
+        break;
+      case "status":
+      default:
+        sorted.sort((a, b) => a.id - b.id);
+        break;
+    }
+    return sorted;
+  }, [filteredItems, sortBy]);
 
   const handleAddClick = () => {
     router.push("/admin/allItems/add");
@@ -115,10 +201,11 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
                     className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
                     <option value="semua">Semua lab</option>
-                    <option value="idk">Lab IDK</option>
-                    <option value="elektronika">Lab Elektronika</option>
-                    <option value="rpl">Lab RPL</option>
-                    <option value="taj">Lab TAJ</option>
+                    <option value="1">Lab Elektronika</option>
+                    <option value="2">Lab IDK</option>
+                    <option value="3">Lab TAJ</option>
+                    <option value="4">Lab RPL</option>
+                    <option value="5">Lab TL</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
                 </div>
@@ -142,22 +229,28 @@ export default function AllItemsAdmin({ session, items }: AllItemsAdminProps) {
 
             {/* Items Grid */}
             <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
-              {items.map((item) => (
+              {sortedItems.map((item) => (
                 <div
-                  key={item.id}
+                  key={`${item.id}-${item.serialNumber}`}
                   onClick={() => handleEditClick(item.id)}
-                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer"
+                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow items-center cursor-pointer h-80 w-50"
                 >
                   {/* Item Image */}
                   <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={150}
-                      height={120}
-                      className="object-contain"
-                      unoptimized
-                    />
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={150}
+                        height={120}
+                        className="object-contain"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                        No Image
+                      </div>
+                    )}
                   </div>
 
                   {/* Item Info and Edit Button */}

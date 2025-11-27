@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Check, X } from "lucide-react";
 import Image from "next/image";
 import ModalAdminDashboard from "@/components/Modal/ModalAdminDashboard";
 import ModalBorrowedItem from "@/components/Modal/ModalBorrowedItem";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 import { Reserve } from "../../types";
+import { useSession } from "next-auth/react";
 
-interface Order {
-  id: number;
-  name: string;
-  item: string;
-  date: string;
-  lab: string;
-}
+const dataLab = [
+  { id: 1, name: 'Elektronika' },
+  { id: 2, name: 'IDK' }
+];
 
 interface OrderDetail {
   id: number;
@@ -45,11 +43,12 @@ interface BorrowedItem {
 
 interface BorrowedItemDetail extends BorrowedItem {
   borrowed_date: string;
-  session: string;
+  sessionId: number;
   room: string;
-  expected_return_date: string;
+  personInCharge: string;
   purpose: string;
   subject: string;
+  inventory_id: number;
 }
 
 interface HeroAdminProps {
@@ -59,7 +58,6 @@ interface HeroAdminProps {
 
 export default function HeroAdmin({
   orders = [],
-  borrowedItems = [],
 }: HeroAdminProps) {
   const { isSidebarOpen } = useAdminSidebar();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,286 +65,184 @@ export default function HeroAdmin({
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
   const [selectedBorrowedItem, setSelectedBorrowedItem] =
     useState<BorrowedItemDetail | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: session } = useSession();
+  const [fetchedOrders, setFetchedOrders] = useState<Reserve[]>([]);
+  const [selectedConditions, setSelectedConditions] = useState<{ [key: number]: "good" | "bad" }>({});
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+  const [pendingAction, setPendingAction] = useState<'approve' | 'reject' | null>(null);
+  const [showConditionConfirm, setShowConditionConfirm] = useState(false);
+  const [pendingConditionItemId, setPendingConditionItemId] = useState<number | null>(null);
+  const [pendingCondition, setPendingCondition] = useState<"good" | "bad" | null>(null);
+
+  const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
+
+  const handleApprove = (orderId: number) => {
+    setPendingOrderId(orderId);
+    setPendingAction('approve');
+    setShowApproveConfirm(true);
+  };
+
+  const handleReject = (orderId: number) => {
+    setPendingOrderId(orderId);
+    setPendingAction('reject');
+    setShowRejectConfirm(true);
+  };
+
+  const executeApprove = async () => {
+    if (!pendingOrderId) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/reserves/${pendingOrderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      if (response.ok) {
+        alert("Request approved!");
+        setRefreshKey(prev => prev + 1);
+      } else {
+        alert("Failed to approve");
+      }
+    } catch (error) {
+      console.error("Error approving:", error);
+      alert("Error approving request");
+    }
+    setShowApproveConfirm(false);
+    setPendingOrderId(null);
+    setPendingAction(null);
+  };
+
+  const executeReject = async () => {
+    if (!pendingOrderId) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/reserves/${pendingOrderId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+      if (response.ok) {
+        alert("Request rejected!");
+        setRefreshKey(prev => prev + 1);
+      } else {
+        alert("Failed to reject");
+      }
+    } catch (error) {
+      console.error("Error rejecting:", error);
+      alert("Error rejecting request");
+    }
+    setShowRejectConfirm(false);
+    setPendingOrderId(null);
+    setPendingAction(null);
+  };
+
+  const executeConditionUpdate = async () => {
+    if (!pendingConditionItemId || !pendingCondition) return;
+    
+    try {
+      // Find the inventory id from the borrowed items
+      const item = borrowedItemsDetail.find(i => i.id === pendingConditionItemId);
+      if (!item) {
+        alert("Item tidak ditemukan");
+        return;
+      }
+      
+      // Update inventory condition
+      const inventoryResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories/${item.inventory_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({ condition: pendingCondition }),
+      });
+      
+      // Update reserve status to done
+      const reserveResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/reserves/${pendingConditionItemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({ status: "done" }),
+      });
+      
+      if (inventoryResponse.ok && reserveResponse.ok) {
+        alert("Kondisi barang berhasil diupdate dan status diubah menjadi done!");
+        setRefreshKey(prev => prev + 1);
+      } else {
+        alert("Gagal update kondisi atau status");
+      }
+    } catch (error) {
+      console.error("Error updating condition:", error);
+      alert("Error updating condition");
+    }
+    setShowConditionConfirm(false);
+    setPendingConditionItemId(null);
+    setPendingCondition(null);
+  };
 
   console.log("Orders in HeroAdmin:", orders);
-  const ordersDetail: OrderDetail[] = [
-    {
-      id: 1,
-      name: "Muhammad Zidan Alhilal",
-      item: "Osiloskop Analog GW Instek GOS 620",
-      date: "1/10/2025",
-      lab: "Lab Elektronika",
-      serialNumber: "728878134781397",
-      purpose: "Project",
-      session: "Session 2 - 12.30",
-      borrower: "Muhammad Zidan Alhilal",
-      room: "HU 201",
-      personInCharge: "Gibran Rakabuming Raka",
-      condition: "Good",
-      subject: "Praktikum Pemrograman Web 2",
-      image:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Muhammad Zidan Alhilal",
-      item: "Multimeter Digital Fluke 87V",
-      date: "2/10/2025",
-      lab: "Lab Elektronika",
-      serialNumber: "MLT-2023-002",
-      purpose: "Praktikum",
-      session: "Session 1 - 07.30",
-      borrower: "Ahmad Dahlan",
-      room: "HU 202",
-      personInCharge: "Soekarno Hatta",
-      condition: "Fair",
-      subject: "Praktikum Elektronika Dasar",
-      image:
-        "https://images.unsplash.com/photo-1617382734744-675b0b0ac5f9?w=400&h=400&fit=crop",
-    },
-    {
-      id: 3,
-      name: "Muhammad Zidan Alhilal",
-      item: "Function Generator 20MHz",
-      date: "3/10/2025",
-      lab: "Lab Telekomunikasi",
-      serialNumber: "FGN-2023-003",
-      purpose: "Penelitian",
-      session: "Session 2 - 12.30",
-      borrower: "Budi Santoso",
-      room: "HU 203",
-      personInCharge: "Tan Malaka",
-      condition: "Good",
-      subject: "Penelitian Sinyal Digital",
-      image:
-        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
-    },
-    {
-      id: 4,
-      name: "Muhammad Zidan Alhilal",
-      item: "Logic Analyzer 16 Channel",
-      date: "4/10/2025",
-      lab: "Lab Komputer",
-      serialNumber: "LGA-2023-004",
-      purpose: "Project",
-      session: "Session 1 - 07.30",
-      borrower: "Citra Dewi",
-      room: "HU 204",
-      personInCharge: "Ki Hajar Dewantara",
-      condition: "Excellent",
-      subject: "Praktikum Sistem Digital",
-      image:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-    },
-    {
-      id: 5,
-      name: "Muhammad Zidan Alhilal",
-      item: "Signal Generator RF",
-      date: "5/10/2025",
-      lab: "Lab IDK",
-      serialNumber: "SGN-2023-005",
-      purpose: "Praktikum",
-      session: "Session 2 - 12.30",
-      borrower: "Dewi Sartika",
-      room: "HU 201",
-      personInCharge: "R.A. Kartini",
-      condition: "Good",
-      subject: "Praktikum RF Communication",
-      image:
-        "https://images.unsplash.com/photo-1617382734744-675b0b0ac5f9?w=400&h=400&fit=crop",
-    },
-    {
-      id: 6,
-      name: "Muhammad Zidan Alhilal",
-      item: "Spectrum Analyzer",
-      date: "6/10/2025",
-      lab: "Lab Telekomunikasi",
-      serialNumber: "SPA-2023-006",
-      purpose: "Penelitian",
-      session: "Session 1 - 07.30",
-      borrower: "Eko Prasetyo",
-      room: "HU 202",
-      personInCharge: "Cut Nyak Dien",
-      condition: "Good",
-      subject: "Penelitian Spektrum Frekuensi",
-      image:
-        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
-    },
-    {
-      id: 7,
-      name: "Muhammad Zidan Alhilal",
-      item: "Power Supply DC 0-30V",
-      date: "7/10/2025",
-      lab: "Lab Elektronika",
-      serialNumber: "PWS-2023-007",
-      purpose: "Project",
-      session: "Session 2 - 12.30",
-      borrower: "Fajar Nugroho",
-      room: "HU 203",
-      personInCharge: "Diponegoro",
-      condition: "Excellent",
-      subject: "Praktikum Power Electronics",
-      image:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-    },
-  ];
 
-  // ✅ Dummy data untuk borrowed items dengan detail lengkap
-  const dummyBorrowedItemsDetail: BorrowedItemDetail[] = [
-    {
-      id: 1,
-      item_name: "Osiloskop Analog GW Instek GOS 620",
-      no_item: "IDK-KACIIW08",
-      img_url:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-      lab: "Lab RPL",
-      borrower: "Muhammad Zidan Alhilal",
-      condition: "bad",
-      borrowed_date: "1/11/2025",
-      session: "Session 1 - 07.30",
-      room: "HU 201",
-      expected_return_date: "8/11/2025",
-      purpose: "Praktikum",
-      subject: "Praktikum Elektronika Digital",
-    },
-    {
-      id: 2,
-      item_name: "Multimeter Digital Fluke 87V",
-      no_item: "IDK-KACIIW09",
-      img_url:
-        "https://images.unsplash.com/photo-1617382734744-675b0b0ac5f9?w=400&h=400&fit=crop",
-      lab: "Lab Elektronika",
-      borrower: "Ahmad Dahlan",
-      condition: "good",
-      borrowed_date: "2/11/2025",
-      session: "Session 2 - 12.30",
-      room: "HU 202",
-      expected_return_date: "9/11/2025",
-      purpose: "Project",
-      subject: "Final Project Instrumentasi",
-    },
-    {
-      id: 3,
-      item_name: "Function Generator 20MHz",
-      no_item: "IDK-KACIIW10",
-      img_url:
-        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
-      lab: "Lab Telekomunikasi",
-      borrower: "Budi Santoso",
-      condition: "good",
-      borrowed_date: "3/11/2025",
-      session: "Session 1 - 07.30",
-      room: "HU 203",
-      expected_return_date: "10/11/2025",
-      purpose: "Penelitian",
-      subject: "Penelitian Sinyal Analog",
-    },
-    {
-      id: 4,
-      item_name: "Logic Analyzer 16 Channel",
-      no_item: "IDK-KACIIW11",
-      img_url:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-      lab: "Lab Komputer",
-      borrower: "Citra Dewi",
-      condition: "good",
-      borrowed_date: "4/11/2025",
-      session: "Session 2 - 12.30",
-      room: "HU 204",
-      expected_return_date: "11/11/2025",
-      purpose: "Praktikum",
-      subject: "Praktikum Sistem Digital",
-    },
-    {
-      id: 5,
-      item_name: "Signal Generator RF 6GHz",
-      no_item: "IDK-KACIIW12",
-      img_url:
-        "https://images.unsplash.com/photo-1617382734744-675b0b0ac5f9?w=400&h=400&fit=crop",
-      lab: "Lab IDK",
-      borrower: "Dewi Sartika",
-      condition: "good",
-      borrowed_date: "5/11/2025",
-      session: "Session 1 - 07.30",
-      room: "HU 201",
-      expected_return_date: "12/11/2025",
-      purpose: "Project",
-      subject: "Final Project RF Communication",
-    },
-    {
-      id: 6,
-      item_name: "Spectrum Analyzer Pro",
-      no_item: "IDK-KACIIW13",
-      img_url:
-        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
-      lab: "Lab Telekomunikasi",
-      borrower: "Eko Prasetyo",
-      condition: "good",
-      borrowed_date: "6/11/2025",
-      session: "Session 2 - 12.30",
-      room: "HU 202",
-      expected_return_date: "13/11/2025",
-      purpose: "Penelitian",
-      subject: "Penelitian Spektrum Frekuensi",
-    },
-    {
-      id: 7,
-      item_name: "Power Supply DC 0-30V",
-      no_item: "IDK-KACIIW14",
-      img_url:
-        "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=400&fit=crop",
-      lab: "Lab Elektronika",
-      borrower: "Fajar Nugroho",
-      condition: "good",
-      borrowed_date: "7/11/2025",
-      session: "Session 1 - 07.30",
-      room: "HU 203",
-      expected_return_date: "14/11/2025",
-      purpose: "Praktikum",
-      subject: "Praktikum Power Electronics",
-    },
-    {
-      id: 8,
-      item_name: "Network Analyzer 8GHz",
-      no_item: "IDK-KACIIW15",
-      img_url:
-        "https://images.unsplash.com/photo-1617382734744-675b0b0ac5f9?w=400&h=400&fit=crop",
-      lab: "Lab IDK",
-      borrower: "Hadi Wijaya",
-      condition: "good",
-      borrowed_date: "8/11/2025",
-      session: "Session 2 - 12.30",
-      room: "HU 204",
-      expected_return_date: "15/11/2025",
-      purpose: "Project",
-      subject: "Final Project Jaringan Komunikasi",
-    },
-    {
-      id: 9,
-      item_name: "Digital Caliper Precision",
-      no_item: "IDK-KACIIW16",
-      img_url:
-        "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&h=400&fit=crop",
-      lab: "Lab RPL",
-      borrower: "Maya Putri",
-      condition: "bad",
-      borrowed_date: "9/11/2025",
-      session: "Session 1 - 07.30",
-      room: "HU 201",
-      expected_return_date: "16/11/2025",
-      purpose: "Praktikum",
-      subject: "Praktikum Metrologi",
-    },
-  ];
+  // Filter orders yang pending (status "process")
+  const pendingOrders = useMemo(() => ordersToUse.filter(order => order.status === 'process'), [ordersToUse]);
 
-  // ✅ Gunakan dummy data jika borrowedItems kosong
-  const displayBorrowedItems =
-    borrowedItems.length > 0
-      ? borrowedItems.map((item) => {
-          const detail = dummyBorrowedItemsDetail.find((d) => d.id === item.id);
-          return detail || { ...item, ...dummyBorrowedItemsDetail[0] };
-        })
-      : dummyBorrowedItemsDetail;
+  // Map pendingOrders ke OrderDetail
+  const ordersDetail: OrderDetail[] = useMemo(() => pendingOrders.map((reserve) => ({
+    id: reserve.id,
+    name: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
+      ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
+      : reserve.reserve_user_created?.username || "Unknown",
+    item: reserve.inventories?.item_name || "Unknown Item",
+    date: reserve.tanggal || "Unknown Date",
+    lab: dataLab.find(lab => lab.id === reserve.inventories?.labolatory_id)?.name || "Unknown Lab", // Map dari labolatory_id
+    serialNumber: reserve.inventories?.no_item || "N/A",
+    purpose: reserve.inventories?.type || "N/A",
+    session: "N/A", // Tidak ada session object
+    borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
+      ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
+      : reserve.reserve_user_created?.username || "Unknown",
+    room: reserve.inventories?.room_id?.toString() || "Kosong",
+    personInCharge: reserve.pic || "N/A",
+    condition: reserve.inventories?.condition || "N/A",
+    subject: reserve.inventories?.inventory_subjects?.map(sub => sub.subject_id).join(", ") || "N/A",
+    image: reserve.inventories?.inventory_galleries?.[0]?.filepath || "", // Kosong jika tidak ada
+  })), [pendingOrders]);
+
+  // Filter orders yang sedang dipinjam (status "waiting_to_be_return")
+  const borrowedOrders = useMemo(() => ordersToUse.filter(order => order.status === 'waiting_to_be_return'), [ordersToUse]);
+
+  // Map borrowedOrders ke BorrowedItemDetail
+  const borrowedItemsDetail: BorrowedItemDetail[] = useMemo(() => borrowedOrders.map((reserve) => ({
+    id: reserve.id,
+    item_name: reserve.inventories?.item_name || "Unknown Item",
+    no_item: reserve.inventories?.no_item || "N/A",
+    img_url: reserve.inventories?.inventory_galleries?.[0]?.filepath || reserve.inventories?.img_url || "",
+    lab: dataLab.find(lab => lab.id === reserve.inventories?.labolatory_id)?.name || "Unknown Lab",
+    borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
+      ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
+      : reserve.reserve_user_created?.username || "Unknown",
+    condition: reserve.inventories?.condition || "good",
+    borrowed_date: reserve.tanggal || "Unknown Date",
+    sessionId: reserve.session_id || 0,
+    room: reserve.inventories?.room_id?.toString() || "Kosong",
+    personInCharge: reserve.pic || "N/A",
+    purpose: reserve.inventories?.type || "N/A",
+    subject: reserve.inventories?.inventory_subjects?.map(sub => sub.subject_id).join(", ") || "N/A",
+    inventory_id: reserve.inventories?.id || 0,
+  })), [borrowedOrders]);
+
+  // gunakan data dari API jika ada, kosong jika tidak
+  const displayBorrowedItems = borrowedItemsDetail;
 
   const session1 = ordersDetail.slice(0, 7);
   const session2 = ordersDetail.slice(7);
@@ -360,11 +256,17 @@ export default function HeroAdmin({
   };
 
   const handleBorrowedItemDetailsClick = (itemId: number) => {
-    const item = dummyBorrowedItemsDetail.find((i) => i.id === itemId);
+    const item = borrowedItemsDetail.find((i) => i.id === itemId);
     if (item) {
       setSelectedBorrowedItem(item);
       setIsBorrowedModalOpen(true);
     }
+  };
+
+  const handleConditionChange = (itemId: number, condition: "good" | "bad") => {
+    setPendingConditionItemId(itemId);
+    setPendingCondition(condition);
+    setShowConditionConfirm(true);
   };
 
   const closeModal = () => {
@@ -377,9 +279,19 @@ export default function HeroAdmin({
     setSelectedBorrowedItem(null);
   };
 
+  useEffect(() => {
+    const initialConditions: { [key: number]: "good" | "bad" } = {};
+    borrowedItemsDetail.forEach(item => {
+      initialConditions[item.id] = item.condition;
+    });
+    setSelectedConditions(initialConditions);
+  }, [borrowedItemsDetail]);
+
   return (
     <>
-      <div className="min-h-screen p-2 pt-20 bg-white">
+      <div className={`min-h-screen p-2 pt-20 bg-white transition-all duration-300 ${
+        isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
+      }`}>
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -425,10 +337,10 @@ export default function HeroAdmin({
                       {order.date}
                     </div>
                     <div className="col-span-2 flex items-center gap-2">
-                      <button className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                      <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
                         <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
                       </button>
-                      <button className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                      <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
                         <Check
                           className="w-6 h-6 text-green-500"
                           strokeWidth={2.5}
@@ -458,10 +370,10 @@ export default function HeroAdmin({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 justify-end">
-                      <button className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                      <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
                         <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
                       </button>
-                      <button className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                      <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
                         <Check
                           className="w-6 h-6 text-green-500"
                           strokeWidth={2.5}
@@ -506,10 +418,10 @@ export default function HeroAdmin({
                         {order.date}
                       </div>
                       <div className="col-span-2 flex items-center gap-2">
-                        <button className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                        <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
                           <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
                         </button>
-                        <button className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                        <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
                           <Check
                             className="w-6 h-6 text-green-500"
                             strokeWidth={2.5}
@@ -539,10 +451,10 @@ export default function HeroAdmin({
                         </div>
                       </div>
                       <div className="flex items-center gap-2 justify-end">
-                        <button className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                        <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
                           <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
                         </button>
-                        <button className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                        <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
                           <Check
                             className="w-6 h-6 text-green-500"
                             strokeWidth={2.5}
@@ -577,14 +489,20 @@ export default function HeroAdmin({
                     <div className="flex items-start gap-4 mb-4">
                       {/* Item Image */}
                       <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
-                        <Image
-                          src={item.img_url}
-                          alt={item.item_name}
-                          width={96}
-                          height={96}
-                          className="object-contain"
-                          unoptimized
-                        />
+                        {item.img_url ? (
+                          <Image
+                            src={item.img_url}
+                            alt={item.item_name}
+                            width={96}
+                            height={96}
+                            className="object-contain"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                            No Image
+                          </div>
+                        )}
                       </div>
 
                       {/* Item Info */}
@@ -602,6 +520,7 @@ export default function HeroAdmin({
                     {/* Borrower Info */}
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm text-gray-700 truncate mr-2">
+                        
                         {item.borrower}
                       </p>
                       <button
@@ -614,10 +533,16 @@ export default function HeroAdmin({
 
                     {/* Action Buttons */}
                     <div className="flex gap-2 justify-end mt-8">
-                      <button className="px-3 py-1 border border-[#004CB0] text-[#004CB0] rounded-full text-xs font-medium hover:bg-[#004CB0] hover:text-white transition-colors">
+                      <button
+                        onClick={() => handleConditionChange(item.id, "bad")}
+                        className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-red-700 transition-colors duration-200"
+                      >
                         Bad Condition
                       </button>
-                      <button className="px-3 py-1 bg-[#C5D9F5] text-[#004CB0] rounded-full text-xs font-medium hover:bg-[#A8C7F0] transition-colors">
+                      <button
+                        onClick={() => handleConditionChange(item.id, "good")}
+                        className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-green-700 transition-colors duration-200"
+                      >
                         Good Condition
                       </button>
                     </div>
@@ -646,6 +571,171 @@ export default function HeroAdmin({
         onClose={closeBorrowedModal}
         item={selectedBorrowedItem}
       />
+
+      {/* Confirmation Dialog for Approve */}
+      {showApproveConfirm && pendingOrderId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="text-center">
+              <div className="mb-4">
+                <svg
+                  className="w-16 h-16 mx-auto text-green-500 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Konfirmasi Persetujuan
+                </h3>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => {
+                    setShowApproveConfirm(false);
+                    setPendingOrderId(null);
+                    setPendingAction(null);
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={executeApprove}
+                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Setujui
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Reject */}
+      {showRejectConfirm && pendingOrderId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="text-center">
+              <div className="mb-4">
+                <svg
+                  className="w-16 h-16 mx-auto text-red-500 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Konfirmasi Penolakan
+                </h3>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => {
+                    setShowRejectConfirm(false);
+                    setPendingOrderId(null);
+                    setPendingAction(null);
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={executeReject}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Tolak
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Condition Update */}
+      {showConditionConfirm && pendingConditionItemId && pendingCondition && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="text-center">
+              <div className="mb-4">
+                {pendingCondition === "good" ? (
+                  <svg
+                    className="w-16 h-16 mx-auto text-green-500 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-16 h-16 mx-auto text-red-500 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                )}
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Konfirmasi Update Kondisi
+                </h3>
+                <p className="text-gray-600">
+                  Update kondisi barang menjadi{" "}
+                  <span className="font-semibold text-[#004CB0]">
+                    {pendingCondition === "good" ? "Good" : "Bad"}
+                  </span>
+                  ?
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => {
+                    setShowConditionConfirm(false);
+                    setPendingConditionItemId(null);
+                    setPendingCondition(null);
+                  }}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={executeConditionUpdate}
+                  className={`px-6 py-2 text-white rounded-lg transition-colors ${
+                    pendingCondition === "good"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

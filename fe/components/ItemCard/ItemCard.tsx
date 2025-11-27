@@ -6,7 +6,7 @@ interface ItemCardProps {
     type: "done" | "approve" | "rejected" | "process" | "waiting_to_be_return" | "canceled";
     image?: string; // ✅ Tambahkan image field
   };
-  onClick: (item: any) => void;
+  onClick: (item: ItemCardProps['item']) => void;
   width?: string;
 }
 

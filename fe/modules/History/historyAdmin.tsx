@@ -153,7 +153,7 @@ export default function HistoryAdmin({
             </div>
 
             {/* History Cards Grid */}
-            <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start ${isSidebarOpen ? 'mr-4' : ''}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
               {sortedData.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <p className="text-gray-500">No history data found</p>
@@ -163,28 +163,32 @@ export default function HistoryAdmin({
                   <div
                     key={item.id}
                     onClick={() => handleDetailClick(item.itemName)}
-                    className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer w-full max-w-[220px] h-[320px]"
+                    className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer h-80"
                   >
                     {/* Item Image */}
-                    <div className="flex items-center justify-center mb-3 h-32 w-full flex-shrink-0">
-                      <Image
-                        src={item.itemImage}
-                        alt={item.itemName}
-                        width={140}
-                        height={110}
-                        className="object-contain"
-                        unoptimized
-                      />
+                    <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
+                      {item.itemImage ? (
+                        <Image
+                          src={item.itemImage}
+                          alt={item.itemName}
+                          width={150}
+                          height={120}
+                          className="object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                          No Image
+                        </div>
+                      )}
                     </div>
 
                     {/* Item Info */}
-                    <div className="text-left w-full flex-grow flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 mb-2">
-                          {item.itemName}
-                        </h3>
-                        <p className="text-sm text-gray-500">{item.lab}</p>
-                      </div>
+                    <div className="w-full">
+                      <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2">
+                        {item.itemName}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-3">{item.lab}</p>
 
                       {/* Detail Button */}
                       <button
@@ -192,7 +196,7 @@ export default function HistoryAdmin({
                           e.stopPropagation();
                           handleDetailClick(item.itemName);
                         }}
-                        className="mt-3 px-5 py-1.5 bg-[#004CB0] text-white text-sm font-semibold rounded-full hover:bg-blue-800 transition-colors self-start"
+                        className="px-4 py-0 bg-[#004CB0] text-white text-sm font-medium rounded-full hover:bg-blue-900 transition-colors"
                       >
                         Detail
                       </button>

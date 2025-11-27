@@ -299,7 +299,10 @@ export default async function ViewAllServerPage({ params }: PageProps) {
     ],
   };
 
-  const inventories = dummyData[slug as keyof typeof dummyData] || [];
+  const inventories = (dummyData[slug as keyof typeof dummyData] || []).map(item => ({
+    ...item,
+    type: item.type as "process" | "approve" | "waiting_to_be_return" | "rejected" | "done" | "canceled"
+  }));
 
   return (
     <>

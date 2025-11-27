@@ -13,9 +13,9 @@ interface BorrowedItemDetail {
   borrower: string;
   condition: "good" | "bad";
   borrowed_date: string;
-  session: string;
+  sessionId: number;
   room: string;
-  expected_return_date: string;
+  personInCharge: string;
   purpose: string;
   subject: string;
 }
@@ -74,14 +74,20 @@ export default function ModalBorrowedItem({
           {/* Header with Image and Title */}
           <div className="flex items-start gap-6 mb-8">
             <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
-              <Image
-                src={item.img_url}
-                alt={item.item_name}
-                width={96}
-                height={96}
-                className="object-contain"
-                unoptimized
-              />
+              {item.img_url ? (
+                <Image
+                  src={item.img_url}
+                  alt={item.item_name}
+                  width={96}
+                  height={96}
+                  className="object-contain"
+                  unoptimized
+                />
+              ) : (
+                <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                  No Image
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-800 mb-2">
@@ -115,7 +121,7 @@ export default function ModalBorrowedItem({
               </div>
               <div>
                 <h3 className="text-gray-600 font-semibold mb-1">Session</h3>
-                <p className="text-gray-800">{item.session}</p>
+                <p className="text-gray-800">{item.sessionId}</p>
               </div>
             </div>
 
@@ -135,9 +141,9 @@ export default function ModalBorrowedItem({
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="text-gray-600 font-semibold mb-1">
-                  Expected Return
+                  Person In Charge
                 </h3>
-                <p className="text-gray-800">{item.expected_return_date}</p>
+                <p className="text-gray-800">{item.personInCharge}</p>
               </div>
               <div>
                 <h3 className="text-gray-600 font-semibold mb-1">Condition</h3>
