@@ -141,23 +141,20 @@ export default async function EditItemPage({ params }: PageProps) {
     inventoryNumber: inventory.no_item,
     room: inventory.room_id?.toString() || "",
     laboratory: inventory.laboratory_id?.toString() || "",
-    subject: inventory.subject_id.map((id: number) => {
-      const subject = subjects.find((s: { id: number; name: string }) => s.id === id);
-      return subject ? subject.name : `Subject ${id}`;
+    subject: inventory.inventory_subjects.filter((sub: { subject_id: number; deleted_at: string | null }) => !sub.deleted_at).map((sub: { subject_id: number; deleted_at: string | null }) => {
+      const subject = subjects.find((s: { id: number; name: string }) => s.id === sub.subject_id);
+      return subject ? subject.name : `Subject ${sub.subject_id}`;
     }),
-    session: inventory.special_session ? "2 Session" : "1 Session",
+    session: inventory.special_session ? "2 Session" : "Session per Hour",
     purpose: inventory.type === "praktikum" ? "Practical Class" : "Project",
     condition: mapCondition(inventory.condition),
-    image: inventory.img_url || "https://placehold.co/150x150/png?text=Item",
+    image: inventory.inventory_galleries?.[0]?.filepath || "https://placehold.co/150x150/png?text=Item",
   };
 
   return (
     <EditItems
       session={session}
       itemData={itemData}
-      labs={labs}
-      rooms={rooms}
-      subjects={subjects}
     />
   );
 }

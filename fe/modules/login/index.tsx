@@ -1,10 +1,8 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
-  const router = useRouter();
 
   return (
     <div className="min-h-screen flex relative">
@@ -55,7 +53,7 @@ const LoginPage = () => {
 
           <button
             onClick={() => signIn("google", { callbackUrl: "/home" })}
-            className="w-full bg-white text-[#004CB0] py-4 px-8 rounded-full font-semibold flex items-center justify-center hover:bg-gray-100 hover:text-blue-800 duration-300 transition-all shadow-lg text-lg"
+            className="w-full bg-white text-[#004CB0] py-4 px-8 rounded-full font-semibold flex items-center justify-center hover:bg-gray-100 hover:text-blue-800 hover:scale-105 duration-300 transition-all shadow-lg text-lg"
           >
             <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
               <path
