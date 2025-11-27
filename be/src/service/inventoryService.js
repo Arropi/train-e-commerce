@@ -1,4 +1,3 @@
-const { subjects } = require("../config/dbConfig")
 const { getAllInventory, createInventory, createSubjectInventory, createImageInventory, getInventory,  updateInventory, getImageInventory, updateImageInventory, getSubjectInventory, deleteSubjectInventory, deleteInventory, getInventoriesLaboratory, getInventoriesLaboratoryAvailable } = require("../repository/inventoryRepository")
 const { getReservesInSpesificDate } = require("../repository/reservesRepository")
 const { getSubjectId, filterSubject, bigintToNumber } = require("../utils/functions")

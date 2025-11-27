@@ -2,7 +2,7 @@ const prisma = require('../config/dbConfig')
 
 const getReservesUser = async (user_id) => {
     try {
-        const reserves = prisma.reserves.findMany({
+        const reserves = await prisma.reserves.findMany({
             where: {
                 user_id: user_id,
             },
@@ -17,16 +17,116 @@ const getReservesUser = async (user_id) => {
     }
 }
 
+const getReserveOnGoingUser = async (user_id) => {
+    try {
+        const reserves = await prisma.reserves.findMany({
+            where: {
+                user_id: user_id,
+                status: {
+                    in: ["process", "approve", "waiting_to_be_return"]
+                }
+            },
+            include: {
+                reserve_user_created: true,
+                inventories: {
+                    include: {
+                        inventory_galleries: true,
+                        labolatories: true
+                    }
+                }
+            }
+        })
+        return reserves
+    } catch (error) {
+        console.log('Reserves Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
 
-const getReservesUserOnProcess = async (user_id, inventories_id) => {
+
+
+const getReserveOnGoingAdmin = async () => {
+    try {
+        const reserves = await prisma.reserves.findMany({
+            where: {
+                status: {
+                    in: ["process", "approve", "waiting_to_be_return"]
+                }
+            },
+            include: {
+                reserve_user_created: true,
+                inventories: {
+                    include: {
+                        inventory_galleries: true,
+                        labolatories: true
+                    }
+                }
+            }
+        })
+        return reserves
+    } catch (error) {
+        console.log('Reserves Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
+const getReserveHistoryUser = async (user_id) => {
+    try {
+        const reserves =await prisma.reserves.findMany({
+            where: {
+                user_id: user_id,
+                status: {
+                    in: ["done", "canceled", "rejected"]
+                }
+            },
+            include: {
+                inventories: {
+                    include: {
+                        inventory_galleries: true,
+                        labolatories: true
+                    }
+                },
+                reserve_user_created: true
+            }
+        })
+        return reserves
+    } catch (error) {
+        console.log('Reserves Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
+const getReserveHistoryAdmin = async () => {
+    try {
+        const reserves = prisma.reserves.findMany({
+          where: {
+            status: {
+                in: ["done", "canceled", "rejected"]
+            }
+          },  
+          include: {
+            reserve_user_created: true,
+            inventories: {
+                include: {
+                    inventory_galleries: true,
+                    labolatories: true,
+                    inventory_subjects: true
+                }
+            }
+          }
+        })
+        return reserves
+    } catch (error) {
+        console.log('Reserves Repository Error: ', error)
+        throw Error('Internal Server Database Not Respond :(')
+    }
+}
+
+const getReservesUserOnProcess = async (dataInput) => {
     try {
         const reserve = await prisma.reserves.findMany({
             where: {
-                user_id: user_id,
-                inventories_id: {
-                    in: inventories_id
-                },
-                status: "process"
+                OR: dataInput
             }
         })
         return reserve
@@ -90,7 +190,12 @@ const getReservesLaboratoryInSpesificDate = async (tanggal, lab_id) => {
                 }
             },
             include: {
-                inventories: true
+                inventories: {
+                    include: {
+                        inventory_subjects: true,
+                        inventory_galleries: true
+                    }
+                }
             }
         })
         return reserves
@@ -145,7 +250,11 @@ const updateReserve = async (dataReserves, reserve_id) => {
 
 module.exports= {
     getReservesUser,
+    getReserveOnGoingUser,
+    getReserveOnGoingAdmin,
+    getReserveHistoryUser,
     getReservesAdmin,
+    getReserveHistoryAdmin,
     getReservesInSpesificDate,
     getReservesLaboratoryInSpesificDate,
     getReservesUserOnProcess,

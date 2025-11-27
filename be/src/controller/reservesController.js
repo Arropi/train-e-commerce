@@ -1,4 +1,4 @@
-const { createReservesService, getReservesUserService, updateReserveService, getReservesAdminService, getReservesInUseService, getReservesLaboratoryInUseService } = require("../service/reservesService")
+const { createReservesService, getReservesUserService, getReservesUserOngoingService, getReservesAdminOngoingService, updateReserveService, getReservesAdminService, getReservesInUseService, getReservesLaboratoryInUseService, getReservesAdminHistoryService, getReservesUserHistoryService } = require("../service/reservesService")
 
 const getReservesUser = async (req, res) => {
     try {
@@ -13,6 +13,80 @@ const getReservesUser = async (req, res) => {
         res.status(500).json({
             'message': error.message
         })
+    }
+}
+
+const getReservesUserOngoing = async (req, res) => {
+    try {
+        const user = req.user
+        const reserves = await getReservesUserOngoingService(user.id)
+        return res.status(200).json({
+            'message': 'Getting ongoing reserves data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        return res.status(500).json({
+            'message': error.message
+        })
+    }
+}
+
+const getReservesAdminOngoing = async (req, res) => {
+    try {
+        const reserves = await getReservesAdminOngoingService()
+        return res.status(200).json({
+            'message': 'Getting ongoing reserves data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        return res.status(500).json({
+            'message': error.message
+        })
+    }
+}
+
+const getReservesUserHistory = async (req, res) => {
+    try {
+        const user = req.user
+        const reserves = await getReservesUserHistoryService(user.id)
+        return res.status(200).json({
+            'message': 'Getting reserve history data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        if (error.cause == 'Bad Request') {
+            res.status(400).json({
+                'message': error.message
+            })
+        } else {
+            res.status(500).json({
+                'message': error.message
+            })
+        }
+    }
+}
+
+const getReservesHistoryAdmin = async (req, res) => {
+    try {
+        const reserves = await getReservesAdminHistoryService()
+        return res.status(200).json({
+            'message': 'Getting reserve history data successfully',
+            'data': reserves
+        })
+    } catch (error) {
+        console.log('Error: ', error)
+        if (error.cause == 'Bad Request') {
+            res.status(400).json({
+                'message': error.message
+            })
+        } else {
+            res.status(500).json({
+                'message': error.message
+            })
+        }
     }
 }
 
@@ -136,7 +210,11 @@ const updateReserveUser = async (req, res) => {
 
 module.exports = {
     getReservesUser,
+    getReservesUserOngoing,
+    getReservesUserHistory,
     getReservesAdmin,
+    getReservesAdminOngoing,
+    getReservesHistoryAdmin,
     getReservesInUse,
     getReservesLaboratoryInUse,
     createReservesUser,

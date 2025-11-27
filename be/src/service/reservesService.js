@@ -1,13 +1,41 @@
-const { getSpecificInventories, getImageInventory, getSubjectInventory } = require("../repository/inventoryRepository")
-const { getReservesUser, createReserves, updateReserve, deleteReserve, getReservesUserOnProcess, getReservesAdmin, getReservesInSpesificDate, getReservesLaboratoryInSpesificDate } = require("../repository/reservesRepository")
-const { getInventoryId, bigintToNumber } = require("../utils/functions")
+const { getReservesUser, getReserveOnGoingUser, getReserveOnGoingAdmin, createReserves, updateReserve,  getReservesUserOnProcess, getReservesAdmin, getReservesInSpesificDate, getReservesLaboratoryInSpesificDate, getReserveHistoryAdmin, getReserveHistoryUser } = require("../repository/reservesRepository")
+const { bigintToNumber } = require("../utils/functions")
 
 const getReservesUserService = async (user_id) => {
     try {
         const reserves = await getReservesUser(user_id)
-        console.log(reserves)
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesUserOngoingService = async (user_id) => {
+    try {
+        const reserves = await getReserveOnGoingUser(user_id)
+        const clearReserves = bigintToNumber(reserves)
+        return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesAdminOngoingService = async () => {
+    try {
+        const reserves = await getReserveOnGoingAdmin()
+        const clearReserves = bigintToNumber(reserves)
+        return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesUserHistoryService = async (user_id) => {
+    try {
+        const reserves = await getReserveHistoryUser(user_id)
+        const reserveClear = bigintToNumber(reserves)
+        return reserveClear
     } catch (error) {
         throw error
     }
@@ -18,6 +46,16 @@ const getReservesAdminService = async () => {
         const reserves = await getReservesAdmin()
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
+    } catch (error) {
+        throw error
+    }
+}
+
+const getReservesAdminHistoryService = async () => {
+    try {
+        const reserves = await getReserveHistoryAdmin()
+        const reserveClear = bigintToNumber(reserves)
+        return reserveClear
     } catch (error) {
         throw error
     }
@@ -48,12 +86,31 @@ const getReservesLaboratoryInUseService = async (tanggal, lab_id) => {
 
 const createReservesService = async (dataInput, user_id) => {
     try {
-        const inventories_id = getInventoryId(dataInput)
-        const existReserve = await getReservesUserOnProcess(user_id, inventories_id)
+        const toCheck = dataInput.map((i) => {
+            const {subject_id, session_id,pic, ...rest} = i
+            return {
+                AND: [
+                    {tanggal: new Date(i.tanggal)},
+                    {session_id: i.session_id},
+                    {inventories_id: i.inventories_id},
+                    {status: "process"}
+                ]
+            }
+        })
+        const existReserve = await getReservesUserOnProcess(toCheck)
+        console.log(existReserve)
         if(existReserve.length > 0) {
-            throw Error("Inventory Reserve In Process", {
-                cause: "Bad Request"
-            })
+            const thisUser = existReserve.find(e => Number(e.user_id) === user_id)
+            console.log(thisUser)   
+            if (thisUser) {
+                throw Error("Inventory Reserve In Process", {
+                    cause: "Bad Request"
+                })
+            } else {
+                throw Error("Inventory Already Reserved by Other User", {
+                    cause: "Bad Request"
+                })
+            }
         }
         const dataReserves = dataInput.map((i) => { 
             return {
@@ -63,6 +120,7 @@ const createReservesService = async (dataInput, user_id) => {
                 'created_at': new Date()
             }
         })
+        console.log(dataReserves)
         const reserves = await createReserves(dataReserves)
         return reserves
     } catch (error) {
@@ -101,7 +159,11 @@ const updateReserveService = async (dataInput, user_id, reserve_id) => {
 
 module.exports = {
     getReservesUserService,
+    getReservesUserOngoingService,
+    getReservesUserHistoryService,
     getReservesAdminService,
+    getReservesAdminOngoingService,
+    getReservesAdminHistoryService,
     getReservesInUseService,
     getReservesLaboratoryInUseService,
     createReservesService,

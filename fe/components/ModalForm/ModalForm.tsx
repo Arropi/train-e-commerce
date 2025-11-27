@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { InventoryCart, InventoryReserves, Rooms, Subject, TimeSession } from "@/types";
+import { InventoryCart, InventoryReserves, Reserve, ReserveFormInput, Rooms, Subject, TimeSession } from "@/types";
 import { useSession } from "next-auth/react";
 import { getDataSubjects } from "@/data/subjects";
+import { postReserves } from "@/action/action";
 
 interface RequestFormProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ interface FormsServe extends InventoryCart {
   key: number
 }
 
+
+
 export default function RequestForm({
   isOpen,
   onClose,
@@ -26,49 +29,58 @@ export default function RequestForm({
   timeSession
 }: RequestFormProps) {
   const { data: session } = useSession();
-  const [formData, setFormData] = useState({
-    name: session?.user.name,
-    subject: "",
-    responsiblePerson: "",
-  });
+  const [formData, setFormData] = useState<ReserveFormInput[]>([]);
   const [showIndex, setShowIndex] = useState<number>(0)
   const [subjects, setSubjects] = useState<Subject[]>()
-  const xSlideStart = useRef(0)
-  const xSlideEnd = useRef(0)
-  const [activeInventory, setActiveInventory] = useState<FormsServe>()
-  const [sessionDates, setSessionDates] = useState<{ [key: number]: string }>(
-    {}
-  );
-
+  const xCoordinate = useRef(0)
+  const yCoordinate = useRef(0)
+  const touchTime = useRef(0)
+  const yRestraint = 75
+  const xRestraint = 50
+  const allowedTime = 300
+  
+  
   const [showNotification, setShowNotification] = useState(false);
   useEffect(() => {
       if(!session) return;
-      if (session?.user?.name) {
-        setFormData(prev => ({
-          ...prev,
-          name: session.user.name
-        }));
-      }
+      const initial = items.map((item) => ({
+        inventories_id:item.inventories.id,
+        pic: null,
+        subject_id: null,
+        tanggal: item.tanggal,
+        session_id: item.session_id
+      }))
+      setFormData(initial)
       const fetchData = async () => {
         const res = await getDataSubjects(session.user.accessToken)
         setSubjects(res)
       };
       fetchData();
-    }, [session])
-  const handleSlideIn = (e: React.TouchEvent) =>{
-    xSlideStart.current = e.touches[0].clientX
+    }, [session, items])
+
+  const handleSlideStart = (e: React.TouchEvent) =>{
+    xCoordinate.current = e.touches[0].clientX
+    yCoordinate.current = e.touches[0].clientY
+    touchTime.current = Date.now()
   }
-  const handleSlideOut = (e: React.TouchEvent) => {
-    xSlideEnd.current = e.touches[0].clientX
-  }
-  const handleEndOut = () => {
-    const gap = xSlideStart.current - xSlideEnd.current
-    if(gap > 50 && showIndex < items.length) {
-      setShowIndex(showIndex + 1)
-    } else if( gap < -50 && showIndex !== 0 ) {
-      setShowIndex(showIndex - 1)
+
+  const handleSlideEnd = (e: React.TouchEvent) => {
+    const touchClient = e.changedTouches[0]
+    const distX = touchClient.clientX - xCoordinate.current
+    const distY = touchClient.clientY - yCoordinate.current
+    const elapsedTime = Date.now() - touchTime.current
+
+    if (elapsedTime > allowedTime) return
+    if (Math.abs(distX) < xRestraint || Math.abs(distY) > yRestraint) return
+
+    if (distX > 0) {
+      setShowIndex((prev) => (prev === 0 ? prev : prev - 1))
+    } else {
+      setShowIndex((prev) => (prev === items.length -1 ? prev : prev + 1))
     }
   }
+  console.log(items.length)
+ 
   // ✅ Lock body scroll ketika modal terbuka
   useEffect(() => {
     if (isOpen) {
@@ -90,26 +102,6 @@ export default function RequestForm({
   }, [isOpen]);
   console.log(items)
 
-  // Function untuk menentukan sesi berdasarkan jam
-  const getSessionFromTime = (time: number) => {
-    if (!time) return "";
-    return timeSession.find(t=> t.id === time)?.start
-
-    // // Ekstrak jam dari format "07.30" atau "13.30"
-    // const hourMatch = time.match(/(\d{2})[:.]/);
-    // if (!hourMatch) return "";
-
-    // const hour = parseInt(hourMatch[1]);
-
-    // // Hanya 2 sesi: 07.30 = Sesi 1, 13.30 = Sesi 2
-    // if (hour >= 7 && hour < 13) {
-    //   return "Sesi 1 - 07.30";
-    // } else if (hour >= 13) {
-    //   return "Sesi 2 - 13.30";
-    // }
-
-    // return time;
-  };
 
   const formattingItemToServe = () => {
     const group = items.map((it, idx) => {
@@ -125,73 +117,26 @@ export default function RequestForm({
     return group
   }
 
-  // Group items berdasarkan sesi dan tanggal
-  const groupItemsBySession = () => {
-    const grouped: {
-      [key: string]: {
-        // session: string;
-        date: string;
-        items: InventoryCart[];
-      };
-    } = {};
-
-    items.forEach((item) => {
-      const session = getSessionFromTime(item.session_id)
-      const date = item.tanggal || "";
-      const key = `${session}-${date}`;
-      console.log('Key nya: ', key)
-
-      if (!grouped[key]) {
-        grouped[key] = {
-          // session,
-          date: date.toString().split('T')[0],
-          items: [],
-        };
-      }
-      console.log(grouped)
-      grouped[key].items.push(item);
-    });
-
-
-    return Object.values(grouped);
+  const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: any) => {
+    setFormData(prev =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    );
   };
 
-  const sessionGroups = groupItemsBySession();
+
   const formattingGroups = formattingItemToServe()
   console.log('Hasil format: ', formattingGroups)
-  console.log('Hasil groupping: ', sessionGroups)
-  console.log('Session dates saat ini: ', sessionDates)
 
   // Initialize sessionDates ketika modal dibuka
   useEffect(() => {
     if (isOpen && items) {
-      const initialDates: { [key: number]: string } = {};
-      sessionGroups.forEach((group, idx) => {
-        initialDates[idx] = group.date;
-      });
-      setSessionDates(initialDates);
-      handleActiveInventory()
+      console.log('Masuk kesini')
     }
   }, [isOpen, items]);
 
-  // Handle perubahan tanggal per sesi
-  const handleDateChange = (groupIdx: number, newDate: string) => {
-    setSessionDates((prev) => ({
-      ...prev,
-      [groupIdx]: newDate,
-    }));
-  };
-  const handleActiveInventory = () => {
-    const formattingGroups = formattingItemToServe()
-    const inventoryServe = formattingGroups.find((fg) => fg.key === showIndex)
-    setActiveInventory(inventoryServe)
-  }
-
-  useEffect(()=>{
-    const formattingGroups = formattingItemToServe()
-    const inventoryServe = formattingGroups.find((fg) => fg.key === showIndex)
-    setActiveInventory(inventoryServe)
-  }, [showIndex])
+  
 
   // Auto hide notification setelah 3 detik
   useEffect(() => {
@@ -217,36 +162,47 @@ export default function RequestForm({
   }
 
   console.log(subjects)
-  console.log(activeInventory?.inventories.inventory_subjects)
-  activeInventory?.inventories.inventory_subjects.map((subject) => {
-    console.log(subject)
-    console.log(subjects.find((s) => s.id === subject.subject_id))
-  })
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     console.log("Form submitted:", formData);
     console.log("Items:", items);
-    console.log("Session Groups:", sessionGroups);
-    console.log("Session Dates:", sessionDates);
 
     // Tampilkan notifikasi
     setShowNotification(true);
-
-    // Tutup modal setelah delay
+    
+    try {
+      const result = await postReserves(formData);
+      
+      if (result && !result.success) {
+        console.error('Submit failed:', result.error);
+      }
+    } catch (error) {
+      console.log('Redirect atau error:', error);
+    }
+    
+    // Tutup modal setelah delay (jika tidak redirect)
     setTimeout(() => {
       onClose();
-      // Reset form
-      setFormData({
-        name: "",
-        subject: "",
-        responsiblePerson: "",
-      });
-      setSessionDates({});
     }, 3000);
   };
-
+  
   console.log(showIndex)
+  const activeInventory = formData[showIndex]
+  console.log(formData)
+  const informationCard = items.find((i)=> i.inventories.id === activeInventory.inventories_id)
+  if (!informationCard) {
+    return(
+      <h1>Data Logic Error</h1>
+    )
+  }
   console.log('Now active: ', activeInventory)
+  // {!formData.length ? ( 
+  //   (
+  //     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+  //       <div className="text-white">Loading form...</div>
+  //     </div>
+  //   )
+  // ): }
 
   return (
     <>
@@ -282,9 +238,8 @@ export default function RequestForm({
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-auto scrollbar-hide"
-          onTouchStart={handleSlideIn}
-          onTouchMove={handleSlideOut}
-          onTouchEnd={handleEndOut}
+          onTouchStart={handleSlideStart}
+          onTouchEnd={handleSlideEnd}
           onClick={(e) => e.stopPropagation()}
         >
           
@@ -301,10 +256,7 @@ export default function RequestForm({
               </label>
               <input
                 type="text"
-                value={formData.name?? "Anonymous"}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                value={session.user.name?? "Anonymous"}
                 readOnly
                 className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Masukkan nama..."
@@ -317,9 +269,9 @@ export default function RequestForm({
                 Subject
               </label>
               <select
-                value={formData.subject}
+                value={activeInventory.subject_id?? 0}
                 onChange={(e) =>
-                  setFormData({ ...formData, subject: e.target.value })
+                  updateFormByIndex(showIndex, "subject_id", Number(e.target.value))
                 }
                 className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -327,7 +279,7 @@ export default function RequestForm({
                 {!subjects ? (
                   <option>Loading...</option>
                 ) : (
-                  activeInventory.inventories.inventory_subjects?.map((subject) => (
+                  informationCard.inventories.inventory_subjects.map((subject) => (
                     <option value={subject.id} key={subject.id}>
                       {subjects.find((s) => s.id === subject.subject_id)?.subject_name}
                     </option>
@@ -339,7 +291,6 @@ export default function RequestForm({
            
             
               <div
-                key={activeInventory.key}
                 className="space-y-4 pb-4 border-b last:border-b-0"
               >
                 {/* Session and Date untuk group ini */}
@@ -380,8 +331,8 @@ export default function RequestForm({
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
-                            src={activeInventory.inventories.inventory_galleries[0].filepath ?? "/images/osiloskop.png"}
-                            alt={activeInventory.inventories.item_name}
+                            src={informationCard.inventories.inventory_galleries[0].filepath ?? "/images/osiloskop.png"}
+                            alt={informationCard.inventories.item_name}
                             fill
                             className="object-contain"
                             unoptimized
@@ -389,13 +340,13 @@ export default function RequestForm({
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold">
-                            {activeInventory.inventories.item_name}
+                            {informationCard.inventories.item_name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {activeInventory.inventories.no_item}
+                            {informationCard.inventories.no_item}
                           </p>
                           <p className="text-xs text-gray-600 mt-1">
-                            Ruang: {rooms.find((r) => r.id === activeInventory.inventories.room_id)?.name ?? "-"}
+                            Ruang: {rooms.find((r) => r.id === informationCard.inventories.room_id)?.name ?? "-"}
                           </p>
                         </div>
                       </div>
@@ -408,24 +359,20 @@ export default function RequestForm({
               </label>
               <input
                 type="text"
-                value={formData.responsiblePerson}
+                value={activeInventory.pic?? ""}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    responsiblePerson: e.target.value,
-                  })
+                  updateFormByIndex(showIndex, "pic", e.target.value)
                 }
                 className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Masukkan nama..."
               />
             </div>
             <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
-              {items.map((_, i) => {
+              {formData.map((_, i) => {
                 const active = showIndex === i
-                console.log(active)
                 return (
                 <button
-                  key={i}
+                  key={_.inventories_id}
                   onClick={() => setShowIndex(i)}
                   className={`
                     w-2.5 h-2.5 rounded-full transition 

@@ -1,12 +1,8 @@
+import { Reserve } from "@/types";
+
 interface ItemCardProps {
-  item: {
-    id: number;
-    title: string;
-    status: string;
-    type: "done" | "approve" | "rejected" | "process" | "waiting_to_be_return" | "canceled";
-    image?: string; // ✅ Tambahkan image field
-  };
-  onClick: (item: ItemCardProps['item']) => void;
+  item: Reserve;
+  onClick: (item: any) => void;
   width?: string;
 }
 
@@ -23,6 +19,24 @@ export default function ItemCard({
     waiting_to_be_return: "text-[#5D00AE] bg-[#C17CFE]",
     canceled: "text-gray-600 bg-gray-300",
   };
+  const switchStatus = (status: string) => {
+    switch (status) {
+      case "approve":
+        return "Approve";
+      case "done":
+        return "Done";
+      case "rejected":
+        return "Rejected";
+      case "process":
+        return "Process";
+      case "waiting_to_be_return":
+        return "Waiting to be Return";
+      case "canceled":
+        return "Canceled";
+      default:
+        return status;
+    }
+  };
 
   return (
     <div
@@ -32,10 +46,10 @@ export default function ItemCard({
     >
       {/* ✅ Update image section */}
       <div className="w-full h-20 bg-gray-300 rounded-lg mb-4 flex-shrink-0 overflow-hidden">
-        {item.image ? (
+        {item.inventories.inventory_galleries[0].filepath ? (
           <img
-            src={item.image}
-            alt={item.title}
+            src={item.inventories.inventory_galleries[0].filepath}
+            alt={item.inventories.item_name}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -44,14 +58,14 @@ export default function ItemCard({
       </div>
 
       <h3 className="text-sm font-semibold text-gray-700 mb-2 line-clamp-2 flex-grow">
-        {item.title}
+        {item.inventories.item_name}
       </h3>
       <span
         className={`text-xs px-3 py-1.5 rounded-full ${
-          statusColors[item.type] || "bg-gray-100 text-gray-800"
+          statusColors[item.status] || "bg-gray-100 text-gray-800"
         } inline-block w-fit`}
       >
-        {item.status}
+        {switchStatus(item.status)}
       </span>
     </div>
   );
