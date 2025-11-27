@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Inventory, InventoryCart, Reserve, Rooms, TimeSession } from "@/types";
+import { Inventory, Reserve, Rooms, TimeSession } from "@/types";
 import { useSidebar } from "@/contexts/SidebarContext";
 
 interface ItemModalProps {
@@ -26,8 +26,8 @@ export default function ItemModal({
   rooms,
   timeSessions
 }: ItemModalProps) {
-  const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(
-    null
+  const [selectedInventory, setSelectedInventory] = useState<Inventory[]>(
+    []
   ); // ✅ NEW
   const [selectedTime, setSelectedTime] = useState<number | undefined>();
   const { addItem } = useSidebar();
@@ -55,10 +55,10 @@ export default function ItemModal({
   // ✅ NEW: Reset selection saat modal dibuka
   useEffect(() => {
     if (isOpen) {
-      setSelectedInventory(null);
+      setSelectedInventory([]);
       setSelectedTime(timeSessions.find(ts => ts.special_session === item?.special_session)?.id)
     }
-  }, [isOpen, item]);
+  }, [isOpen, item, timeSessions]);
   
   if (!isOpen || !item) return null;
 
@@ -70,17 +70,14 @@ export default function ItemModal({
   );
   
   const handleAddItem = () => {
-    if (!selectedInventory || !selectedTime) {
-      alert("Please select inventory unit and time");
+    if (selectedInventory.length === 0 || !selectedTime) {
+      alert("Please select at least one inventory unit and time");
       return;
     }
 
-    const payload = {
-      ...selectedInventory,
-      session_id: selectedTime
-    };
-
-    addItem(selectedInventory.id, selectedTime, tanggal);
+    selectedInventory.forEach(inv => {
+      addItem(inv.id, selectedTime, tanggal);
+    });
     onClose();
   };
   const checkAvailability = (invId: number) => {
@@ -171,7 +168,7 @@ export default function ItemModal({
               return (
               <label
                 key={inv.id}
-                className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100"
+                className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100 cursor-pointer"
               >
                 <div>
                   <div className="text-sm text-black font-bold">
@@ -181,16 +178,35 @@ export default function ItemModal({
                     {inv.no_item}
                   </div>
                 </div>
-                <input
-                  disabled={checkAvailability(inv.id)}
-                  type="radio"
-                  name="inventory"
-                  value={inv.id}
-                  checked={selectedInventory?.id === inv.id}
-                  onChange={() => setSelectedInventory(inv as Inventory)}
-                  className="w-4 h-4 text-[#004CB0]"
-                  style={{ accentColor: "#004CB0" }}
-                />
+                <div className="flex items-center">
+                  <input
+                    disabled={checkAvailability(inv.id)}
+                    type="checkbox"
+                    name="inventory"
+                    value={inv.id}
+                    checked={selectedInventory.some(selected => selected.id === inv.id)}
+                    className="hidden"
+                  />
+                  <div
+                    onClick={() => {
+                      if (!checkAvailability(inv.id)) {
+                        const isSelected = selectedInventory.some(selected => selected.id === inv.id);
+                        if (isSelected) {
+                          setSelectedInventory(selectedInventory.filter(selected => selected.id !== inv.id));
+                        } else {
+                          setSelectedInventory([...selectedInventory, inv]);
+                        }
+                      }
+                    }}
+                    className={`w-4 h-4 rounded-full border-2 border-[#004CB0] flex items-center justify-center ${
+                      checkAvailability(inv.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
+                  >
+                    {selectedInventory.some(selected => selected.id === inv.id) && (
+                      <div className="w-2 h-2 bg-[#004CB0] rounded-full"></div>
+                    )}
+                  </div>
+                </div>
               </label>
             )})}
           </div>
@@ -198,7 +214,7 @@ export default function ItemModal({
           <button
             onClick={handleAddItem}
             className="w-25 bg-[#004CB0] text-white py-0 text-md rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300"
-            disabled={!selectedInventory || !selectedTime}
+            disabled={selectedInventory.length === 0 || !selectedTime}
           >
             Add
           </button>
