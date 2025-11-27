@@ -2,6 +2,9 @@ const { book_status } = require('@prisma/client')
 const { z, ZodError} = require('zod')
 
 const reservesCreateValidation = async (req, res, next) => {
+    console.log(new Date())
+    console.log(new Date(req.body.data[0].tanggal))
+    console.log(new Date(req.body.data[0].tanggal) > new Date())
     try {
         const pic = z.string({
             error: (iss) =>
@@ -14,6 +17,8 @@ const reservesCreateValidation = async (req, res, next) => {
                 iss.input === undefined
             ? "Field Tanggal Cannot Be Empty"
             : "Invalid input on Tanggal"
+        }).refine((date) => new Date(date) > new Date().setHours(0,0,0,0), {
+            error: "Tanggal tidak boleh kurang dari hari ini"
         })
         const inventories_id = z.number({
             error: (iss) =>

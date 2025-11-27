@@ -122,15 +122,11 @@ const getReserveHistoryAdmin = async () => {
     }
 }
 
-const getReservesUserOnProcess = async (user_id, inventories_id) => {
+const getReservesUserOnProcess = async (dataInput) => {
     try {
         const reserve = await prisma.reserves.findMany({
             where: {
-                user_id: user_id,
-                inventories_id: {
-                    in: inventories_id
-                },
-                status: "process"
+                OR: dataInput
             }
         })
         return reserve

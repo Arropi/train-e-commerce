@@ -52,6 +52,7 @@ const getInventoriesLaboratoryAvailableService = async (lab_id, tanggal) => {
     try {
         const tanggalFormat = new Date(tanggal)
         const inventoriesReserve = await getReservesInSpesificDate(tanggalFormat)
+        console.log(inventoriesReserve)
         const inventoriesLab = await getInventoriesLaboratory(lab_id)
         const information = inventoriesLab.map((inventori)=>{
             const inventoryInReserve = inventoriesReserve.filter((reserve) => reserve.inventories.id === inventori.id)
