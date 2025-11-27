@@ -15,9 +15,7 @@ interface BorrowRecord {
   status: "Returned" | "Late" | "Damaged";
   condition: "Good" | "Bad";
   borrowDate: string;
-}
-
-interface BorrowDetail extends BorrowRecord {
+  // Additional fields for detail view
   itemName: string;
   itemImage: string;
   itemSerialNumber: string;
@@ -27,7 +25,10 @@ interface BorrowDetail extends BorrowRecord {
   room: string;
   personInCharge: string;
   subject: string;
+  returnDate: string;
 }
+
+type BorrowDetail = BorrowRecord;
 
 interface DetailHistoryProps {
   session: Session;
@@ -82,21 +83,9 @@ export default function DetailHistory({
       return;
     }
 
-    // TODO: Fetch full detail dari API
-    // const fullDetail = await fetch(`/api/borrow/${record.borrowerId}`)
-
-    // Dummy data lengkap untuk detail
+    // Use data from the record directly
     const fullDetail: BorrowDetail = {
       ...record,
-      itemName: itemName,
-      itemImage: "https://placehold.co/150x150/png?text=Oscilloscope",
-      itemSerialNumber: record.borrowerId,
-      lab: "Lab Elektronika",
-      purpose: "Project",
-      session: "Session 2 - 12.30",
-      room: "HU 201",
-      personInCharge: "Gibran Rakabuming Raka",
-      subject: "Praktikum Pemrograman Web 2",
     };
 
     setSelectedDetail(fullDetail);
@@ -297,34 +286,34 @@ export default function DetailHistory({
 
                 {/* Details Content */}
                 <div className="px-10 py-10 space-y-4">
-                  {/* Date & Lab */}
+                  {/* Date & Return Date */}
                   <div className="grid grid-cols-2 gap-x-6">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Date</p>
+                      <p className="text-xs text-gray-500 mb-1">Borrow Date</p>
                       <p className=" text-gray-800 text-sm">
                         {selectedDetail.borrowDate}
                       </p>
                     </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Return Date</p>
+                      <p className=" text-gray-800 text-sm">
+                        {selectedDetail.returnDate}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Lab & Purpose */}
+                  <div className="grid grid-cols-2 gap-x-6">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Lab</p>
                       <p className=" text-gray-800 text-sm">
                         {selectedDetail.lab}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Purpose & Session */}
-                  <div className="grid grid-cols-2 gap-x-6">
                     <div>
                       <p className="text-xs text-gray-500 mb-1">Purpose</p>
                       <p className=" text-gray-800 text-sm">
                         {selectedDetail.purpose}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Session</p>
-                      <p className=" text-gray-800 text-sm leading-tight">
-                        {selectedDetail.session}
                       </p>
                     </div>
                   </div>

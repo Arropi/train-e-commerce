@@ -1,17 +1,16 @@
-import { inventories } from './../../be/node_modules/.prisma/client/index.d';
 export type Profile = {
     email: string,
     password?: string
     username?: string
 }
 
-const dataLab = [{
-    'id': 1,
-    'name': 'Elektronika'
-}, {
-    'id': 2,
-    'name': 'IDK'
-}]
+export type User = {
+    id: number;
+    username: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+}
 
 export interface Inventory {
   id: number
@@ -37,6 +36,7 @@ export interface Inventory {
     name: string;
   }
   status: string
+  laboratory?: Laboratory; // tambah
 }
 
 export interface InventorySubject {
@@ -100,7 +100,9 @@ export interface Reserve {
   updated_at: string | null;
   deleted_at: string | null;
   inventories: Inventory;
-  reserve_user_created: Profile
+  reserve_user_created?: User; // tambah
+  session?: TimeSession; // tambah
+  subject?: Subject; // tambah
 }
 
 export interface TimeSession { 

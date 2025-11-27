@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 
@@ -27,6 +28,64 @@ interface EditItemsProps {
 export default function EditItems({ session, itemData }: EditItemsProps) {
   const router = useRouter();
   const { isSidebarOpen } = useAdminSidebar();
+  const { data: sessionData } = useSession();
+  const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
+  const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
+  const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+      const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+
+      if (!accessToken) return;
+
+      try {
+        const [labsRes, roomsRes, subjectsRes] = await Promise.all([
+          fetch(`${backendUrl}/laboratories`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            cache: "no-store",
+          }),
+          fetch(`${backendUrl}/rooms`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            cache: "no-store",
+          }),
+          fetch(`${backendUrl}/subjects`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            cache: "no-store",
+          }),
+        ]);
+
+        if (labsRes.ok) {
+          const labsData = await labsRes.json();
+          setLabs(labsData.data || labsData.laboratories || []);
+        }
+
+        if (roomsRes.ok) {
+          const roomsData = await roomsRes.json();
+          setRooms(roomsData.data || []);
+        }
+
+        if (subjectsRes.ok) {
+          const subjectsData = await subjectsRes.json();
+          setSubjects(subjectsData.data.map((item: { id: number; subject_name: string }) => ({ id: item.id, name: item.subject_name })) || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dropdown data:", error);
+      }
+    };
+
+    fetchData();
+  }, [sessionData, session]);
   const [formData, setFormData] = useState({
     name: itemData.name,
     inventoryNumber: itemData.inventoryNumber,
@@ -63,13 +122,71 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // TODO: Implement API call to update item
-    console.log("Updated form data:", formData);
+    // Check if any field has changed
+    const hasChanged =
+      formData.name !== itemData.name ||
+      formData.inventoryNumber !== itemData.inventoryNumber ||
+      formData.room !== itemData.room ||
+      formData.laboratory !== itemData.laboratory ||
+      JSON.stringify(formData.subject.sort()) !== JSON.stringify(itemData.subject.sort()) ||
+      formData.session !== itemData.session ||
+      formData.purpose !== itemData.purpose ||
+      formData.condition !== itemData.condition ||
+      formData.image !== null;
 
-    // Simulate API call and redirect with success message
-    setTimeout(() => {
-      router.push("/admin/allItems?updated=true");
-    }, 500);
+    if (!hasChanged) {
+      alert("No changes detected.");
+      return;
+    }
+
+    const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+    if (!accessToken) {
+      alert("No access token available");
+      return;
+    }
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+
+    // Map form data to API format
+    const updateData = {
+      item_name: formData.name,
+      no_inventory: formData.inventoryNumber,
+      room_id: parseInt(formData.room),
+      laboratory_id: parseInt(formData.laboratory),
+      type: formData.purpose === "Practical Class" ? "praktikum" : "projek",
+      condition: formData.condition.toLowerCase(),
+      special_session: formData.session === "2 Session",
+      subjects: formData.subject.map(name => subjects.find(s => s.name === name)?.id).filter(Boolean) as number[],
+    };
+
+    // Handle image if uploaded
+    if (formData.image) {
+      // For simplicity, assume image is uploaded separately or handle base64
+      // Here, we'll skip image update for now
+      console.log("Image update not implemented yet");
+    }
+
+    try {
+      const response = await fetch(`${backendUrl}/inventories/${itemData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (response.ok) {
+        alert("Item updated successfully!");
+        router.push("/admin/allItems?updated=true");
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update item: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error("Error updating item:", error);
+      alert("Error updating item");
+    }
   };
 
   return (
@@ -197,9 +314,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       required
                     >
                       <option value="">Choose room</option>
-                      <option value="R301">R301</option>
-                      <option value="R302">R302</option>
-                      <option value="R303">R303</option>
+                      {rooms.map((room) => (
+                        <option key={room.id} value={room.id.toString()}>
+                          {room.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -255,10 +374,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       required
                     >
                       <option value="">Choose lab</option>
-                      <option value="Lab IDK">Lab IDK</option>
-                      <option value="Lab Elektronika">Lab Elektronika</option>
-                      <option value="Lab RPL">Lab RPL</option>
-                      <option value="Lab TAJ">Lab TAJ</option>
+                      {labs.map((lab) => (
+                        <option key={lab.id} value={lab.id.toString()}>
+                          {lab.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -321,24 +441,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
                     >
                       <option value="">Add Subject</option>
-                      <option value="Praktikum Pemrograman Komputer">
-                        Praktikum Pemrograman Komputer
-                      </option>
-                      <option value="Praktikum Basis Data">
-                        Praktikum Basis Data
-                      </option>
-                      <option value="Praktikum Jaringan Komputer">
-                        Praktikum Jaringan Komputer
-                      </option>
-                      <option value="Praktikum Sistem Operasi">
-                        Praktikum Sistem Operasi
-                      </option>
-                      <option value="Praktikum Web Programming">
-                        Praktikum Web Programming
-                      </option>
-                      <option value="Praktikum Mobile Programming">
-                        Praktikum Mobile Programming
-                      </option>
+                      {subjects.map((subject) => (
+                        <option key={subject.id} value={subject.name}>
+                          {subject.name}
+                        </option>
+                      ))}
                     </select>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {formData.subject.map((subject) => (

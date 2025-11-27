@@ -5,8 +5,9 @@ import { getServerSession } from "next-auth";
 import { authConfig } from "../../lib/auth";
 
 export default async function AdminPage() {
-  const session = await getServerSession(authConfig)
+  const session = await getServerSession(authConfig);
   if (!session) redirect("/");
+
   const reserve = await fetch(`${
     process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
   }/reserves/admin`, {
@@ -15,9 +16,9 @@ export default async function AdminPage() {
       Authorization: `Bearer ${session.user.accessToken}`,
     },
     cache: "no-store",
-  })
-  const data = await reserve.json()
-  console.log("RESERVE ADMIN: ", data)
+  });
+  const data = await reserve.json();
+  console.log("RESERVE ADMIN: ", data);
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -30,12 +31,8 @@ export default async function AdminPage() {
         }}
       />
 
-      {/* Main Content - responsive dengan margin berdasarkan sidebar state */}
-      <div
-        className={`flex-1 transition-all duration-300 ${
-          session ? "lg:ml-74" : "lg:ml-16"
-        }`}
-      >
+      {/* Main Content */}
+      <div className="flex-1">
         <HeroAdmin orders={data.data} borrowedItems={[]} />
       </div>
     </div>
