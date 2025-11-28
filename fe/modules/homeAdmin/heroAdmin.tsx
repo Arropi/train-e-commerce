@@ -78,6 +78,12 @@ export default function HeroAdmin({
   const [laboratoriesData, setLaboratoriesData] = useState<{ [key: number]: string }>({});
   // roomsData used to map room ids to names; fetched in useEffect below
   const [roomsData, setRoomsData] = useState<{ [key: number]: string }>({});
+  // Loading states
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [loadingLabs, setLoadingLabs] = useState(true);
+  const [loadingRooms, setLoadingRooms] = useState(true);
+
+  const isLoading = loadingSubjects || loadingLabs || loadingRooms;
 
   const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
 
@@ -292,6 +298,7 @@ export default function HeroAdmin({
   // Fetch subjects data
   useEffect(() => {
     const fetchSubjects = async () => {
+      setLoadingSubjects(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/subjects`, {
           headers: {
@@ -308,6 +315,8 @@ export default function HeroAdmin({
         }
       } catch (error) {
         console.error("Error fetching subjects:", error);
+      } finally {
+        setLoadingSubjects(false);
       }
     };
 
@@ -319,6 +328,7 @@ export default function HeroAdmin({
   // Fetch laboratories data
   useEffect(() => {
     const fetchLaboratories = async () => {
+      setLoadingLabs(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
           headers: {
@@ -335,6 +345,8 @@ export default function HeroAdmin({
         }
       } catch (error) {
         console.error("Error fetching laboratories:", error);
+      } finally {
+        setLoadingLabs(false);
       }
     };
 
@@ -346,6 +358,7 @@ export default function HeroAdmin({
   // Fetch rooms data
   useEffect(() => {
     const fetchRooms = async () => {
+      setLoadingRooms(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/rooms`, {
           headers: {
@@ -362,6 +375,8 @@ export default function HeroAdmin({
         }
       } catch (error) {
         console.error("Error fetching rooms:", error);
+      } finally {
+        setLoadingRooms(false);
       }
     };
 
@@ -376,268 +391,276 @@ export default function HeroAdmin({
         isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
       }`}>
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#004CB0]">
-              Dashboard Admin Lab IDK
-            </h1>
-          </div>
-
-          {/* Table Container */}
-          <div className={`bg-white rounded-xl overflow-hidden mb-8 overflow-x-auto ${isSidebarOpen ? 'mr-4' : ''}`}>
-            {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-gray-500">
-              <div className="col-span-1"></div>
-              <div className="col-span-3">Name</div>
-              <div className="col-span-4">Barang</div>
-              <div className="col-span-2">Date</div>
-              <div className="col-span-2">Action</div>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[400px]">
+              <div className="custom-loader"></div>
             </div>
-
-            {/* Session 1 */}
-            <div className="">
-              <div className="px-6 py-3 ">
-                <h3 className="font-bold text-gray-700">1</h3>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-[#004CB0]">
+                  Dashboard Admin Lab IDK
+                </h1>
               </div>
-              {session1.map((order) => (
-                <React.Fragment key={order.id}>
-                  <div
-                    className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
-                  >
-                    <div className="col-span-1">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 rounded border-2 border-[#004CB0] text-[#004CB0] focus:ring-[#004CB0] focus:ring-2 cursor-pointer accent-[#004CB0]"
-                      />
-                    </div>
-                    <div className="col-span-3 text-sm text-gray-800">
-                      {order.name}
-                    </div>
-                    <div className="col-span-4 text-sm text-gray-800">
-                      {order.item}
-                    </div>
-                    <div className="col-span-2 text-sm text-gray-800">
-                      {order.date}
-                    </div>
-                    <div className="col-span-2 flex items-center gap-2">
-                      <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                        <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      </button>
-                      <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                        <Check
-                          className="w-6 h-6 text-green-500"
-                          strokeWidth={2.5}
-                        />
-                      </button>
-                      <button
-                        onClick={() => handleDetailsClick(order.id)}
-                        className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                      >
-                        Details
-                      </button>
-                    </div>
-                  </div>
-                  {/* Mobile View */}
-                  <div
-                    className="md:hidden px-4 py-4 border-b border-gray-100"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 rounded border-2 border-[#004CB0] text-[#004CB0] focus:ring-[#004CB0] focus:ring-2 cursor-pointer accent-[#004CB0]"
-                      />
-                      <div className="flex-1 ml-3">
-                        <p className="font-medium text-gray-800">{order.name}</p>
-                        <p className="text-sm text-gray-600">{order.item}</p>
-                        <p className="text-sm text-gray-500">{order.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                        <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                      </button>
-                      <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                        <Check
-                          className="w-6 h-6 text-green-500"
-                          strokeWidth={2.5}
-                        />
-                      </button>
-                      <button
-                        onClick={() => handleDetailsClick(order.id)}
-                        className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                      >
-                        Details
-                      </button>
-                    </div>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
 
-            {/* Session 2 */}
-            {session2.length > 0 && (
-              <div>
-                <div className="px-6 py-3">
-                  <h3 className="font-bold text-gray-700">2</h3>
+              {/* Table Container */}
+              <div className={`bg-white rounded-xl overflow-hidden mb-8 overflow-x-auto ${isSidebarOpen ? 'mr-4' : ''}`}>
+                {/* Table Header */}
+                <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-gray-500">
+                  <div className="col-span-1"></div>
+                  <div className="col-span-3">Name</div>
+                  <div className="col-span-4">Barang</div>
+                  <div className="col-span-2">Date</div>
+                  <div className="col-span-2">Action</div>
                 </div>
-                {session2.map((order) => (
-                  <React.Fragment key={order.id}>
-                    <div
-                      className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
-                    >
-                      <div className="col-span-1">
-                        <input
-                          type="checkbox"
-                          className="w-5 h-5 rounded border-2 border-[#004CB0] text-[#004CB0] focus:ring-[#004CB0] focus:ring-2 cursor-pointer accent-[#004CB0]"
-                        />
-                      </div>
-                      <div className="col-span-3 text-sm text-gray-800">
-                        {order.name}
-                      </div>
-                      <div className="col-span-4 text-sm text-gray-800">
-                        {order.item}
-                      </div>
-                      <div className="col-span-2 text-sm text-gray-800">
-                        {order.date}
-                      </div>
-                      <div className="col-span-2 flex items-center gap-2">
-                        <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                          <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                        </button>
-                        <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                          <Check
-                            className="w-6 h-6 text-green-500"
-                            strokeWidth={2.5}
+
+                {/* Session 1 */}
+                <div className="">
+                  <div className="px-6 py-3 ">
+                    <h3 className="font-bold text-gray-700">1</h3>
+                  </div>
+                  {session1.map((order) => (
+                    <React.Fragment key={order.id}>
+                      <div
+                        className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
+                      >
+                        <div className="col-span-1">
+                          <input
+                            type="checkbox"
+                            className="hidden"
                           />
-                        </button>
-                        <button
-                          onClick={() => handleDetailsClick(order.id)}
-                          className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                        >
-                          Details
-                        </button>
-                      </div>
-                    </div>
-                    {/* Mobile View */}
-                    <div
-                      className="md:hidden px-4 py-4 border-b border-gray-100"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <input
-                          type="checkbox"
-                          className="w-5 h-5 rounded border-2 border-[#004CB0] text-[#004CB0] focus:ring-[#004CB0] focus:ring-2 cursor-pointer accent-[#004CB0]"
-                        />
-                        <div className="flex-1 ml-3">
-                          <p className="font-medium text-gray-800">{order.name}</p>
-                          <p className="text-sm text-gray-600">{order.item}</p>
-                          <p className="text-sm text-gray-500">{order.date}</p>
+                        </div>
+                        <div className="col-span-3 text-sm text-gray-800">
+                          {order.name}
+                        </div>
+                        <div className="col-span-4 text-sm text-gray-800">
+                          {order.item}
+                        </div>
+                        <div className="col-span-2 text-sm text-gray-800">
+                          {order.date}
+                        </div>
+                        <div className="col-span-2 flex items-center gap-2">
+                          <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                            <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
+                          </button>
+                          <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                            <Check
+                              className="w-6 h-6 text-green-500"
+                              strokeWidth={2.5}
+                            />
+                          </button>
+                          <button
+                            onClick={() => handleDetailsClick(order.id)}
+                            className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
+                          >
+                            Details
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 justify-end">
-                        <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                          <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                        </button>
-                        <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                          <Check
-                            className="w-6 h-6 text-green-500"
-                            strokeWidth={2.5}
+                      {/* Mobile View */}
+                      <div
+                        className="md:hidden px-4 py-4 border-b border-gray-100"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <input
+                            type="checkbox"
+                            className="hidden"
                           />
-                        </button>
-                        <button
-                          onClick={() => handleDetailsClick(order.id)}
-                          className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                        >
-                          Details
-                        </button>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Sedang dipinjam section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-[#004CB0] mb-4">On Loan</h2>
-
-            {displayBorrowedItems.length > 0 ? (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
-                {displayBorrowedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-shadow h-[280px] ${isSidebarOpen ? 'w-[330px]' : 'w-[380px]'}`}
-                  >
-                    {/* Header with Image and Title side by side */}
-                    <div className="flex items-start gap-4 mb-4">
-                      {/* Item Image */}
-                      <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
-                        {item.img_url ? (
-                          <Image
-                            src={item.img_url}
-                            alt={item.item_name}
-                            width={96}
-                            height={96}
-                            className="object-contain"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                            No Image
+                          <div className="flex-1 ml-3">
+                            <p className="font-medium text-gray-800">{order.name}</p>
+                            <p className="text-sm text-gray-600">{order.item}</p>
+                            <p className="text-sm text-gray-500">{order.date}</p>
                           </div>
-                        )}
+                        </div>
+                        <div className="flex items-center gap-2 justify-end">
+                          <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                            <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
+                          </button>
+                          <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                            <Check
+                              className="w-6 h-6 text-green-500"
+                              strokeWidth={2.5}
+                            />
+                          </button>
+                          <button
+                            onClick={() => handleDetailsClick(order.id)}
+                            className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
+                          >
+                            Details
+                          </button>
+                        </div>
                       </div>
+                    </React.Fragment>
+                  ))}
+                </div>
 
-                      {/* Item Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2 overflow-hidden text-ellipsis">
-                          {item.item_name}
-                        </h3>
-                        <p className="text-sm text-gray-500">{item.lab}</p>
-                      </div>
+                {/* Session 2 */}
+                {session2.length > 0 && (
+                  <div>
+                    <div className="px-6 py-3">
+                      <h3 className="font-bold text-gray-700">2</h3>
                     </div>
-
-                    {/* Divider */}
-                    <hr className="border-gray-300 my-4" />
-
-                    {/* Borrower Info */}
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm text-gray-700 truncate mr-2">
-                        
-                        {item.borrower}
-                      </p>
-                      <button
-                        onClick={() => handleBorrowedItemDetailsClick(item.id)}
-                        className="px-4 py-1 bg-[#004CB0] text-white rounded-full text-xs hover:bg-blue-900 transition-colors whitespace-nowrap"
-                      >
-                        Details
-                      </button>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 justify-end mt-8">
-                      <button
-                        onClick={() => handleConditionChange(item.id, "bad")}
-                        className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-red-700 transition-colors duration-200"
-                      >
-                        Bad Condition
-                      </button>
-                      <button
-                        onClick={() => handleConditionChange(item.id, "good")}
-                        className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-green-700 transition-colors duration-200"
-                      >
-                        Good Condition
-                      </button>
-                    </div>
+                    {session2.map((order) => (
+                      <React.Fragment key={order.id}>
+                        <div
+                          className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
+                        >
+                          <div className="col-span-1">
+                            <input
+                              type="checkbox"
+                              className="hidden"
+                            />
+                          </div>
+                          <div className="col-span-3 text-sm text-gray-800">
+                            {order.name}
+                          </div>
+                          <div className="col-span-4 text-sm text-gray-800">
+                            {order.item}
+                          </div>
+                          <div className="col-span-2 text-sm text-gray-800">
+                            {order.date}
+                          </div>
+                          <div className="col-span-2 flex items-center gap-2">
+                            <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                              <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
+                            </button>
+                            <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                              <Check
+                                className="w-6 h-6 text-green-500"
+                                strokeWidth={2.5}
+                              />
+                            </button>
+                            <button
+                              onClick={() => handleDetailsClick(order.id)}
+                              className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </div>
+                        {/* Mobile View */}
+                        <div
+                          className="md:hidden px-4 py-4 border-b border-gray-100"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <input
+                              type="checkbox"
+                              className="hidden"
+                            />
+                            <div className="flex-1 ml-3">
+                              <p className="font-medium text-gray-800">{order.name}</p>
+                              <p className="text-sm text-gray-600">{order.item}</p>
+                              <p className="text-sm text-gray-500">{order.date}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 justify-end">
+                            <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                              <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
+                            </button>
+                            <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
+                              <Check
+                                className="w-6 h-6 text-green-500"
+                                strokeWidth={2.5}
+                              />
+                            </button>
+                            <button
+                              onClick={() => handleDetailsClick(order.id)}
+                              className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <p className="text-lg">No items currently on loan</p>
+
+              {/* Sedang dipinjam section */}
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-[#004CB0] mb-4">On Loan</h2>
+
+                {displayBorrowedItems.length > 0 ? (
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
+                    {displayBorrowedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`bg-white rounded-3xl shadow-lg p-6 hover:shadow-xl transition-shadow h-[280px] ${isSidebarOpen ? 'w-[330px]' : 'w-[380px]'}`}
+                      >
+                        {/* Header with Image and Title side by side */}
+                        <div className="flex items-start gap-4 mb-4">
+                          {/* Item Image */}
+                          <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
+                            {item.img_url ? (
+                              <Image
+                                src={item.img_url}
+                                alt={item.item_name}
+                                width={96}
+                                height={96}
+                                className="object-contain"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                                No Image
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Item Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2 overflow-hidden text-ellipsis">
+                              {item.item_name}
+                            </h3>
+                            <p className="text-sm text-gray-500">{item.lab}</p>
+                          </div>
+                        </div>
+
+                        {/* Divider */}
+                        <hr className="border-gray-300 my-4" />
+
+                        {/* Borrower Info */}
+                        <div className="flex items-center justify-between mb-4">
+                          <p className="text-sm text-gray-700 truncate mr-2">
+                            
+                            {item.borrower}
+                          </p>
+                          <button
+                            onClick={() => handleBorrowedItemDetailsClick(item.id)}
+                            className="px-4 py-1 bg-[#004CB0] text-white rounded-full text-xs hover:bg-blue-900 transition-colors whitespace-nowrap"
+                          >
+                            Details
+                          </button>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 justify-end mt-8">
+                          <button
+                            onClick={() => handleConditionChange(item.id, "bad")}
+                            className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-red-700 transition-colors duration-200"
+                          >
+                            Bad Condition
+                          </button>
+                          <button
+                            onClick={() => handleConditionChange(item.id, "good")}
+                            className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-green-700 transition-colors duration-200"
+                          >
+                            Good Condition
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-lg">No items currently on loan</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -818,7 +841,7 @@ export default function HeroAdmin({
             </div>
           </div>
         </div>
-      )}
+        )}
     </>
   );
 }
