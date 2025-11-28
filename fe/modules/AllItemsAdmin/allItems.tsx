@@ -8,14 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 
-const dataLab = [
-  { id: 1, name: "Elektronika" },
-  { id: 2, name: "IDK" },
-  { id: 3, name: "TAJ" },
-  { id: 4, name: "RPL" },
-  { id: 5, name: "TL" },
-];
-
 interface RawInventory {
   id: number;
   item_name: string;
@@ -75,26 +67,54 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
   const [selectedLab, setSelectedLab] = useState("semua");
   const [sortBy, setSortBy] = useState("name");
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("Item successfully added");
   const [fetchedItems, setFetchedItems] = useState<Item[]>([]);
+  const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
 
   const mappedInventories = useMemo(() => (Array.isArray(inventories) ? inventories : []).map((inv: RawInventory) => ({
     id: inv.id,
     name: inv.item_name,
-    lab: dataLab.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+    lab: labs.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
     labId: inv.labolatory_id,
     image: inv.inventory_galleries?.[0]?.filepath || "",
     serialNumber: inv.no_item,
     category: inv.alat_bhp || "alat",
     condition: inv.condition || "good",
-  })), [inventories]);
+  })), [inventories, labs]);
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
+      setNotificationMessage("Item successfully added");
       setShowSuccessNotification(true);
       // Remove success parameter from URL
       router.replace("/admin/allItems");
+    } else if (searchParams.get("updated") === "true") {
+      setNotificationMessage("Item successfully updated");
+      setShowSuccessNotification(true);
+      // Remove updated parameter from URL
+      router.replace("/admin/allItems");
     }
   }, [searchParams, router]);
+
+  // Fetch laboratories from API
+  useEffect(() => {
+    const fetchLabs = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setLabs(data.data || data.laboratories || []);
+        }
+      } catch (error) {
+        console.error("Error fetching laboratories:", error);
+      }
+    };
+    fetchLabs();
+  }, [session]);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -109,7 +129,7 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
           const mappedItems: Item[] = data.inventories.map((inv: RawInventory) => ({
             id: inv.id,
             name: inv.item_name,
-            lab: dataLab.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+            lab: labs.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
             labId: inv.labolatory_id,
             image: inv.inventory_galleries?.[0]?.filepath || "",
             serialNumber: inv.no_item,
@@ -122,8 +142,10 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
         console.error("Error fetching items:", error);
       }
     };
-    fetchItems();
-  }, [session]);
+    if (labs.length > 0) {
+      fetchItems();
+    }
+  }, [session, labs]);
 
   const displayItems = fetchedItems.length > 0 ? fetchedItems : mappedInventories;
 
@@ -165,7 +187,7 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
       {/* Success Notification */}
       {showSuccessNotification && (
         <SuccessNotification
-          message="Barang berhasil ditambahkan!"
+          message={notificationMessage}
           onClose={() => setShowSuccessNotification(false)}
         />
       )}
@@ -201,11 +223,11 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
                     className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
                     <option value="semua">Semua lab</option>
-                    <option value="1">Lab Elektronika</option>
-                    <option value="2">Lab IDK</option>
-                    <option value="3">Lab TAJ</option>
-                    <option value="4">Lab RPL</option>
-                    <option value="5">Lab TL</option>
+                    {labs.map((lab) => (
+                      <option key={lab.id} value={lab.id.toString()}>
+                        Lab {lab.name}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
                 </div>

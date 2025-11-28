@@ -316,14 +316,14 @@ export default function SuperAdminProfile(profileProps: {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-10 flex">
+    <div className="min-h-screen bg-white pb-10">
       {/* Sidebar Admin */}
       <SidebarAdmin user={sidebarUser} />
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "lg:ml-56" : "lg:ml-16"
+        className={`transition-all duration-300 ${
+          isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
         }`}
       >
         {/* Toasts (inline) */}
@@ -338,7 +338,7 @@ export default function SuperAdminProfile(profileProps: {
             />
             <div className="relative bg-white rounded-2xl w-full max-w-3xl p-8 z-10 shadow-lg">
               <h3 className="text-2xl font-semibold text-[#004CB0] mb-6">
-                Add Atmin
+                Add Admin
               </h3>
 
               <div className="space-y-4">
@@ -480,7 +480,7 @@ export default function SuperAdminProfile(profileProps: {
           </div>
         </div>
 
-        <div className={`max-w-4xl mx-auto mt-8 px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
+        <div className={`w-[56rem] mx-auto mt-8 px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
           <div className="flex flex-col items-center justify-center mb-30">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-[#004CB0]">
               {session?.user?.image ? (

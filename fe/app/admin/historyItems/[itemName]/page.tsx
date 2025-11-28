@@ -118,11 +118,58 @@ export default async function DetailHistoryPage({ params }: PageProps) {
 
     const reservesData = await reservesResponse.json();
 
-    // Create labs map for quick lookup
-    const labsMap = new Map<number, string>();
-    dataLab.forEach((lab: Lab) => {
-      labsMap.set(lab.id, lab.name);
+    // Fetch laboratories data
+    const labsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: 'no-store'
     });
+
+    let labsMap = new Map<number, string>();
+    if (labsResponse.ok) {
+      const labsData = await labsResponse.json();
+      labsData.data?.forEach((lab: Lab) => {
+        labsMap.set(lab.id, lab.name);
+      });
+    } else {
+      // Fallback to hardcoded data
+      dataLab.forEach((lab: Lab) => {
+        labsMap.set(lab.id, lab.name);
+      });
+    }
+
+    // Fetch subjects data
+    const subjectsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/subjects`, {
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: 'no-store'
+    });
+
+    let subjectsMap = new Map<number, string>();
+    if (subjectsResponse.ok) {
+      const subjectsData = await subjectsResponse.json();
+      subjectsData.data?.forEach((subject: { id: number; subject_name: string }) => {
+        subjectsMap.set(subject.id, subject.subject_name);
+      });
+    }
+
+    // Fetch rooms data
+    const roomsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/rooms`, {
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: 'no-store'
+    });
+
+    let roomsMap = new Map<number, string>();
+    if (roomsResponse.ok) {
+      const roomsData = await roomsResponse.json();
+      roomsData.data?.forEach((room: { id: number; name: string }) => {
+        roomsMap.set(room.id, room.name);
+      });
+    }
 
     // Filter reserves with status "done" and matching item name, then map to BorrowRecord format
     const borrowRecords = reservesData.data
@@ -148,9 +195,9 @@ export default async function DetailHistoryPage({ params }: PageProps) {
         lab: labsMap.get(reserve.inventories?.labolatory_id || 0) || "Unknown Lab",
         purpose: reserve.inventories?.type || "Unknown Purpose",
         session: `Session ${reserve.session_id || "N/A"}`,
-        room: reserve.inventories?.room_id?.toString() || "N/A",
+        room: roomsMap.get(reserve.inventories?.room_id || 0) || "Unknown Room",
         personInCharge: reserve.pic || "N/A",
-        subject: reserve.inventories?.inventory_subjects?.map(sub => `Subject ${sub.subject_id}`).join(", ") || "N/A",
+        subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsMap.get(sub.subject_id) || `Subject ${sub.subject_id}`).join(", ") || "N/A",
         returnDate: reserve.updated_at ? new Date(reserve.updated_at).toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
