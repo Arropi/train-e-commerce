@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { InventoryCart, InventoryReserves, Reserve, ReserveFormInput, Rooms, Subject, TimeSession } from "@/types";
+import { InventoryCart, ReserveFormInput, Rooms, Subject, TimeSession } from "@/types";
 import { useSession } from "next-auth/react";
 import { getDataSubjects } from "@/data/subjects";
 import { postReserves } from "@/action/action";
@@ -117,7 +117,7 @@ export default function RequestForm({
     return group
   }
 
-  const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: any) => {
+  const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: ReserveFormInput[keyof ReserveFormInput]) => {
     setFormData(prev =>
       prev.map((item, i) =>
         i === index ? { ...item, [field]: value } : item

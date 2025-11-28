@@ -101,8 +101,9 @@ export default function HeroAdmin({
           "Content-Type": "application/json",
           Authorization: `Bearer ${session?.user?.accessToken}`,
         },
-        body: JSON.stringify({ status: "approved" }),
+        body: JSON.stringify({ status: "approve" }),
       });
+      console.log(await response.json())
       if (response.ok) {
         alert("Request approved!");
         setRefreshKey(prev => prev + 1);
@@ -245,6 +246,7 @@ export default function HeroAdmin({
   const displayBorrowedItems = borrowedItemsDetail;
 
   const session1 = ordersDetail.slice(0, 7);
+  console.log("Orders Detail:", ordersDetail);
   const session2 = ordersDetail.slice(7);
 
   const handleDetailsClick = (orderId: number) => {

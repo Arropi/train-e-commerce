@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import Image from "next/image";
 interface TopCardProps {
   id: number;
   title: string;
@@ -18,19 +18,6 @@ export default function TopCard({
   labPath = "/dashboard", 
 }: TopCardProps) {
   // Split title menjadi "Laboratorium" dan nama lab
-  const formatTitle = (text: string) => {
-    const parts = text.split(" ");
-    if (parts.length >= 2 && parts[0] === "Laboratorium") {
-      return (
-        <>
-          {parts[0]}
-          <br />
-          {parts.slice(1).join(" ")}
-        </>
-      );
-    }
-    return text;
-  };
 
   return (
     <Link
@@ -60,7 +47,7 @@ export default function TopCard({
           }`}
         >
           {/* buat icon */}
-          <img src={iconPath} alt={title} className="w-12 h-12" />
+          <Image width={48} height={48} src={iconPath} alt={title} className="w-12 h-12" />
         </div>
 
         {/* Text Content */}
