@@ -3,8 +3,9 @@
 import { updateReserves } from "@/action/action";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { Reserve, Subject } from "@/types";
-import { X, Check } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect } from "react";
+import Image from "next/image";
 
 interface ModalViewAllProps {
   isOpen: boolean;
@@ -187,7 +188,9 @@ export default function ModalViewAll({
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 flex items-center justify-center mb-6">
             {item.inventories.inventory_galleries[0].filepath ? (
-              <img
+              <Image
+                width={128}
+                height={128}
                 src={item.inventories.inventory_galleries[0].filepath}
                 alt={item.inventories.item_name}
                 className="max-w-full max-h-full object-contain"
@@ -242,7 +245,7 @@ export default function ModalViewAll({
               <p className="text-base font-semibold text-gray-900 mb-2">
                 Peminjam
               </p>
-              <p className="text-base text-gray-700">{item.reserve_user_created.username || "-"}</p>
+              <p className="text-base text-gray-700">{item?.reserve_user_created?.username || "-"}</p>
             </div>
             <div>
               <p className="text-base font-semibold text-gray-900 mb-2">Room</p>

@@ -29,6 +29,7 @@ export default async function AllItemsPage() {
   // Pass raw inventories data to client component (assuming result is { inventories: [...] })
   const inventories = result.inventories || [];
   console.log("Barang nya: ", inventories);
+  console.log(inventories[inventories.length - 1]);
 
   return <AllItemsAdmin session={session} inventories={inventories} />;
 }

@@ -92,22 +92,35 @@ const createReservesService = async (dataInput, user_id) => {
                 AND: [
                     {tanggal: new Date(i.tanggal)},
                     {session_id: i.session_id},
+                    {user_id: user_id},
                     {inventories_id: i.inventories_id},
                     {status: "process"}
                 ]
             }
         })
+        const secondCheck = dataInput.map((i) => {
+            const {subject_id, session_id,pic, ...rest} = i
+            return {
+                AND: [
+                    {tanggal: new Date(i.tanggal)},
+                    {session_id: i.session_id},
+                    {user_id: user_id},
+                    {inventories_id: i.inventories_id},
+                    {status: {
+                        in: ["approve", "waiting_to_be_return"]
+                    }}
+                ]
+            }
+        })
         const existReserve = await getReservesUserOnProcess(toCheck)
-        console.log(existReserve)
         if(existReserve.length > 0) {
-            const thisUser = existReserve.find(e => Number(e.user_id) === user_id)
-            console.log(thisUser)   
-            if (thisUser) {
-                throw Error("Inventory Reserve In Process", {
-                    cause: "Bad Request"
-                })
-            } else {
-                throw Error("Inventory Already Reserved by Other User", {
+            throw Error("Inventory Reserve In Process", {
+                cause: "Bad Request"
+            })
+        } else {
+            const existSecondReserve = await getReservesUserOnProcess(secondCheck)
+            if(existSecondReserve.length > 0) {
+                throw Error("Inventory Already Reserved", {
                     cause: "Bad Request"
                 })
             }

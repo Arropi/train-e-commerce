@@ -19,6 +19,8 @@ export default async function AdminPage() {
   });
   const data = await reserve.json();
   console.log("RESERVE ADMIN: ", data);
+  const rejectedItems = data.data.filter( (item: any) => item.status  === 'rejected')
+  console.log("Ini ketolak: ", rejectedItems)
 
   return (
     <div className="flex min-h-screen bg-white">

@@ -1,4 +1,4 @@
-import { NextAuthOptions, User } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github"
 
@@ -20,7 +20,7 @@ export const authConfig: NextAuthOptions = {
     maxAge: 60*60*24
   },
   callbacks: {
-    async signIn({user, account, profile }) {
+    async signIn({ account, profile }) {
       if (account?.provider === "google" && profile?.email?.endsWith('@mail.ugm.ac.id')) {
         return true
       }

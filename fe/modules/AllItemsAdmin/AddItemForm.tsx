@@ -8,6 +8,7 @@ import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "../../contexts/AdminSidebarContext";
+import { useUploadThing } from "@/lib/uploadthing";
 
 interface AddItemFormProps {
   session: Session;
@@ -17,6 +18,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   const router = useRouter();
   const { isSidebarOpen } = useAdminSidebar();
   const { data: sessionData } = useSession();
+  const [ error, setError] = useState<string | null>(null);
   const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
@@ -31,8 +33,15 @@ export default function AddItemForm({ session }: AddItemFormProps) {
     condition: "Good",
     image: null as File | null,
   });
+  const [files, setFiles] = useState<File | null>(null);
 
   const [imagePreview, setImagePreview] = useState<string>("");
+  const { startUpload } = useUploadThing("imageUploader", {
+    onUploadError(e) {
+      console.error("Upload error:", e);
+      setError(e.message)
+    },
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +105,8 @@ export default function AddItemForm({ session }: AddItemFormProps) {
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
+      setFiles(file);
+      console.log("Selected file:", file);
       reader.readAsDataURL(file);
     }
   };
@@ -149,13 +160,16 @@ export default function AddItemForm({ session }: AddItemFormProps) {
       subjects: formData.subject.map(name => subjects.find(s => s.name === name)?.id).filter(Boolean) as number[],
     };
 
-    // Handle image if uploaded - convert to base64
-    if (formData.image) {
+    if (formData.image && files) {
       try {
-        const base64String = await convertFileToBase64(formData.image);
-        createData.img_url = base64String;
+        const uploadImage = await startUpload([files]);
+        if (!uploadImage || !uploadImage[0] || !uploadImage[0].ufsUrl) {
+          setError("Image upload failed");
+          return;
+        }
+        createData.img_url = uploadImage[0].ufsUrl;
       } catch (error) {
-        console.error("Error converting image to base64:", error);
+        console.error("Error uploading image:", error);
         alert("Failed to process image");
         return;
       }
@@ -194,7 +208,10 @@ export default function AddItemForm({ session }: AddItemFormProps) {
           avatar: session?.user?.image?? undefined,
         }}
       />
-
+      {error && (<div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow">
+        {error}
+      </div>
+      )}
       {/* Main Content */}
       <div
         className={`flex-1 transition-all duration-300 ${

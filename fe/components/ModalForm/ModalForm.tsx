@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { InventoryCart, InventoryReserves, Reserve, ReserveFormInput, Rooms, Subject, TimeSession } from "@/types";
+import { InventoryCart, ReserveFormInput, Rooms, Subject, TimeSession } from "@/types";
 import { useSession } from "next-auth/react";
 import { getDataSubjects } from "@/data/subjects";
 import { postReserves } from "@/action/action";
@@ -18,8 +18,6 @@ interface RequestFormProps {
 interface FormsServe extends InventoryCart {
   key: number
 }
-
-
 
 export default function RequestForm({
   isOpen,
@@ -117,7 +115,8 @@ export default function RequestForm({
     return group
   }
 
-  const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: any) => {
+  const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: ReserveFormInput[keyof ReserveFormInput]) => {
+    console.log('Updating form at index:', index, 'field:', field, 'value:', value);
     setFormData(prev =>
       prev.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
@@ -161,7 +160,7 @@ export default function RequestForm({
     );
   }
 
-  console.log(subjects)
+  console.log("Value Subject: ", )
 
   const handleSubmit = async() => {
     console.log("Form submitted:", formData);
@@ -174,6 +173,7 @@ export default function RequestForm({
       const result = await postReserves(formData);
       
       if (result && !result.success) {
+
         console.error('Submit failed:', result.error);
       }
     } catch (error) {
@@ -195,7 +195,17 @@ export default function RequestForm({
       <h1>Data Logic Error</h1>
     )
   }
+  console.log('Information card: ',informationCard)
   console.log('Now active: ', activeInventory)
+  console.log('Available subjects from API: ', subjects)
+  console.log('Inventory subjects for this item: ', informationCard.inventories.inventory_subjects)
+  
+  // Debug mapping
+  console.log('Subject mapping check:')
+  informationCard.inventories.inventory_subjects.forEach(invSubject => {
+    const foundSubject = subjects?.find(s => s.id === invSubject.subject_id)
+    console.log(`Subject ID ${invSubject.subject_id} -> Found:`, foundSubject)
+  })
   // {!formData.length ? ( 
   //   (
   //     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
@@ -203,7 +213,6 @@ export default function RequestForm({
   //     </div>
   //   )
   // ): }
-
   return (
     <>
       {/* bg transparan */}
@@ -270,8 +279,10 @@ export default function RequestForm({
               </label>
               <select
                 value={activeInventory.subject_id?? 0}
-                onChange={(e) =>
+                onChange={(e) =>{
+                  console.log(e.target.value) 
                   updateFormByIndex(showIndex, "subject_id", Number(e.target.value))
+                }
                 }
                 className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -279,9 +290,9 @@ export default function RequestForm({
                 {!subjects ? (
                   <option>Loading...</option>
                 ) : (
-                  informationCard.inventories.inventory_subjects.map((subject) => (
-                    <option value={subject.id} key={subject.id}>
-                      {subjects.find((s) => s.id === subject.subject_id)?.subject_name}
+                  informationCard.inventories.inventory_subjects.map((inventorySubject) => (
+                    <option value={inventorySubject.subject_id} key={inventorySubject.id}>
+                      {subjects.find((s) => s.id === inventorySubject.subject_id)?.subject_name}
                     </option>
                   ))
                 )}

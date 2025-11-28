@@ -83,9 +83,33 @@ export default function HeroAdmin({
   const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingRooms, setLoadingRooms] = useState(true);
 
-  const isLoading = loadingSubjects || loadingLabs || loadingRooms;
+  // const isLoading = loadingSubjects || loadingLabs || loadingRooms;
 
-  const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
+  const ordersToUse = fetchedOrders
+
+  // Function to fetch fresh data from API
+  const fetchOrders = async () => {
+    if (!session?.user?.accessToken) return;
+    
+    try {
+      const reserve = await fetch(`${
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+      }/reserves/admin`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+        cache: "no-store",
+      });
+      
+      if (reserve.ok) {
+        const data = await reserve.json();
+        setFetchedOrders(data);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
 
   const handleApprove = (orderId: number) => {
     setPendingOrderId(orderId);
@@ -109,10 +133,12 @@ export default function HeroAdmin({
           "Content-Type": "application/json",
           Authorization: `Bearer ${session?.user?.accessToken}`,
         },
-        body: JSON.stringify({ status: "approved" }),
+        body: JSON.stringify({ status: "approve" }),
       });
+      console.log(await response.json())
       if (response.ok) {
         alert("Request approved!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Failed to approve");
@@ -138,8 +164,10 @@ export default function HeroAdmin({
         },
         body: JSON.stringify({ status: "rejected" }),
       });
+      console.log(await response.json())
       if (response.ok) {
         alert("Request rejected!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Failed to reject");
@@ -186,6 +214,7 @@ export default function HeroAdmin({
       
       if (inventoryResponse.ok && reserveResponse.ok) {
         alert("Kondisi barang berhasil diupdate dan status diubah menjadi done!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Gagal update kondisi atau status");
@@ -253,6 +282,7 @@ export default function HeroAdmin({
   const displayBorrowedItems = borrowedItemsDetail;
 
   const session1 = ordersDetail.slice(0, 7);
+  console.log("Orders Detail:", ordersDetail);
   const session2 = ordersDetail.slice(7);
 
   const handleDetailsClick = (orderId: number) => {
@@ -295,95 +325,14 @@ export default function HeroAdmin({
     setSelectedConditions(initialConditions);
   }, [borrowedItemsDetail]);
 
-  // Fetch subjects data
+  // Refetch data when refreshKey changes
   useEffect(() => {
-    const fetchSubjects = async () => {
-      setLoadingSubjects(true);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/subjects`, {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const subjectsMap: { [key: number]: string } = {};
-          data.data?.forEach((subject: { id: number; subject_name: string }) => {
-            subjectsMap[subject.id] = subject.subject_name;
-          });
-          setSubjectsData(subjectsMap);
-        }
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
-      } finally {
-        setLoadingSubjects(false);
-      }
-    };
-
-    if (session?.user?.accessToken) {
-      fetchSubjects();
+    if (refreshKey > 0) {
+      fetchOrders();
     }
-  }, [session]);
+  }, [refreshKey, session?.user?.accessToken]);
 
-  // Fetch laboratories data
-  useEffect(() => {
-    const fetchLaboratories = async () => {
-      setLoadingLabs(true);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const labsMap: { [key: number]: string } = {};
-          data.data?.forEach((lab: { id: number; name: string }) => {
-            labsMap[lab.id] = lab.name;
-          });
-          setLaboratoriesData(labsMap);
-        }
-      } catch (error) {
-        console.error("Error fetching laboratories:", error);
-      } finally {
-        setLoadingLabs(false);
-      }
-    };
 
-    if (session?.user?.accessToken) {
-      fetchLaboratories();
-    }
-  }, [session]);
-
-  // Fetch rooms data
-  useEffect(() => {
-    const fetchRooms = async () => {
-      setLoadingRooms(true);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/rooms`, {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          const roomsMap: { [key: number]: string } = {};
-          data.data?.forEach((room: { id: number; name: string }) => {
-            roomsMap[room.id] = room.name;
-          });
-          setRoomsData(roomsMap);
-        }
-      } catch (error) {
-        console.error("Error fetching rooms:", error);
-      } finally {
-        setLoadingRooms(false);
-      }
-    };
-
-    if (session?.user?.accessToken) {
-      fetchRooms();
-    }
-  }, [session]);
 
   return (
     <>
@@ -391,11 +340,7 @@ export default function HeroAdmin({
         isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
       }`}>
         <div className="max-w-6xl mx-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="custom-loader"></div>
-            </div>
-          ) : (
+          { (
             <>
               {/* Header */}
               <div className="mb-6">

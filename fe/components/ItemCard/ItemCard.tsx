@@ -2,7 +2,7 @@ import { Reserve } from "@/types";
 
 interface ItemCardProps {
   item: Reserve;
-  onClick: (item: any) => void;
+  onClick: (item: Reserve) => void;
   width?: string;
 }
 
