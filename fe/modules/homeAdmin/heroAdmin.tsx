@@ -79,6 +79,30 @@ export default function HeroAdmin({
 
   const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
 
+  // Function to fetch fresh data from API
+  const fetchOrders = async () => {
+    if (!session?.user?.accessToken) return;
+    
+    try {
+      const reserve = await fetch(`${
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+      }/reserves/admin`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+        cache: "no-store",
+      });
+      
+      if (reserve.ok) {
+        const data = await reserve.json();
+        setFetchedOrders(data);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+
   const handleApprove = (orderId: number) => {
     setPendingOrderId(orderId);
     setPendingAction('approve');
@@ -106,6 +130,7 @@ export default function HeroAdmin({
       console.log(await response.json())
       if (response.ok) {
         alert("Request approved!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Failed to approve");
@@ -131,8 +156,10 @@ export default function HeroAdmin({
         },
         body: JSON.stringify({ status: "rejected" }),
       });
+      console.log(await response.json())
       if (response.ok) {
         alert("Request rejected!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Failed to reject");
@@ -179,6 +206,7 @@ export default function HeroAdmin({
       
       if (inventoryResponse.ok && reserveResponse.ok) {
         alert("Kondisi barang berhasil diupdate dan status diubah menjadi done!");
+        // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
         alert("Gagal update kondisi atau status");
@@ -288,6 +316,15 @@ export default function HeroAdmin({
     });
     setSelectedConditions(initialConditions);
   }, [borrowedItemsDetail]);
+
+  // Refetch data when refreshKey changes
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchOrders();
+    }
+  }, [refreshKey, session?.user?.accessToken]);
+
+
 
   return (
     <>
