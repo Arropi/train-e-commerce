@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 export const postReserves = async (reserve: ReserveFormInput[]) => {
     const session = await getServerSession(authConfig)
     if (!session) return { success: false, error: 'Unauthorized' }
+    console.log('Posting reserves:', reserve)
     
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reserves`, {
@@ -45,7 +46,7 @@ export const postReserves = async (reserve: ReserveFormInput[]) => {
             
             return { success: false, error: 'Checkout failed' }
         }
-        
+        console.log(result)
         return { success: false, error: 'Reserve failed' }
     } catch (error) {
         // PENTING: redirect() melempar error NEXT_REDIRECT yang HARUS di-propagate

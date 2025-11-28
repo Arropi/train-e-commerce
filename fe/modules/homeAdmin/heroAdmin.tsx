@@ -83,9 +83,9 @@ export default function HeroAdmin({
   const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingRooms, setLoadingRooms] = useState(true);
 
-  const isLoading = loadingSubjects || loadingLabs || loadingRooms;
+  // const isLoading = loadingSubjects || loadingLabs || loadingRooms;
 
-  const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
+  const ordersToUse = fetchedOrders
 
   // Function to fetch fresh data from API
   const fetchOrders = async () => {
@@ -340,11 +340,7 @@ export default function HeroAdmin({
         isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
       }`}>
         <div className="max-w-6xl mx-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="custom-loader"></div>
-            </div>
-          ) : (
+          { (
             <>
               {/* Header */}
               <div className="mb-6">
