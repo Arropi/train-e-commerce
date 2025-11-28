@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload } from "lucide-react";
+import { Upload, CheckCircle, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
@@ -25,6 +25,18 @@ interface EditItemsProps {
   };
 }
 
+interface UpdateData {
+  item_name: string;
+  no_inventory: string;
+  room_id: number;
+  laboratory_id: number;
+  type: string;
+  condition: string;
+  special_session: boolean;
+  subjects: number[];
+  img_url?: string;
+}
+
 export default function EditItems({ session, itemData }: EditItemsProps) {
   const router = useRouter();
   const { isSidebarOpen } = useAdminSidebar();
@@ -32,6 +44,21 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: "success" | "error";
+    message: string;
+  }>({ show: false, type: "success", message: "" });
+
+  // Auto-hide notification after 3 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ ...notification, show: false });
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,13 +112,27 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     };
 
     fetchData();
-  }, [sessionData, session]);
+    
+    // Set initial form data from itemData when component mounts
+    setFormData({
+      name: itemData.name,
+      inventoryNumber: itemData.inventoryNumber,
+      room: itemData.room,
+      laboratory: itemData.laboratory,
+      subject: itemData.subject || [],
+      session: itemData.session,
+      purpose: itemData.purpose,
+      condition: itemData.condition,
+      image: null,
+    });
+  }, [sessionData, session, itemData]);
+
   const [formData, setFormData] = useState({
     name: itemData.name,
     inventoryNumber: itemData.inventoryNumber,
     room: itemData.room,
     laboratory: itemData.laboratory,
-    subject: itemData.subject,
+    subject: itemData.subject || [],
     session: itemData.session,
     purpose: itemData.purpose,
     condition: itemData.condition,
@@ -99,6 +140,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   });
 
   const [imagePreview, setImagePreview] = useState<string>(itemData.image);
+
+  // Debug logs
+  console.log("ItemData received:", itemData);
+  console.log("Form Data Laboratory:", formData.laboratory);
+  console.log("Available Labs:", labs);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -119,6 +165,15 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     });
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -135,35 +190,42 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       formData.image !== null;
 
     if (!hasChanged) {
-      alert("No changes detected.");
+      setNotification({
+        show: true,
+        type: "error",
+        message: "No changes detected",
+      });
       return;
     }
 
     const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
     if (!accessToken) {
-      alert("No access token available");
+      setNotification({
+        show: true,
+        type: "error",
+        message: "No access token available",
+      });
       return;
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
     // Map form data to API format
-    const updateData = {
+    const updateData: UpdateData = {
       item_name: formData.name,
       no_inventory: formData.inventoryNumber,
       room_id: parseInt(formData.room),
       laboratory_id: parseInt(formData.laboratory),
       type: formData.purpose === "Practical Class" ? "praktikum" : "projek",
       condition: formData.condition.toLowerCase(),
-      special_session: formData.session === "2 Session",
+      special_session: formData.session === "Session per Hour",
       subjects: formData.subject.map(name => subjects.find(s => s.name === name)?.id).filter(Boolean) as number[],
     };
 
     // Handle image if uploaded
     if (formData.image) {
-      // For simplicity, assume image is uploaded separately or handle base64
-      // Here, we'll skip image update for now
-      console.log("Image update not implemented yet");
+      const base64 = await fileToBase64(formData.image);
+      updateData.img_url = base64;
     }
 
     try {
@@ -177,20 +239,51 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       });
 
       if (response.ok) {
-        alert("Item updated successfully!");
         router.push("/admin/allItems?updated=true");
       } else {
         const errorData = await response.json();
-        alert(`Failed to update item: ${errorData.message || 'Unknown error'}`);
+        setNotification({
+          show: true,
+          type: "error",
+          message: `Failed to update item: ${errorData.message || 'Unknown error'}`,
+        });
       }
     } catch (error) {
       console.error("Error updating item:", error);
-      alert("Error updating item");
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Error updating item",
+      });
     }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Notification */}
+      {notification.show && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[60] animate-slide-down">
+          <div
+            className={`${
+              notification.type === "success"
+                ? "bg-white border-2 border-green-500"
+                : "bg-white border-2 border-red-500"
+            } text-gray-800 px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3`}
+          >
+            {notification.type === "success" ? (
+              <div className="bg-green-500 rounded-full p-1">
+                <CheckCircle className="w-5 h-5 text-white" strokeWidth={3} />
+              </div>
+            ) : (
+              <div className="bg-red-500 rounded-full p-1">
+                <XCircle className="w-5 h-5 text-white" strokeWidth={3} />
+              </div>
+            )}
+            <span className="font-semibold text-base">{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <SidebarAdmin
         user={{
@@ -373,7 +466,6 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
                       required
                     >
-                      <option value="">Choose lab</option>
                       {labs.map((lab) => (
                         <option key={lab.id} value={lab.id.toString()}>
                           {lab.name}

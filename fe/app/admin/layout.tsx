@@ -10,7 +10,6 @@ export default function AdminLayout({
     <Providers>
       <AdminSidebarProvider>
         <div className="min-h-screen bg-gray-50">
-          {/* Hanya render children tanpa Navbar, Footer, atau Sidebar User */}
           {children}
         </div>
       </AdminSidebarProvider>

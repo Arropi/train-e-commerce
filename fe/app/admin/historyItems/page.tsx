@@ -123,11 +123,42 @@ export default async function HistoryItemsPage() {
 
     const reservesData = await reservesResponse.json();
 
-    // Create labs map for quick lookup
-    const labsMap = new Map<number, string>();
-    dataLab.forEach((lab: Lab) => {
-      labsMap.set(lab.id, lab.name);
+    // Fetch laboratories data
+    const labsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: 'no-store'
     });
+
+    let labsMap = new Map<number, string>();
+    if (labsResponse.ok) {
+      const labsData = await labsResponse.json();
+      labsData.data?.forEach((lab: Lab) => {
+        labsMap.set(lab.id, lab.name);
+      });
+    } else {
+      // Fallback to hardcoded data
+      dataLab.forEach((lab: Lab) => {
+        labsMap.set(lab.id, lab.name);
+      });
+    }
+
+    // Fetch subjects data
+    const subjectsResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/subjects`, {
+      headers: {
+        Authorization: `Bearer ${session.user.accessToken}`,
+      },
+      cache: 'no-store'
+    });
+
+    let subjectsMap = new Map<number, string>();
+    if (subjectsResponse.ok) {
+      const subjectsData = await subjectsResponse.json();
+      subjectsData.data?.forEach((subject: { id: number; subject_name: string }) => {
+        subjectsMap.set(subject.id, subject.subject_name);
+      });
+    }
 
     // Filter reserves with status "done" and map to BorrowHistory format
     const historyData: BorrowHistory[] = reservesData.data

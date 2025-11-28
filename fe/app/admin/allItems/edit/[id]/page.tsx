@@ -17,9 +17,21 @@ interface InventoryData {
   type: string;
   special_session: string;
   room_id: number | null;
-  laboratory_id: number | null;
+  labolatory_id: number | null;
+  laboratory_id?: number | null;
   img_url: string | null;
   subject_id: number[];
+  inventory_subjects: Array<{
+    id: number;
+    inventory_id: number;
+    subject_id: number;
+    deleted_at: string | null;
+    created_at?: string;
+    updated_at?: string;
+  }>;
+  inventory_galleries?: Array<{
+    filepath: string;
+  }>;
 }
 
 export default async function EditItemPage({ params }: PageProps) {
@@ -56,6 +68,10 @@ export default async function EditItemPage({ params }: PageProps) {
     redirect("/admin/allItems");
   }
 
+  console.log("Inventory data:", inventory);
+  console.log("Laboratory ID from inventory (labolatory_id):", inventory.labolatory_id);
+  console.log("Laboratory ID from inventory (laboratory_id):", inventory.laboratory_id);
+
   // Fetch dropdown data
   const [labsRes, roomsRes, subjectsRes] = await Promise.all([
     fetch(`${backendUrl}/laboratories`, {
@@ -87,52 +103,38 @@ export default async function EditItemPage({ params }: PageProps) {
   let subjects = [];
 
   try {
-    labs = labsRes.ok ? (await labsRes.json()).data || (await labsRes.json()).laboratories || [] : [];
+    if (labsRes.ok) {
+      const labsData = await labsRes.json();
+      labs = labsData.data || labsData.laboratories || [];
+    }
   } catch (error) {
     console.error("Failed to fetch laboratories:", error);
   }
 
   try {
-    rooms = roomsRes.ok ? (await roomsRes.json()).rooms || [] : [];
+    if (roomsRes.ok) {
+      const roomsData = await roomsRes.json();
+      rooms = roomsData.data || roomsData.rooms || [];
+    }
   } catch (error) {
     console.error("Failed to fetch rooms:", error);
   }
 
   try {
-    subjects = subjectsRes.ok ? (await subjectsRes.json()).subjects || [] : [];
+    if (subjectsRes.ok) {
+      const subjectsData = await subjectsRes.json();
+      subjects = subjectsData.data ? subjectsData.data.map((item: { id: number; subject_name: string }) => ({ id: item.id, name: item.subject_name })) : [];
+    }
   } catch (error) {
     console.error("Failed to fetch subjects:", error);
   }
 
-  // Fallback dummy data if API fails (for testing)
-  if (labs.length === 0) {
-    labs = [
-      { id: 1, name: "Lab Elektronika" },
-      { id: 2, name: "Lab RPL" },
-      { id: 3, name: "Lab IDK" },
-      { id: 4, name: "Lab TAJ" }
-    ];
-  }
+  // Log fetched labs data
+  console.log("Fetched labs from API:", labs);
+  console.log("Labs count:", labs.length);
 
-  if (rooms.length === 0) {
-    rooms = [
-      { id: 1, name: "Room 301" },
-      { id: 2, name: "Room 302" },
-      { id: 3, name: "Room 303" },
-      { id: 4, name: "Room 304" }
-    ];
-  }
-
-  if (subjects.length === 0) {
-    subjects = [
-      { id: 1, name: "Praktikum Pemrograman Komputer" },
-      { id: 2, name: "Praktikum Basis Data" },
-      { id: 3, name: "Praktikum Jaringan Komputer" },
-      { id: 4, name: "Praktikum Sistem Operasi" }
-    ];
-  }
-
-  console.log("Fetched data:", { labs, rooms, subjects });
+  console.log("Final data before mapping:", { labs, rooms, subjects });
+  console.log("Inventory subjects from inventory:", inventory.inventory_subjects);
 
   // Map inventory data to component format
   const itemData = {
@@ -140,12 +142,27 @@ export default async function EditItemPage({ params }: PageProps) {
     name: inventory.item_name,
     inventoryNumber: inventory.no_item,
     room: inventory.room_id?.toString() || "",
-    laboratory: inventory.laboratory_id?.toString() || "",
-    subject: inventory.inventory_subjects.filter((sub: { subject_id: number; deleted_at: string | null }) => !sub.deleted_at).map((sub: { subject_id: number; deleted_at: string | null }) => {
-      const subject = subjects.find((s: { id: number; name: string }) => s.id === sub.subject_id);
-      return subject ? subject.name : `Subject ${sub.subject_id}`;
-    }),
-    session: inventory.special_session ? "2 Session" : "Session per Hour",
+    laboratory: inventory.labolatory_id?.toString() || inventory.laboratory_id?.toString() || "",
+    subject: inventory.inventory_subjects 
+      ? (() => {
+          // Get only the latest version of each subject (by subject_id)
+          const latestSubjects = inventory.inventory_subjects.reduce((acc: any, sub: any) => {
+            if (!acc[sub.subject_id] || new Date(sub.created_at) > new Date(acc[sub.subject_id].created_at)) {
+              acc[sub.subject_id] = sub;
+            }
+            return acc;
+          }, {});
+          
+          return Object.values(latestSubjects)
+            .filter((sub: any) => !sub.deleted_at)
+            .map((sub: any) => {
+              const subject = subjects.find((s: { id: number; name: string }) => s.id === sub.subject_id);
+              console.log(`Mapping subject_id ${sub.subject_id} to:`, subject);
+              return subject ? subject.name : `Subject ${sub.subject_id}`;
+            });
+        })()
+      : [],
+    session: inventory.special_session ? "Session per Hour" : "2 Session",
     purpose: inventory.type === "praktikum" ? "Practical Class" : "Project",
     condition: mapCondition(inventory.condition),
     image: inventory.inventory_galleries?.[0]?.filepath || "https://placehold.co/150x150/png?text=Item",
