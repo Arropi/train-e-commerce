@@ -9,11 +9,6 @@ import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 import { Reserve } from "../../types";
 import { useSession } from "next-auth/react";
 
-const dataLab = [
-  { id: 1, name: 'Elektronika' },
-  { id: 2, name: 'IDK' }
-];
-
 interface OrderDetail {
   id: number;
   name: string;
@@ -76,6 +71,13 @@ export default function HeroAdmin({
   const [showConditionConfirm, setShowConditionConfirm] = useState(false);
   const [pendingConditionItemId, setPendingConditionItemId] = useState<number | null>(null);
   const [pendingCondition, setPendingCondition] = useState<"good" | "bad" | null>(null);
+
+  // subjectsData used to map subject ids to names; fetched in useEffect below
+  const [subjectsData, setSubjectsData] = useState<{ [key: number]: string }>({});
+  // laboratoriesData used to map laboratory ids to names; fetched in useEffect below
+  const [laboratoriesData, setLaboratoriesData] = useState<{ [key: number]: string }>({});
+  // roomsData used to map room ids to names; fetched in useEffect below
+  const [roomsData, setRoomsData] = useState<{ [key: number]: string }>({});
 
   const ordersToUse = fetchedOrders.length > 0 ? fetchedOrders : orders;
 
@@ -203,20 +205,20 @@ export default function HeroAdmin({
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
       : reserve.reserve_user_created?.username || "Unknown",
     item: reserve.inventories?.item_name || "Unknown Item",
-    date: reserve.tanggal || "Unknown Date",
-    lab: dataLab.find(lab => lab.id === reserve.inventories?.labolatory_id)?.name || "Unknown Lab", // Map dari labolatory_id
+    date: reserve.tanggal ? new Date(reserve.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date",
+    lab: laboratoriesData[reserve.inventories?.labolatory_id] || "Unknown Lab",
     serialNumber: reserve.inventories?.no_item || "N/A",
     purpose: reserve.inventories?.type || "N/A",
     session: "N/A", // Tidak ada session object
     borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
       : reserve.reserve_user_created?.username || "Unknown",
-    room: reserve.inventories?.room_id?.toString() || "Kosong",
+    room: roomsData[reserve.inventories?.room_id] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     condition: reserve.inventories?.condition || "N/A",
-    subject: reserve.inventories?.inventory_subjects?.map(sub => sub.subject_id).join(", ") || "N/A",
+    subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsData[sub.subject_id] || sub.subject_id).join(", ") || "N/A",
     image: reserve.inventories?.inventory_galleries?.[0]?.filepath || "", // Kosong jika tidak ada
-  })), [pendingOrders]);
+  })), [pendingOrders, subjectsData, laboratoriesData, roomsData]);
 
   // Filter orders yang sedang dipinjam (status "waiting_to_be_return")
   const borrowedOrders = useMemo(() => ordersToUse.filter(order => order.status === 'waiting_to_be_return'), [ordersToUse]);
@@ -227,19 +229,19 @@ export default function HeroAdmin({
     item_name: reserve.inventories?.item_name || "Unknown Item",
     no_item: reserve.inventories?.no_item || "N/A",
     img_url: reserve.inventories?.inventory_galleries?.[0]?.filepath || reserve.inventories?.img_url || "",
-    lab: dataLab.find(lab => lab.id === reserve.inventories?.labolatory_id)?.name || "Unknown Lab",
+    lab: laboratoriesData[reserve.inventories?.labolatory_id] || "Unknown Lab",
     borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
       : reserve.reserve_user_created?.username || "Unknown",
     condition: reserve.inventories?.condition || "good",
-    borrowed_date: reserve.tanggal || "Unknown Date",
+    borrowed_date: reserve.tanggal ? new Date(reserve.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date",
     sessionId: reserve.session_id || 0,
-    room: reserve.inventories?.room_id?.toString() || "Kosong",
+    room: roomsData[reserve.inventories?.room_id] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     purpose: reserve.inventories?.type || "N/A",
-    subject: reserve.inventories?.inventory_subjects?.map(sub => sub.subject_id).join(", ") || "N/A",
+    subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsData[sub.subject_id] || sub.subject_id).join(", ") || "N/A",
     inventory_id: reserve.inventories?.id || 0,
-  })), [borrowedOrders]);
+  })), [borrowedOrders, subjectsData, laboratoriesData, roomsData]);
 
   // gunakan data dari API jika ada, kosong jika tidak
   const displayBorrowedItems = borrowedItemsDetail;
@@ -286,6 +288,87 @@ export default function HeroAdmin({
     });
     setSelectedConditions(initialConditions);
   }, [borrowedItemsDetail]);
+
+  // Fetch subjects data
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/subjects`, {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const subjectsMap: { [key: number]: string } = {};
+          data.data?.forEach((subject: { id: number; subject_name: string }) => {
+            subjectsMap[subject.id] = subject.subject_name;
+          });
+          setSubjectsData(subjectsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      }
+    };
+
+    if (session?.user?.accessToken) {
+      fetchSubjects();
+    }
+  }, [session]);
+
+  // Fetch laboratories data
+  useEffect(() => {
+    const fetchLaboratories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const labsMap: { [key: number]: string } = {};
+          data.data?.forEach((lab: { id: number; name: string }) => {
+            labsMap[lab.id] = lab.name;
+          });
+          setLaboratoriesData(labsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching laboratories:", error);
+      }
+    };
+
+    if (session?.user?.accessToken) {
+      fetchLaboratories();
+    }
+  }, [session]);
+
+  // Fetch rooms data
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/rooms`, {
+          headers: {
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const roomsMap: { [key: number]: string } = {};
+          data.data?.forEach((room: { id: number; name: string }) => {
+            roomsMap[room.id] = room.name;
+          });
+          setRoomsData(roomsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      }
+    };
+
+    if (session?.user?.accessToken) {
+      fetchRooms();
+    }
+  }, [session]);
 
   return (
     <>
