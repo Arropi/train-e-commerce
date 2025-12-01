@@ -94,7 +94,7 @@ export default function HeroAdmin({
     try {
       const reserve = await fetch(`${
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
-      }/reserves/admin`, {
+      }/reserves/admin/ongoing`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${session.user.accessToken}`,
@@ -104,7 +104,7 @@ export default function HeroAdmin({
       
       if (reserve.ok) {
         const data = await reserve.json();
-        setFetchedOrders(data);
+        setFetchedOrders(data.data || []);
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -244,7 +244,7 @@ export default function HeroAdmin({
     lab: laboratoriesData[reserve.inventories?.labolatory_id] || "Unknown Lab",
     serialNumber: reserve.inventories?.no_item || "N/A",
     purpose: reserve.inventories?.type || "N/A",
-    session: "N/A", // Tidak ada session object
+    session: reserve.session_id?.toString() || "N/A",
     borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
       : reserve.reserve_user_created?.username || "Unknown",
@@ -283,6 +283,9 @@ export default function HeroAdmin({
 
   const session1 = ordersDetail.slice(0, 7);
   console.log("Orders Detail:", ordersDetail);
+  console.log("Subjects Data:", subjectsData);
+  console.log("Fetched Orders:", fetchedOrders);
+  console.log("Sample inventory_subjects:", fetchedOrders[0]?.inventories?.inventory_subjects);
   const session2 = ordersDetail.slice(7);
 
   const handleDetailsClick = (orderId: number) => {
@@ -331,6 +334,116 @@ export default function HeroAdmin({
       fetchOrders();
     }
   }, [refreshKey, session?.user?.accessToken]);
+
+  // Fetch orders on component mount
+  useEffect(() => {
+    fetchOrders();
+  }, [session?.user?.accessToken]);
+
+  // Fetch subjects data
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      if (!session?.user?.accessToken) return;
+      
+      setLoadingSubjects(true);
+      try {
+        const response = await fetch(`${
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+        }/subjects`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+          cache: "no-store",
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const subjectsMap: { [key: number]: string } = {};
+          data.data.forEach((subject: any) => {
+            subjectsMap[subject.id] = subject.subject_name;
+          });
+          setSubjectsData(subjectsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    };
+
+    fetchSubjects();
+  }, [session?.user?.accessToken]);
+
+  // Fetch laboratories data
+  useEffect(() => {
+    const fetchLaboratories = async () => {
+      if (!session?.user?.accessToken) return;
+      
+      setLoadingLabs(true);
+      try {
+        const response = await fetch(`${
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+        }/laboratories`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+          cache: "no-store",
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const labsMap: { [key: number]: string } = {};
+          data.data.forEach((lab: any) => {
+            labsMap[lab.id] = lab.name;
+          });
+          setLaboratoriesData(labsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching laboratories:", error);
+      } finally {
+        setLoadingLabs(false);
+      }
+    };
+
+    fetchLaboratories();
+  }, [session?.user?.accessToken]);
+
+  // Fetch rooms data
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!session?.user?.accessToken) return;
+      
+      setLoadingRooms(true);
+      try {
+        const response = await fetch(`${
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+        }/rooms`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+          cache: "no-store",
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const roomsMap: { [key: number]: string } = {};
+          data.data.forEach((room: any) => {
+            roomsMap[room.id] = room.name;
+          });
+          setRoomsData(roomsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+
+    fetchRooms();
+  }, [session?.user?.accessToken]);
 
 
 

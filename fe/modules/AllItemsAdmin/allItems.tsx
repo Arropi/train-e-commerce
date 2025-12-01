@@ -265,11 +265,11 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
                         alt={item.name}
                         width={150}
                         height={120}
-                        className="object-contain"
+                        className="object-cover w-full h-full rounded-lg"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs rounded-lg">
                         No Image
                       </div>
                     )}

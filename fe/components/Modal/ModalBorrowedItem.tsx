@@ -80,7 +80,7 @@ export default function ModalBorrowedItem({
                   alt={item.item_name}
                   width={96}
                   height={96}
-                  className="object-contain"
+                  className="object-cover w-full h-full rounded-lg"
                   unoptimized
                 />
               ) : (

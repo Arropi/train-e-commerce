@@ -18,7 +18,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   const router = useRouter();
   const { isSidebarOpen } = useAdminSidebar();
   const { data: sessionData } = useSession();
-  const [ error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
@@ -39,14 +39,16 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   const { startUpload } = useUploadThing("imageUploader", {
     onUploadError(e) {
       console.error("Upload error:", e);
-      setError(e.message)
+      setError(e.message);
     },
   });
 
   useEffect(() => {
     const fetchData = async () => {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
-      const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+      const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+      const accessToken =
+        sessionData?.user?.accessToken || session?.user?.accessToken;
 
       if (!accessToken) return;
 
@@ -87,7 +89,14 @@ export default function AddItemForm({ session }: AddItemFormProps) {
 
         if (subjectsRes.ok) {
           const subjectsData = await subjectsRes.json();
-          setSubjects(subjectsData.data.map((item: { id: number; subject_name: string }) => ({ id: item.id, name: item.subject_name })) || []);
+          setSubjects(
+            subjectsData.data.map(
+              (item: { id: number; subject_name: string }) => ({
+                id: item.id,
+                name: item.subject_name,
+              })
+            ) || []
+          );
         }
       } catch (error) {
         console.error("Failed to fetch dropdown data:", error);
@@ -116,7 +125,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
     });
   };
 
@@ -130,13 +139,15 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+    const accessToken =
+      sessionData?.user?.accessToken || session?.user?.accessToken;
     if (!accessToken) {
       alert("No access token available");
       return;
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
     // Map form data to API format
     const createData: {
@@ -157,7 +168,9 @@ export default function AddItemForm({ session }: AddItemFormProps) {
       type: formData.purpose === "Practical Class" ? "praktikum" : "projek",
       condition: formData.condition.toLowerCase(),
       special_session: formData.session === "2 Session",
-      subjects: formData.subject.map(name => subjects.find(s => s.name === name)?.id).filter(Boolean) as number[],
+      subjects: formData.subject
+        .map((name) => subjects.find((s) => s.name === name)?.id)
+        .filter(Boolean) as number[],
     };
 
     if (formData.image && files) {
@@ -190,7 +203,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
         router.push("/admin/allItems?success=true");
       } else {
         const errorData = await response.json();
-        alert(`Failed to add item: ${errorData.message || 'Unknown error'}`);
+        alert(`Failed to add item: ${errorData.message || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error adding item:", error);
@@ -199,29 +212,33 @@ export default function AddItemForm({ session }: AddItemFormProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <SidebarAdmin
         user={{
           name: session?.user?.name || "Admin",
           role: "Admin",
-          avatar: session?.user?.image?? undefined,
+          avatar: session?.user?.image ?? undefined,
         }}
       />
-      {error && (<div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow">
-        {error}
-      </div>
+
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow z-50">
+          {error}
+        </div>
       )}
+
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? "ml-96" : "ml-36"
+        className={`transition-all duration-300 ${
+          isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
         }`}
       >
-        <div className="min-h-screen p-2 pt-20 bg-gray-50">
-          <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen p-6 pt-20">
+          <div className="max-w-5xl mx-auto">
             {/* Header */}
-            <div className="mb-8 mt-8 -ml-30">
+            <div className="mb-8">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => router.back()}
@@ -273,7 +290,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
                 </div>
 
                 {/* Form Fields */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Name */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -432,7 +449,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
                   </div>
 
                   {/* Subject */}
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Subject
                     </label>
@@ -478,11 +495,11 @@ export default function AddItemForm({ session }: AddItemFormProps) {
                   </div>
 
                   {/* Condition */}
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Condition
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 max-w-md">
                       {["Good", "Bad"].map((cond) => (
                         <button
                           key={cond}

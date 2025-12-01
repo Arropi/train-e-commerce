@@ -421,7 +421,7 @@ export default function SuperAdminProfile(profileProps: {
         )}
 
         {/* Header */}
-        <div className={`mt-20 px-3 sm:px-4 lg:px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
+        <div className="mt-20 px-3 sm:px-4 lg:px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               {/* Tombol toggle sidebar */}
@@ -480,8 +480,9 @@ export default function SuperAdminProfile(profileProps: {
           </div>
         </div>
 
-        <div className={`w-[56rem] mx-auto mt-8 px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
-          <div className="flex flex-col items-center justify-center mb-30">
+        {/* Profile Content - Fixed width container */}
+        <div className="max-w-4xl mx-auto mt-8 px-6">
+          <div className="flex flex-col items-center justify-center mb-8">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-[#004CB0]">
               {session?.user?.image ? (
                 <Image
@@ -504,7 +505,7 @@ export default function SuperAdminProfile(profileProps: {
             </div>
           </div>
 
-          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 mt-6 overflow-hidden">
+          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1" />
             <h3 className="text-xl font-semibold text-[#004CB0] mb-6">
               Informasi Detail

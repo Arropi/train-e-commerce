@@ -137,28 +137,6 @@ export default function ItemModal({
               }
             )
             }
-            {/* <button
-              onClick={() => setSelectedTime("07.30")}
-              type="button"
-              className={`px-4 py-2 font-bold transition-all border-b-2 ${
-                selectedTime === "07.30"
-                  ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
-              }`}
-            >
-              07.30
-            </button>
-            <button
-              onClick={() => setSelectedTime("13.30")}
-              type="button"
-              className={`px-4 py-2 font-bold transition-all border-b-2 ${
-                selectedTime === "13.30"
-                  ? "border-[#004CB0] text-[#004CB0]"
-                  : "border-transparent text-gray-600 hover:text-[#004CB0] hover:border-[#004CB0] transition-all duration-300 ease-in-out"
-              }`}
-            >
-              13.30
-            </button> */}
           </div>
 
           {/* ✅ NEW: Pilihan Ruang + Nomor Inventaris (ganti room list) */}

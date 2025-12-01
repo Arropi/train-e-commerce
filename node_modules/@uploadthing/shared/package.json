@@ -1,0 +1,39 @@
+{
+  "name": "@uploadthing/shared",
+  "version": "7.1.10",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "github:pingdotgg/uploadthing",
+    "directory": "packages/shared"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@uploadthing/mime-types": "0.3.6",
+    "effect": "3.17.7",
+    "sqids": "^0.3.0"
+  }
+}

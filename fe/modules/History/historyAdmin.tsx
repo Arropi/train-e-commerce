@@ -32,9 +32,8 @@ export default function HistoryAdmin({
 }: HistoryAdminProps) {
   const router = useRouter();
   const { isSidebarOpen } = useAdminSidebar();
-  const [selectedLab, setSelectedLab] = useState("semua");
   const [selectedDate, setSelectedDate] = useState("all");
-  const [sortBy, setSortBy] = useState("date");
+  const [sortBy, setSortBy] = useState("name");
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleDetailClick = (itemName: string) => {
@@ -45,25 +44,25 @@ export default function HistoryAdmin({
 
   // Filter data based on lab, date, and search
   const filteredData = historyData.filter((item) => {
-    const labMatch = selectedLab === "semua" || item.lab === selectedLab;
     const searchMatch =
       item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.borrowerName.toLowerCase().includes(searchQuery.toLowerCase());
-    return labMatch && searchMatch;
+    return searchMatch;
   });
 
   // Sort data
   const sortedData = [...filteredData].sort((a, b) => {
-    if (sortBy === "date") {
-      return (
-        new Date(b.returnDate).getTime() - new Date(a.returnDate).getTime()
-      );
-    } else if (sortBy === "name") {
-      return a.itemName.localeCompare(b.itemName);
-    } else if (sortBy === "borrower") {
-      return a.borrowerName.localeCompare(b.borrowerName);
+    switch (sortBy) {
+      case "name":
+        return a.itemName.localeCompare(b.itemName);
+      case "lab":
+        return a.lab.localeCompare(b.lab);
+      case "condition":
+        return a.status.localeCompare(b.status);
+      case "status":
+      default:
+        return new Date(b.returnDate).getTime() - new Date(a.returnDate).getTime();
     }
-    return 0;
   });
 
   return (
@@ -93,28 +92,13 @@ export default function HistoryAdmin({
 
               {/* Filters */}
               <div className={`flex flex-col sm:flex-row gap-3 ${isSidebarOpen ? 'mr-4' : ''}`}>
-                {/* Lab Filter */}
-                <div className="relative">
-                  <select
-                    value={selectedLab}
-                    onChange={(e) => setSelectedLab(e.target.value)}
-                    className="appearance-none px-5 py-1.5 pr-10 border-2 border-[#004CB0] rounded-full text-gray-600 text-sm font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
-                  >
-                    <option value="semua">Semua lab</option>
-                    <option value="Lab IDK">Lab IDK</option>
-                    <option value="Lab Elektronika">Lab Elektronika</option>
-                    <option value="Lab RPL">Lab RPL</option>
-                    <option value="Lab TAJ">Lab TAJ</option>
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#004CB0] pointer-events-none" />
-                </div>
 
                 {/* Date Filter */}
                 <div className="relative">
                   <select
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="appearance-none px-5 py-1.5 pr-10 border-2 border-[#004CB0] rounded-full text-gray-600 text-sm font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
+                    className="appearance-none px-5 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-600 text-sm font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
                     <option value="all">Date</option>
                     <option value="today">Today</option>
@@ -129,11 +113,12 @@ export default function HistoryAdmin({
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none px-5 py-1.5 pr-10 border-2 border-[#004CB0] rounded-full text-gray-600 text-sm font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
+                    className="appearance-none px-5 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-600 text-sm font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
-                    <option value="date">Sort by</option>
-                    <option value="name">Item Name</option>
-                    <option value="borrower">Borrower</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="lab">Sort by Lab</option>
+                    <option value="condition">Sort by Condition</option>
+                    <option value="status">Sort by Status</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#004CB0] pointer-events-none" />
                 </div>
@@ -173,11 +158,11 @@ export default function HistoryAdmin({
                           alt={item.itemName}
                           width={150}
                           height={120}
-                          className="object-contain"
+                          className="object-cover w-full h-full rounded-lg"
                           unoptimized
                         />
                       ) : (
-                        <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs rounded-lg">
                           No Image
                         </div>
                       )}
