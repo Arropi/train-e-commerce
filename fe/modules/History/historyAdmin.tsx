@@ -148,7 +148,7 @@ export default function HistoryAdmin({
                   <div
                     key={item.id}
                     onClick={() => handleDetailClick(item.itemName)}
-                    className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer h-80"
+                    className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer h-85 w-55"
                   >
                     {/* Item Image */}
                     <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
@@ -159,6 +159,7 @@ export default function HistoryAdmin({
                           width={150}
                           height={120}
                           className="object-cover w-full h-full rounded-lg"
+                          loading="lazy"
                           unoptimized
                         />
                       ) : (

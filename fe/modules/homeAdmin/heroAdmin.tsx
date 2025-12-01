@@ -8,6 +8,10 @@ import ModalBorrowedItem from "@/components/Modal/ModalBorrowedItem";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 import { Reserve } from "../../types";
 import { useSession } from "next-auth/react";
+import LoadingSpinner from "@/components/Loading/LoadingSpinner";
+import SkeletonTable from "@/components/Loading/SkeletonTable";
+import SkeletonCard from "@/components/Loading/SkeletonCard";
+import Toast from "@/components/Toast/Toast";
 
 interface OrderDetail {
   id: number;
@@ -71,6 +75,11 @@ export default function HeroAdmin({
   const [showConditionConfirm, setShowConditionConfirm] = useState(false);
   const [pendingConditionItemId, setPendingConditionItemId] = useState<number | null>(null);
   const [pendingCondition, setPendingCondition] = useState<"good" | "bad" | null>(null);
+  
+  // Toast state
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error" | "warning">("success");
 
   // subjectsData used to map subject ids to names; fetched in useEffect below
   const [subjectsData, setSubjectsData] = useState<{ [key: number]: string }>({});
@@ -82,15 +91,24 @@ export default function HeroAdmin({
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // const isLoading = loadingSubjects || loadingLabs || loadingRooms;
+  const isLoading = loadingSubjects || loadingLabs || loadingRooms || loadingOrders;
 
   const ordersToUse = fetchedOrders
+
+  // Toast helper function
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   // Function to fetch fresh data from API
   const fetchOrders = async () => {
     if (!session?.user?.accessToken) return;
     
+    setLoadingOrders(true);
     try {
       const reserve = await fetch(`${
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
@@ -108,6 +126,8 @@ export default function HeroAdmin({
       }
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -137,15 +157,15 @@ export default function HeroAdmin({
       });
       console.log(await response.json())
       if (response.ok) {
-        alert("Request approved!");
+        showToast("Request approved!", "success");
         // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
-        alert("Failed to approve");
+        showToast("Failed to approve", "error");
       }
     } catch (error) {
       console.error("Error approving:", error);
-      alert("Error approving request");
+      showToast("Error approving request", "error");
     }
     setShowApproveConfirm(false);
     setPendingOrderId(null);
@@ -166,15 +186,15 @@ export default function HeroAdmin({
       });
       console.log(await response.json())
       if (response.ok) {
-        alert("Request rejected!");
+        showToast("Request rejected!", "error");
         // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
-        alert("Failed to reject");
+        showToast("Failed to reject", "error");
       }
     } catch (error) {
       console.error("Error rejecting:", error);
-      alert("Error rejecting request");
+      showToast("Error rejecting request", "error");
     }
     setShowRejectConfirm(false);
     setPendingOrderId(null);
@@ -188,7 +208,7 @@ export default function HeroAdmin({
       // Find the inventory id from the borrowed items
       const item = borrowedItemsDetail.find(i => i.id === pendingConditionItemId);
       if (!item) {
-        alert("Item tidak ditemukan");
+        showToast("Item tidak ditemukan", "error");
         return;
       }
       
@@ -213,15 +233,15 @@ export default function HeroAdmin({
       });
       
       if (inventoryResponse.ok && reserveResponse.ok) {
-        alert("Kondisi barang berhasil diupdate dan status diubah menjadi done!");
+        showToast("Kondisi barang berhasil diupdate dan status diubah menjadi done!", "success");
         // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
-        alert("Gagal update kondisi atau status");
+        showToast("Gagal update kondisi atau status", "error");
       }
     } catch (error) {
       console.error("Error updating condition:", error);
-      alert("Error updating condition");
+      showToast("Error updating condition", "error");
     }
     setShowConditionConfirm(false);
     setPendingConditionItemId(null);
@@ -281,12 +301,28 @@ export default function HeroAdmin({
   // gunakan data dari API jika ada, kosong jika tidak
   const displayBorrowedItems = borrowedItemsDetail;
 
-  const session1 = ordersDetail.slice(0, 7);
+  // Group orders by room
+  const ordersByRoom = useMemo(() => {
+    const grouped: { [roomName: string]: OrderDetail[] } = {};
+    
+    ordersDetail.forEach(order => {
+      const roomName = order.room || "Unknown Room";
+      if (!grouped[roomName]) {
+        grouped[roomName] = [];
+      }
+      grouped[roomName].push(order);
+    });
+    
+    return grouped;
+  }, [ordersDetail]);
+
+  const roomNames = useMemo(() => Object.keys(ordersByRoom).sort(), [ordersByRoom]);
+
   console.log("Orders Detail:", ordersDetail);
   console.log("Subjects Data:", subjectsData);
   console.log("Fetched Orders:", fetchedOrders);
   console.log("Sample inventory_subjects:", fetchedOrders[0]?.inventories?.inventory_subjects);
-  const session2 = ordersDetail.slice(7);
+  console.log("Orders by Room:", ordersByRoom);
 
   const handleDetailsClick = (orderId: number) => {
     const order = ordersDetail.find((o) => o.id === orderId);
@@ -447,8 +483,21 @@ export default function HeroAdmin({
 
 
 
+  // Show full page loading spinner when initially loading
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return (
     <>
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={toastVisible}
+        onClose={() => setToastVisible(false)}
+      />
+
       <div className={`min-h-screen p-2 pt-20 bg-white transition-all duration-300 ${
         isSidebarOpen ? "lg:ml-72" : "lg:ml-20"
       }`}>
@@ -462,104 +511,38 @@ export default function HeroAdmin({
                 </h1>
               </div>
 
-              {/* Table Container */}
-              <div className={`bg-white rounded-xl overflow-hidden mb-8 overflow-x-auto ${isSidebarOpen ? 'mr-4' : ''}`}>
-                {/* Table Header */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-gray-500">
-                  <div className="col-span-1"></div>
-                  <div className="col-span-3">Name</div>
-                  <div className="col-span-4">Barang</div>
-                  <div className="col-span-2">Date</div>
-                  <div className="col-span-2">Action</div>
-                </div>
-
-                {/* Session 1 */}
-                <div className="">
-                  <div className="px-6 py-3 ">
-                    <h3 className="font-bold text-gray-700">1</h3>
-                  </div>
-                  {session1.map((order) => (
-                    <React.Fragment key={order.id}>
-                      <div
-                        className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
-                      >
-                        <div className="col-span-1">
-                          <input
-                            type="checkbox"
-                            className="hidden"
-                          />
-                        </div>
-                        <div className="col-span-3 text-sm text-gray-800">
-                          {order.name}
-                        </div>
-                        <div className="col-span-4 text-sm text-gray-800">
-                          {order.item}
-                        </div>
-                        <div className="col-span-2 text-sm text-gray-800">
-                          {order.date}
-                        </div>
-                        <div className="col-span-2 flex items-center gap-2">
-                          <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                            <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                          </button>
-                          <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                            <Check
-                              className="w-6 h-6 text-green-500"
-                              strokeWidth={2.5}
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleDetailsClick(order.id)}
-                            className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                          >
-                            Details
-                          </button>
-                        </div>
-                      </div>
-                      {/* Mobile View */}
-                      <div
-                        className="md:hidden px-4 py-4 border-b border-gray-100"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <input
-                            type="checkbox"
-                            className="hidden"
-                          />
-                          <div className="flex-1 ml-3">
-                            <p className="font-medium text-gray-800">{order.name}</p>
-                            <p className="text-sm text-gray-600">{order.item}</p>
-                            <p className="text-sm text-gray-500">{order.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => handleReject(order.id)} className="p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                            <X className="w-6 h-6 text-red-500" strokeWidth={2.5} />
-                          </button>
-                          <button onClick={() => handleApprove(order.id)} className="p-1.5 rounded-full hover:bg-green-50 transition-colors">
-                            <Check
-                              className="w-6 h-6 text-green-500"
-                              strokeWidth={2.5}
-                            />
-                          </button>
-                          <button
-                            onClick={() => handleDetailsClick(order.id)}
-                            className="px-4 py-1.5 border-2 border-[#004CB0] text-[#004CB0] rounded-xl text-sm font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
-                          >
-                            Details
-                          </button>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-
-                {/* Session 2 */}
-                {session2.length > 0 && (
-                  <div>
-                    <div className="px-6 py-3">
-                      <h3 className="font-bold text-gray-700">2</h3>
+              {/* Group by Room */}
+              {loadingOrders ? (
+                <>
+                  <SkeletonTable />
+                  <SkeletonTable />
+                </>
+              ) : ordersDetail.length > 0 ? (
+                roomNames.map((roomName) => (
+                  <div key={roomName} className="mb-8">
+                    {/* Room Header */}
+                    <div className="mb-4 flex items-center gap-2">
+                      <h2 className="text-md font-semibold text-black">
+                        {roomName}
+                      </h2>
+                      <span className="text-sm text-gray-500">
+                        ({ordersByRoom[roomName].length} items)
+                      </span>
                     </div>
-                    {session2.map((order) => (
+
+                    {/* Table Container */}
+                    <div className={`bg-white rounded-xl overflow-hidden mb-4 overflow-x-auto ${isSidebarOpen ? 'mr-4' : ''}`}>
+                      {/* Table Header */}
+                      <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-gray-500">
+                        <div className="col-span-1"></div>
+                        <div className="col-span-3">Name</div>
+                        <div className="col-span-4">Barang</div>
+                        <div className="col-span-2">Date</div>
+                        <div className="col-span-2">Action</div>
+                      </div>
+
+                      {/* Orders for this room */}
+                      {ordersByRoom[roomName].map((order) => (
                       <React.Fragment key={order.id}>
                         <div
                           className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50"
@@ -632,15 +615,26 @@ export default function HeroAdmin({
                         </div>
                       </React.Fragment>
                     ))}
+                    </div>
                   </div>
-                )}
-              </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-lg">No pending requests</p>
+                </div>
+              )}
 
               {/* Sedang dipinjam section */}
               <div className="mb-8">
-                <h2 className="text-xl font-bold text-[#004CB0] mb-4">On Loan</h2>
+                <h2 className="text-2xl font-bold text-[#004CB0] mb-4">On Loan</h2>
 
-                {displayBorrowedItems.length > 0 ? (
+                {loadingOrders ? (
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <SkeletonCard key={i} />
+                    ))}
+                  </div>
+                ) : displayBorrowedItems.length > 0 ? (
                   <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
                     {displayBorrowedItems.map((item) => (
                       <div

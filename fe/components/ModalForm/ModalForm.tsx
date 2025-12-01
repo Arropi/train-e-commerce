@@ -6,6 +6,8 @@ import { InventoryCart, ReserveFormInput, Rooms, Subject, TimeSession } from "@/
 import { useSession } from "next-auth/react";
 import { getDataSubjects } from "@/data/subjects";
 import { postReserves } from "@/action/action";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { useRouter } from "next/navigation";
 
 interface RequestFormProps {
   isOpen: boolean;
@@ -27,6 +29,8 @@ export default function RequestForm({
   timeSession
 }: RequestFormProps) {
   const { data: session } = useSession();
+  const { refreshCart, closeSidebar } = useSidebar();
+  const router = useRouter();
   const [formData, setFormData] = useState<ReserveFormInput[]>([]);
   const [showIndex, setShowIndex] = useState<number>(0)
   const [subjects, setSubjects] = useState<Subject[]>()
@@ -173,17 +177,22 @@ export default function RequestForm({
       const result = await postReserves(formData);
       
       if (result && !result.success) {
-
         console.error('Submit failed:', result.error);
+      } else {
+        // Refresh cart dan close sidebar
+        await refreshCart();
+        closeSidebar();
+        
+        // Delay untuk menampilkan notifikasi, lalu reload page
+        setTimeout(() => {
+          onClose();
+          router.refresh(); // Refresh current page
+          window.location.reload(); // Force reload untuk memastikan data ter-update
+        }, 2000);
       }
     } catch (error) {
       console.log('Redirect atau error:', error);
     }
-    
-    // Tutup modal setelah delay (jika tidak redirect)
-    setTimeout(() => {
-      onClose();
-    }, 3000);
   };
   
   console.log(showIndex)
