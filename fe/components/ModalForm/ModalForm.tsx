@@ -8,6 +8,7 @@ import { getDataSubjects } from "@/data/subjects";
 import { postReserves } from "@/action/action";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useRouter } from "next/navigation";
+import Toast from "@/components/Toast/Toast";
 
 interface RequestFormProps {
   isOpen: boolean;
@@ -43,6 +44,8 @@ export default function RequestForm({
   
   
   const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<"success" | "error" | "warning">("success");
+  const [notificationMessage, setNotificationMessage] = useState("");
   useEffect(() => {
       if(!session) return;
       const initial = items.map((item) => ({
@@ -154,7 +157,18 @@ export default function RequestForm({
 
   const isLoading = !session || !subjects;
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    // Tetap render Toast meskipun modal tertutup
+    return (
+      <Toast
+        message={notificationMessage}
+        type={notificationType}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+    );
+  }
 
   if (isLoading) {
   return (
@@ -170,28 +184,51 @@ export default function RequestForm({
     console.log("Form submitted:", formData);
     console.log("Items:", items);
 
-    // Tampilkan notifikasi
-    setShowNotification(true);
+    // Validasi form sebelum submit
+    const hasEmptyPic = formData.some(item => !item.pic || item.pic.trim() === "");
+    const hasEmptySubject = formData.some(item => !item.subject_id);
+    
+    if (hasEmptyPic || hasEmptySubject) {
+      setNotificationType("warning");
+      setNotificationMessage("Mohon lengkapi semua data sebelum submit!");
+      setShowNotification(true);
+      return;
+    }
     
     try {
       const result = await postReserves(formData);
       
       if (result && !result.success) {
         console.error('Submit failed:', result.error);
+        setNotificationType("error");
+        setNotificationMessage("Gagal mengirim pesanan. Silakan coba lagi.");
+        setShowNotification(true);
       } else {
-        // Refresh cart dan close sidebar
-        await refreshCart();
+        // Tutup modal dan sidebar langsung
+        onClose();
         closeSidebar();
         
-        // Delay untuk menampilkan notifikasi, lalu reload page
-        setTimeout(() => {
-          onClose();
-          router.refresh(); // Refresh current page
-          window.location.reload(); // Force reload untuk memastikan data ter-update
-        }, 2000);
+        // Tampilkan notifikasi sukses
+        setNotificationType("success");
+        setNotificationMessage("Pesanan berhasil dikirim!");
+        setShowNotification(true);
+        
+        // Refresh cart untuk update UI
+        await refreshCart();
       }
     } catch (error) {
       console.log('Redirect atau error:', error);
+      
+      // Tutup modal dan sidebar
+      onClose();
+      closeSidebar();
+      
+      // Refresh cart untuk update UI (cart sudah di-clear di backend)
+      await refreshCart();
+      
+      setNotificationType("success");
+      setNotificationMessage("Pesanan berhasil dikirim!");
+      setShowNotification(true);
     }
   };
   
@@ -231,26 +268,13 @@ export default function RequestForm({
       />
 
       {/* Notification */}
-      {showNotification && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[80] animate-slide-down">
-          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="font-medium">Pesanan sudah terkirim</span>
-          </div>
-        </div>
-      )}
+      <Toast
+        message={notificationMessage}
+        type={notificationType}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
 
       {/* Modal Form */}
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -351,8 +375,12 @@ export default function RequestForm({
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
-                            src={informationCard.inventories.inventory_galleries[0].filepath ?? "/images/osiloskop.png"}
-                            alt={informationCard.inventories.item_name}
+                            src={
+                              informationCard?.inventories?.inventory_galleries?.length > 0
+                                ? informationCard.inventories.inventory_galleries[0].filepath
+                                : "/images/osiloskop.png"
+                            }
+                            alt={informationCard?.inventories?.item_name || "Default Image"}
                             fill
                             className="object-contain"
                             unoptimized
@@ -548,23 +576,6 @@ export default function RequestForm({
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes slide-down {
-          from {
-            transform: translate(-50%, -100%);
-            opacity: 0;
-          }
-          to {
-            transform: translate(-50%, 0);
-            opacity: 1;
-          }
-        }
-
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-      `}</style>
     </>
   );
 }
