@@ -83,6 +83,7 @@ export default function ItemModal({
   const checkAvailability = (invId: number) => {
     return reservesItem?.some(reserve => reserve.inventories.id === invId && reserve.session_id === selectedTime);
   }
+  
   return (
     <div
       className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
@@ -117,7 +118,7 @@ export default function ItemModal({
           </h2>
 
           {/* jam milih */}
-          <div className="flex justify-center items-center gap-12 mb-4 text-sm">
+          <div className="flex justify-center items-center gap-12 mb-4 text-sm overflow-x-auto scrollbar-hide">
             {
               sessionHere.map((ts) => {
                 return (
@@ -163,6 +164,16 @@ export default function ItemModal({
                     name="inventory"
                     value={inv.id}
                     checked={selectedInventory.some(selected => selected.id === inv.id)}
+                    onChange={(e) => {
+                      if (!checkAvailability(inv.id)) {
+                        const isSelected = e.target.checked;
+                        if (isSelected) {
+                          setSelectedInventory([...selectedInventory, inv]);
+                        } else {
+                          setSelectedInventory(selectedInventory.filter(selected => selected.id !== inv.id));
+                        }
+                      }
+                    }}
                     className="hidden"
                   />
                   <div

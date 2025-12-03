@@ -46,7 +46,7 @@ export default function ItemCard({
     >
       {/* ✅ Update image section */}
       <div className="w-full h-20 bg-gray-300 rounded-lg mb-4 flex-shrink-0 overflow-hidden">
-        {item.inventories.inventory_galleries[0].filepath ? (
+        {item.inventories.inventory_galleries?.[0]?.filepath ? (
           <img
             src={item.inventories.inventory_galleries[0].filepath}
             alt={item.inventories.item_name}

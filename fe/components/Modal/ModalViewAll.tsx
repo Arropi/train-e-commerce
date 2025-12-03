@@ -4,7 +4,8 @@ import { updateReserves } from "@/action/action";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { Reserve, Subject } from "@/types";
 import { X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Toast from "@/components/Toast/Toast";
 import Image from "next/image";
 
 interface ModalViewAllProps {
@@ -21,6 +22,15 @@ export default function ModalViewAll({
   subjects
 }: ModalViewAllProps) {
   const { rooms, timeSessions } = useSidebar()
+  const [pendingAction, setPendingAction] = useState<{
+    type: string;
+    label: string;
+    handler: (() => Promise<void>) | null;
+  } | null>(null);
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<"success" | "error" | "warning">("success");
+  const [notificationMessage, setNotificationMessage] = useState("");
   // Lock body scroll ketika modal terbuka
   useEffect(() => {
     if (isOpen) {
@@ -60,16 +70,27 @@ export default function ModalViewAll({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    // Tetap render Toast meskipun modal tertutup agar notifikasi terlihat setelah menutup modal
+    return (
+      <Toast
+        message={notificationMessage}
+        type={notificationType}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        duration={3000}
+      />
+    );
+  }
 
-  // Status colors - ✅ Update key sesuai dengan type
+  // Status colors 
   const statusColors: Record<string, string> = {
     approve: "text-[#1F8E00] bg-[#B2FD9E]",
     done: "text-[#004CB0] bg-[#76B1FF]",
-    rejected: "text-[#C70000] bg-[#FE9696]", // ✅ Tambahkan key rejected
+    rejected: "text-[#C70000] bg-[#FE9696]", 
     process: "text-[#817D24] bg-[#FFF876]",
-    waiting_to_be_return: "text-[#5D00AE] bg-[#C17CFE]", // ✅ Tambahkan key waiting_to_be_return
-    canceled: "text-[#6B7280] bg-[#E5E7EB]", // ✅ Tambahkan key canceled
+    waiting_to_be_return: "text-[#5D00AE] bg-[#C17CFE]", 
+    canceled: "text-[#6B7280] bg-[#E5E7EB]", 
   };
 
   // Fungsi untuk render button berdasarkan type
@@ -86,13 +107,15 @@ export default function ModalViewAll({
               {switchStatus(item.status)}
             </span>
             <button
-              onClick={
-                () => {
-                  // Handle cancel action
-                  console.log("Cancel item:", item.id);
-                  updateReserves(item.id, "canceled");
+              onClick={() =>
+                setPendingAction({
+                  type: "cancel",
+                  label: "Cancel",
+                  handler: async () => {
+                    await updateReserves(item.id, "canceled");
+                  },
+                })
               }
-            }
               className="px-6 py-1 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-semibold"
             >
               Cancel
@@ -111,11 +134,15 @@ export default function ModalViewAll({
               {switchStatus(item.status)}
             </span>
             <button
-              onClick={() => {
-                // Handle bring back item
-                console.log("Bring back item:", item.id);
-                updateReserves(item.id, "waiting_to_be_return");
-              }}
+              onClick={() =>
+                setPendingAction({
+                  type: "bring_back",
+                  label: "Bring back Item",
+                  handler: async () => {
+                    await updateReserves(item.id, "waiting_to_be_return");
+                  },
+                })
+              }
               className="px-6 py-1 border-2 border-[#004CB0] text-[#004CB0] rounded-lg hover:bg-[#004CB0] hover:text-white transition-colors font-semibold"
             >
               Bring back Item
@@ -187,7 +214,7 @@ export default function ModalViewAll({
         {/* Header dengan Image */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 flex items-center justify-center mb-6">
-            {item.inventories.inventory_galleries[0].filepath ? (
+            {item.inventories.inventory_galleries?.[0]?.filepath ? (
               <Image
                 width={128}
                 height={128}
@@ -285,7 +312,63 @@ export default function ModalViewAll({
         {/* Action Buttons - Dynamic based on type */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           {renderActionButtons()}
+
+          {/* Toast */}
+          <Toast
+            message={notificationMessage}
+            type={notificationType}
+            isVisible={showNotification}
+            onClose={() => setShowNotification(false)}
+            duration={3000}
+          />
         </div>
+
+        {/* Confirmation Modal (popup) */}
+        {pendingAction && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingAction(null)}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200"
+            >
+              <p className="text-sm text-gray-800">Apakah anda yakin ingin <span className="font-semibold">{pendingAction.label}</span> barang?</p>
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setPendingAction(null)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!pendingAction?.handler) return;
+                    try {
+                      await pendingAction.handler();
+                      setNotificationType("success");
+                      setNotificationMessage(
+                        pendingAction.type === "cancel"
+                          ? "Reservasi berhasil dibatalkan"
+                          : "Barang berhasil dikembalikan ke status waiting to be return"
+                      );
+                      setShowNotification(true);
+                      setPendingAction(null);
+                      onClose();
+                      setTimeout(() => window.location.reload(), 1200);
+                    } catch (err) {
+                      console.error(err);
+                      setNotificationType("error");
+                      setNotificationMessage("Terjadi kesalahan. Silakan coba lagi.");
+                      setShowNotification(true);
+                      setPendingAction(null);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-900"
+                >
+                  Ya, Konfirmasi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
