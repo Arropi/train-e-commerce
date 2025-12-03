@@ -7,6 +7,7 @@ import FilterBar from "../../components/FilterBar/FilterBar";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { Inventory, Laboratory, Reserve, Rooms, Subject, TimeSession } from "@/types";
 import { useSession } from "next-auth/react";
+import SkeletonCard from "@/components/Loading/SkeletonCard";
 
 interface LabPageProps {
   slug: string;
@@ -25,12 +26,14 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
   const [reservesItem, setReservesItem] = useState<Reserve[] | null>(reserves);
   const [filteredInventories, setFilteredInventories] = useState<Inventory[]>(inventories);
   const [date, setDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(false);
   const { openSidebar, isSidebarOpen } = useSidebar();
   const handleOpenSidebar = () => {
     openSidebar(null);
   };
   console.log("Tanggal terpili: ", date)
   useEffect(() => {
+    setIsLoading(true);
     const res = fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories/${slug}?tanggal=${date}`, {
       method: "GET",
       headers: {
@@ -43,6 +46,8 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
         const result = await response.json();
         setFilteredInventories(result.inventories);
       }
+    }).finally(() => {
+      setIsLoading(false);
     });
 
     const fetchReserves = async() => {
@@ -177,43 +182,51 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
           <FilterBar onFilterChange={handleFilterChange} />
 
           {/* Grid Kartu */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-8">
-            {(uniqueItems ?? []).map((item) => {
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-8">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-8">
+              {uniqueItems.map((item) => {
               const availability = getAvailabilityStatus(item);
               const itemCount = getItemCount(item.item_name || "");
 
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col"
                   onClick={() => handleItemClick(item)}
                 >
-                  <div className="p-4">
-                    <div className="flex justify-center items-center mb-3">
-                      <div className="w-full h-24 flex items-center justify-center">
-                        <Image
-                          src={
-                            item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
-                          }
-                          alt={item.item_name}
-                          width={90}
-                          height={90}
-                          className="max-h-full object-contain"
-                        />
-                      </div>
-                    </div>
+                  {/* Image Section - Square */}
+                  <div className="relative w-full aspect-square bg-gray-50 flex items-center justify-center p-4">
+                    <Image
+                      src={
+                        item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
+                      }
+                      alt={item.item_name}
+                      width={120}
+                      height={120}
+                      className="max-w-full max-h-full object-contain"
+                      unoptimized
+                    />
+                  </div>
 
-                    <h3 className="text-sm font-bold text-gray-800 mb-1">
+                  {/* Content Section */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-md font-bold text-gray-800 mb-0 line-clamp-2 min-h-[1.2rem]">
                       {item.item_name}
                     </h3>
-                    <p className="text-xs text-gray-500 mb-3">
-                        {currentLab?.title || "No Lab"}
+                    <p className="text-sm text-gray-500 mb-6">
+                      {currentLab?.title || "No Lab"}
                     </p>
 
-                    {/* ✅ Tampilkan Available/Not Available */}
-                    <div>
+                    {/* Status Badge */}
+                    <div className="mt-auto">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${availability.bgColor} ${availability.textColor}`}
+                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${availability.bgColor} ${availability.textColor}`}
                       >
                         {availability.text}
                       </span>
@@ -221,11 +234,12 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
                   </div>
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
 
           {/* No results message */}
-          {uniqueItems.length === 0 && (
+          {!isLoading && uniqueItems.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
                 Tidak ada barang yang sesuai dengan filter

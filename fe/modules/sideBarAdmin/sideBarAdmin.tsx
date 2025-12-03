@@ -13,7 +13,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
-import { Reserve } from "../../types";
 
 interface SidebarAdminProps {
   user?: {

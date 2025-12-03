@@ -58,7 +58,8 @@ const getReserveOnGoingAdmin = async () => {
                 inventories: {
                     include: {
                         inventory_galleries: true,
-                        labolatories: true
+                        labolatories: true,
+                        inventory_subjects: true
                     }
                 }
             }
@@ -143,10 +144,18 @@ const getReservesAdmin = async () => {
                 inventories: {
                     include: {
                         inventory_galleries: true,
-                        inventory_subjects: true
+                        inventory_subjects: {
+                            include: {
+                                subjects: true
+                            }
+                        },
+                        labolatories: true,
+                        rooms: true
                     }
                 },
-                reserve_user_created: true
+                reserve_user_created: true,
+                time_sessions: true,
+                subjects: true
             }
         })
         return reserves

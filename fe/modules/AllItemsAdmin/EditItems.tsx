@@ -8,6 +8,7 @@ import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
+import { useUploadThing } from "@/lib/uploadthing";
 
 interface EditItemsProps {
   session: Session;
@@ -139,6 +140,16 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     image: null as File | null,
   });
 
+  const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<File | null>(null);
+
+  const { startUpload } = useUploadThing("imageUploader", {
+    onUploadError(e) {
+      console.error("Upload error:", e);
+      setError(e.message);
+    },
+  });
+
   const [imagePreview, setImagePreview] = useState<string>(itemData.image);
 
   // Debug logs
@@ -154,6 +165,8 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
+      setFiles(file);
+      console.log("Selected file:", file);
       reader.readAsDataURL(file);
     }
   };
@@ -165,7 +178,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     });
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
+  const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -223,9 +236,19 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     };
 
     // Handle image if uploaded
-    if (formData.image) {
-      const base64 = await fileToBase64(formData.image);
-      updateData.img_url = base64;
+    if (formData.image && files) {
+      try {
+        const uploadImage = await startUpload([files]);
+        if (!uploadImage || !uploadImage[0] || !uploadImage[0].ufsUrl) {
+          setError("Image upload failed");
+          return;
+        }
+        updateData.img_url = uploadImage[0].ufsUrl;
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        alert("Failed to process image");
+        return;
+      }
     }
 
     try {
@@ -292,6 +315,10 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
           avatar: session?.user?.image || undefined,
         }}
       />
+      {error && (<div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow">
+        {error}
+      </div>
+      )}
 
       {/* Main Content */}
       <div

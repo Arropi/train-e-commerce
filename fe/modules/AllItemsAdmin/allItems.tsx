@@ -7,6 +7,7 @@ import { Session } from "next-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
+import SkeletonCard from "@/components/Loading/SkeletonCard";
 
 interface RawInventory {
   id: number;
@@ -70,6 +71,10 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
   const [notificationMessage, setNotificationMessage] = useState("Item successfully added");
   const [fetchedItems, setFetchedItems] = useState<Item[]>([]);
   const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
+  const [loadingLabs, setLoadingLabs] = useState(true);
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  const isLoading = loadingLabs || loadingItems;
 
   const mappedInventories = useMemo(() => (Array.isArray(inventories) ? inventories : []).map((inv: RawInventory) => ({
     id: inv.id,
@@ -99,6 +104,7 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
   // Fetch laboratories from API
   useEffect(() => {
     const fetchLabs = async () => {
+      setLoadingLabs(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
           headers: {
@@ -111,6 +117,8 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
         }
       } catch (error) {
         console.error("Error fetching laboratories:", error);
+      } finally {
+        setLoadingLabs(false);
       }
     };
     fetchLabs();
@@ -118,6 +126,7 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
 
   useEffect(() => {
     const fetchItems = async () => {
+      setLoadingItems(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/inventories`, {
           headers: {
@@ -140,6 +149,8 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
         }
       } catch (error) {
         console.error("Error fetching items:", error);
+      } finally {
+        setLoadingItems(false);
       }
     };
     if (labs.length > 0) {
@@ -250,12 +261,19 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
             </div>
 
             {/* Items Grid */}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
-              {sortedItems.map((item) => (
+            {isLoading ? (
+              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
+                {sortedItems.map((item) => (
                 <div
                   key={`${item.id}-${item.serialNumber}`}
                   onClick={() => handleEditClick(item.id)}
-                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow items-center cursor-pointer h-80 w-50"
+                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow items-center cursor-pointer h-85 w-55"
                 >
                   {/* Item Image */}
                   <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
@@ -265,11 +283,12 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
                         alt={item.name}
                         width={150}
                         height={120}
-                        className="object-contain"
+                        className="object-cover w-full h-full rounded-lg"
+                        loading="lazy"
                         unoptimized
                       />
                     ) : (
-                      <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs rounded-lg">
                         No Image
                       </div>
                     )}
@@ -294,8 +313,9 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Floating Add Button */}
             <button

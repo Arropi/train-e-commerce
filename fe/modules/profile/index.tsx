@@ -295,7 +295,7 @@ export default function ProfilePage(profileProps: {
 
             <div>
               <p className="text-gray-500 text-sm mb-1">Email</p>
-              <p className="text-gray-800 font-medium">{profile.email}</p>
+              <p className="text-gray-800 font-medium line-clamp-2">{profile.email}</p>
             </div>
 
             <div>

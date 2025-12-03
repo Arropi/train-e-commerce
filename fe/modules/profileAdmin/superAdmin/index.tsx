@@ -85,13 +85,15 @@ export default function SuperAdminProfile(profileProps: {
                 />
               </svg>
             )}
-            <div className={`text-sm font-medium ${
-              t.type === "success"
-                ? "text-[#004CB0]"
-                : t.type === "error"
-                ? "text-red-600"
-                : "text-[#004CB0]"
-            }`}>
+            <div
+              className={`text-sm font-medium ${
+                t.type === "success"
+                  ? "text-[#004CB0]"
+                  : t.type === "error"
+                  ? "text-red-600"
+                  : "text-[#004CB0]"
+              }`}
+            >
               {t.message}
             </div>
           </div>
@@ -132,7 +134,8 @@ export default function SuperAdminProfile(profileProps: {
     const fetchProfile = async () => {
       if (!session?.user?.accessToken) return;
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+        const backendUrl =
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
         const res = await fetch(`${backendUrl}/user`, {
           headers: {
             Authorization: `Bearer ${session.user.accessToken}`,
@@ -166,7 +169,11 @@ export default function SuperAdminProfile(profileProps: {
   });
 
   // Dummy labs for UI testing (no backend fetching)
-  const [labs] = useState<string[]>(["Lab Komputer", "Lab Fisika", "Lab Kimia"]);
+  const [labs] = useState<string[]>([
+    "Lab Komputer",
+    "Lab Fisika",
+    "Lab Kimia",
+  ]);
 
   // State untuk sidebar
   const { isSidebarOpen } = useAdminSidebar();
@@ -221,7 +228,10 @@ export default function SuperAdminProfile(profileProps: {
     // email format validation
     const emailRegex = /@(gmail\.com|mail\.ugm\.ac\.id)$/;
     if (!emailRegex.test(newAdmin.email)) {
-      showToast("Email harus berformat @gmail.com atau @mail.ugm.ac.id", "error");
+      showToast(
+        "Email harus berformat @gmail.com atau @mail.ugm.ac.id",
+        "error"
+      );
       return;
     }
 
@@ -234,7 +244,10 @@ export default function SuperAdminProfile(profileProps: {
       setNewAdmin({ email: "", lab: "", password: "" });
     } catch (err: unknown) {
       console.error("Add admin error:", err);
-      showToast(err instanceof Error ? err.message : "Gagal menambahkan admin", "error");
+      showToast(
+        err instanceof Error ? err.message : "Gagal menambahkan admin",
+        "error"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -406,11 +419,17 @@ export default function SuperAdminProfile(profileProps: {
                   />
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={closeAddModal}
+                    className="px-6 py-1 bg-white hover:bg-[#004CB0] border-2 border-[#004CB0] hover:text-white transition-colors duration-200 text-[#004CB0] rounded-full"
+                  >
+                    Cancel
+                  </button>
                   <button
                     onClick={handleAddAdmin}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-[#004CB0] text-white rounded-full"
+                    className="px-6 py-1 bg-[#004CB0] text-white hover:bg-blue-900 transition-colors duration-200 rounded-full"
                   >
                     Add
                   </button>
@@ -421,7 +440,7 @@ export default function SuperAdminProfile(profileProps: {
         )}
 
         {/* Header */}
-        <div className={`mt-20 px-3 sm:px-4 lg:px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
+        <div className="mt-20 px-3 sm:px-4 lg:px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               {/* Tombol toggle sidebar */}
@@ -432,7 +451,9 @@ export default function SuperAdminProfile(profileProps: {
               >
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
               </svg>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-[#004CB0]">Profile</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-[#004CB0]">
+                Profile
+              </h2>
             </div>
 
             {/* Button Tambah Admin */}
@@ -480,8 +501,9 @@ export default function SuperAdminProfile(profileProps: {
           </div>
         </div>
 
-        <div className={`w-[56rem] mx-auto mt-8 px-6 ${isSidebarOpen ? 'mr-4' : ''}`}>
-          <div className="flex flex-col items-center justify-center mb-30">
+        {/* Profile Content - Fixed width container */}
+        <div className="max-w-4xl mx-auto mt-8 px-6">
+          <div className="flex flex-col items-center justify-center mb-8">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-[#004CB0]">
               {session?.user?.image ? (
                 <Image
@@ -504,7 +526,7 @@ export default function SuperAdminProfile(profileProps: {
             </div>
           </div>
 
-          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 mt-6 overflow-hidden">
+          <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1" />
             <h3 className="text-xl font-semibold text-[#004CB0] mb-6">
               Informasi Detail
@@ -550,7 +572,9 @@ export default function SuperAdminProfile(profileProps: {
 
               <div>
                 <p className="text-gray-500 text-sm mb-1">Email</p>
-                <p className="text-gray-800 font-medium">{profile.email}</p>
+                <p className="text-gray-800 font-medium line-clamp-2">
+                  {profile.email}
+                </p>
               </div>
 
               <div>

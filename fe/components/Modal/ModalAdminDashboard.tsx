@@ -76,7 +76,7 @@ export default function ModalAdminDashboard({
                 alt={order.item}
                 width={96}
                 height={96}
-                className="object-contain"
+                className="object-cover w-full h-full rounded-lg"
                 unoptimized
               />
             </div>

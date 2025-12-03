@@ -82,12 +82,12 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-4 items-center mt-8 justify-between">
+    <div className="flex flex-col lg:flex-row gap-4 mt-8">
       {/* Filter Group - Kiri */}
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-3 flex-1">
         {/* Filter Lokasi */}
         <Select onValueChange={handleLocationChange} value={selectedLocation || "all"}>
-          <SelectTrigger className="w-[180px] !h-10 border-[#1E40AF] border-2 text-gray-500 rounded-xl">
+          <SelectTrigger className="w-full sm:w-[180px] !h-10 border-[#1E40AF] border-2 text-gray-500 rounded-xl">
             <SelectValue placeholder="Lokasi" />
           </SelectTrigger>
           <SelectContent>
@@ -100,7 +100,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
         {/* Filter Tanggal */}
         <Popover>
           <PopoverTrigger asChild>
-            <button className="flex items-center justify-between w-[180px] border-2 border-[#1E40AF] rounded-xl px-3 text-gray-500 h-10 hover:bg-gray-50 transition-colors">
+            <button className="flex items-center justify-between w-full sm:w-[180px] border-2 border-[#1E40AF] rounded-xl px-3 text-gray-500 h-10 hover:bg-gray-50 transition-colors">
               {date ? format(date, "dd/MM/yyyy") : "dd/mm/yyyy"}
               <CalendarIcon className="ml-2 h-4 w-4 text-[#1E40AF]" />
             </button>
@@ -123,7 +123,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
       </div>
 
       {/* Search Bar - Kanan */}
-      <div className="relative w-[320px]">
+      <div className="relative w-full lg:w-[320px]">
         <Image
           src="/icons/searchLogo.svg"
           alt="Search"

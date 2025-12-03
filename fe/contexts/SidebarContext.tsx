@@ -32,6 +32,7 @@ interface SidebarContextType {
   addItem: (inventory_id: number, session_id: number, tanggal: Date) => void;
   removeItem: (id: number) => void;
   clear: () => void;
+  refreshCart: () => Promise<void>;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -130,6 +131,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     setItems([]);
   };
 
+  const refreshCart = async () => {
+    await loadCartItems();
+  };
+
   return (
     <SidebarContext.Provider
       value={{
@@ -146,6 +151,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         addItem,
         removeItem,
         clear,
+        refreshCart,
       }}
     >
       {children}
