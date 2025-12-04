@@ -213,17 +213,18 @@ export default function ModalViewAll({
 
         {/* Header dengan Image */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-32 h-32 flex items-center justify-center mb-6">
+          <div className="w-32 h-32 flex items-center justify-center mb-6 rounded-2xl overflow-hidden bg-gray-50">
             {item.inventories.inventory_galleries?.[0]?.filepath ? (
               <Image
                 width={128}
                 height={128}
                 src={item.inventories.inventory_galleries[0].filepath}
                 alt={item.inventories.item_name}
-                className="max-w-full max-h-full object-contain"
+                loading="lazy"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                 <span className="text-5xl">📦</span>
               </div>
             )}

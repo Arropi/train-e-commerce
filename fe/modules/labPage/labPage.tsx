@@ -8,6 +8,7 @@ import { useSidebar } from "../../contexts/SidebarContext";
 import { Inventory, Laboratory, Reserve, Rooms, Subject, TimeSession } from "@/types";
 import { useSession } from "next-auth/react";
 import SkeletonCard from "@/components/Loading/SkeletonCard";
+import Pagination from "@/components/Pagination/Pagination";
 
 interface LabPageProps {
   slug: string;
@@ -27,6 +28,8 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
   const [filteredInventories, setFilteredInventories] = useState<Inventory[]>(inventories);
   const [date, setDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const { openSidebar, isSidebarOpen } = useSidebar();
   const handleOpenSidebar = () => {
     openSidebar(null);
@@ -113,6 +116,7 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
     }
 
     setFilteredInventories(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   // Function untuk determine availability
@@ -166,6 +170,22 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
 
   const currentLab = laboratories.find((lab) => lab.id === Number(slug));
 
+  // Pagination calculations
+  const totalPages = Math.ceil(uniqueItems.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = uniqueItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  };
+
   return (
     <>
       <div
@@ -183,14 +203,15 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
 
           {/* Grid Kartu */}
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-8">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-8">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map((i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mt-8">
-              {uniqueItems.map((item) => {
+            <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-8">
+              {currentItems.map((item) => {
               const availability = getAvailabilityStatus(item);
               const itemCount = getItemCount(item.item_name || "");
 
@@ -202,16 +223,17 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
                 >
                   {/* Image Section - Square */}
                   <div className="relative w-full aspect-square bg-gray-50 flex items-center justify-center p-4">
-                    <Image
-                      src={
-                        item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
-                      }
-                      alt={item.item_name}
-                      width={120}
-                      height={120}
-                      className="max-w-full max-h-full object-contain"
-                      unoptimized
-                    />
+                    <div className="relative w-full h-full rounded-xl overflow-hidden">
+                      <Image
+                        src={
+                          item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
+                        }
+                        alt={item.item_name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
                   </div>
 
                   {/* Content Section */}
@@ -236,6 +258,17 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
               );
               })}
             </div>
+
+            {/* Pagination - Always show */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              totalItems={uniqueItems.length}
+            />
+            </>
           )}
 
           {/* No results message */}
