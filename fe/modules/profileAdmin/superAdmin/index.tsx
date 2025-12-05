@@ -5,12 +5,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
+import { Laboratory } from "@/types";
 
 export default function SuperAdminProfile(profileProps: {
   name: string;
-  nim: string;
+  lab: string;
   email: string;
-  prodi: string;
+  role: string;
 }) {
   const { data: session, status } = useSession();
 
@@ -106,15 +107,15 @@ export default function SuperAdminProfile(profileProps: {
   // Local profile state (initialized from props)
   const [profile, setProfile] = useState({
     name: profileProps.name ?? "",
-    nim: profileProps.nim ?? "",
+    role: profileProps.role ?? "",
     email: profileProps.email ?? "",
-    prodi: profileProps.prodi ?? "",
+    lab: profileProps.lab ?? "",
   });
 
   // Form state for editing
   const [form, setForm] = useState({
-    nim: profileProps.nim ?? "",
-    prodi: profileProps.prodi ?? "",
+    role: profileProps.role ?? "",
+    lab: profileProps.lab ?? "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -164,17 +165,38 @@ export default function SuperAdminProfile(profileProps: {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newAdmin, setNewAdmin] = useState({
     email: "",
-    lab: "",
+    lab: 0,
   });
+  console.log('data yang akan dikirim: ',newAdmin)
 
   // Labs untuk pilihan lab admin
-  const [labs] = useState<string[]>([
-    "IDK",
-    "RPL",
-    "TAJ",
-    "Elektronika",
-    "TL",
-  ]);
+  const [labs, setLabs] = useState<Laboratory[]>([]);
+  useEffect(() => {
+    if (!session?.user?.accessToken) return;
+    const fetchLabs = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+        const res = await fetch(`${backendUrl}/laboratories`, {
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`, 
+          },
+          cache: 'no-store'
+        }); 
+        if (res.ok) {
+          const data = await res.json();
+          for (const lab of data.data) {
+            console.log(lab)
+            const formatingLab = {'title': lab.name, ...lab}
+            setLabs((prevLabs) => [...prevLabs, formatingLab]);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch labs error:", err);
+      }
+    };
+    fetchLabs();
+  }, [session]);
+  console.log('labs: ', labs);
 
   // State untuk sidebar
   const { isSidebarOpen } = useAdminSidebar();
@@ -183,24 +205,24 @@ export default function SuperAdminProfile(profileProps: {
   useEffect(() => {
     setProfile({
       name: profileProps.name ?? "",
-      nim: profileProps.nim ?? "",
+      role: profileProps.role ?? "",
       email: profileProps.email ?? "",
-      prodi: profileProps.prodi ?? "",
+      lab: profileProps.lab ?? "",
     });
     setForm({
-      nim: profileProps.nim ?? "",
-      prodi: profileProps.prodi ?? "",
+      role: profileProps.role ?? "",
+      lab: profileProps.lab ?? "",
     });
   }, [
     profileProps.name,
-    profileProps.nim,
+    profileProps.role,
     profileProps.email,
-    profileProps.prodi,
+    profileProps.lab,
   ]);
 
   // repurpose the button to open the Add Admin modal (per request)
   const handleEdit = () => {
-    setNewAdmin({ email: "", lab: "" });
+    setNewAdmin({ email: "", lab: 0 });
     setIsAddModalOpen(true);
     setError(null);
   };
@@ -211,6 +233,10 @@ export default function SuperAdminProfile(profileProps: {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target as HTMLInputElement;
+    if (name === "lab") {
+      setNewAdmin((p) => ({ ...p, [name]: Number(value) }));
+      return;
+    }
     setNewAdmin((p) => ({ ...p, [name]: value }));
   };
 
@@ -242,15 +268,14 @@ export default function SuperAdminProfile(profileProps: {
         process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
       const res = await fetch(`${backendUrl}/user`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.user.accessToken}`,
         },
         body: JSON.stringify({
           email: newAdmin.email,
-          lab: newAdmin.lab,
-          role: "admin",
+          lab_id: newAdmin.lab,
         }),
       });
 
@@ -271,7 +296,7 @@ export default function SuperAdminProfile(profileProps: {
       const data = await res.json();
       showToast("Admin berhasil ditambahkan", "success");
       setIsAddModalOpen(false);
-      setNewAdmin({ email: "", lab: "" });
+      setNewAdmin({ email: "", lab: 0 });
     } catch (err: unknown) {
       console.error("Add admin error:", err);
       showToast(
@@ -285,7 +310,7 @@ export default function SuperAdminProfile(profileProps: {
 
   const handleCancel = () => {
     setIsEditing(false);
-    setForm({ nim: profile.nim, prodi: profile.prodi });
+    setForm({ role: profile.role, lab: profile.lab });
     setError(null);
   };
 
@@ -313,7 +338,7 @@ export default function SuperAdminProfile(profileProps: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.user.accessToken}`,
         },
-        body: JSON.stringify({ nim: form.nim, prodi: form.prodi }),
+        body: JSON.stringify({ role: form.role, lab_id: form.lab }),
       });
 
       const contentType = res.headers.get("content-type") ?? "";
@@ -337,8 +362,8 @@ export default function SuperAdminProfile(profileProps: {
       // update local profile state
       setProfile((p) => ({
         ...p,
-        nim: user?.nim ?? form.nim,
-        prodi: user?.prodi ?? form.prodi,
+        role: user?.role ?? form.role,
+        lab: user?.lab ?? form.lab,
         name: user?.name ?? user?.username ?? p.name,
         email: user?.email ?? p.email,
       }));
@@ -415,8 +440,8 @@ export default function SuperAdminProfile(profileProps: {
                     >
                       <option value="">Pilih laboratorium...</option>
                       {labs.map((l) => (
-                        <option key={l} value={l}>
-                          Lab {l}
+                        <option key={l.id} value={l.id}>
+                          Lab {l.title}
                         </option>
                       ))}
                     </select>
@@ -575,15 +600,15 @@ export default function SuperAdminProfile(profileProps: {
                 {isEditing ? (
                   <input
                     type="text"
-                    name="nim"
-                    value={form.nim}
+                    name="lab"
+                    value={form.lab}
                     onChange={handleChange}
-                    placeholder="Masukkan NIM"
+                    placeholder="Masukkan Lab"
                     className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">
-                    {profile.nim || (
+                    {profile.lab || (
                       <span className="text-gray-400 italic">Belum diisi</span>
                     )}
                   </p>
@@ -603,14 +628,14 @@ export default function SuperAdminProfile(profileProps: {
                   <input
                     type="text"
                     name="prodi"
-                    value={form.prodi}
+                    value={form.role}
                     onChange={handleChange}
                     placeholder="Masukkan Program Studi"
                     className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">
-                    {profile.prodi || (
+                    {profile.role || (
                       <span className="text-gray-400 italic">Belum diisi</span>
                     )}
                   </p>

@@ -31,7 +31,7 @@ export default async function AdminProfile() {
   
   return (
     <>
-        <SuperAdminProfile nim={user.nim} email={session.user.email ?? ''} name={session.user.name ?? ''} prodi={user.prodi} />
+        <SuperAdminProfile role={user.role} email={session.user.email ?? ''} name={session.user.name ?? ''} lab={user.lab_name} />
     </>
   );
 }

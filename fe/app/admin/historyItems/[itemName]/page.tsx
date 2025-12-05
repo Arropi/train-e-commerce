@@ -197,7 +197,7 @@ export default async function DetailHistoryPage({ params }: PageProps) {
         session: `Session ${reserve.session_id || "N/A"}`,
         room: roomsMap.get(reserve.inventories?.room_id || 0) || "Unknown Room",
         personInCharge: reserve.pic || "N/A",
-        subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsMap.get(sub.subject_id) || `Subject ${sub.subject_id}`).join(", ") || "N/A",
+        subject: subjectsMap.get(reserve.subject_id)|| "N/A",
         returnDate: reserve.updated_at ? new Date(reserve.updated_at).toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
