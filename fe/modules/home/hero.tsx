@@ -43,7 +43,7 @@ export default function Hero({ session, laboratories, onGoing, history, subjects
   return (
     <>
       <div
-        className={`transition-all duration-300 ease-in-out ${
+        className={`transition-all duration-300 ease-in-out relative ${
           isSidebarOpen ? "mr-96" : "mr-0"
         }`}
       >

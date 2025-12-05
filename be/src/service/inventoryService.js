@@ -2,9 +2,9 @@ const { getAllInventory, createInventory, createSubjectInventory, createImageInv
 const { getReservesInSpesificDate } = require("../repository/reservesRepository")
 const { getSubjectId, filterSubject, bigintToNumber } = require("../utils/functions")
 
-const getInventoriesService = async () => {
+const getInventoriesService = async (lab_id) => {
     try {
-        const inventories = await getAllInventory()
+        const inventories = await getInventoriesLaboratory(lab_id)
         const info = bigintToNumber(inventories)
         const information = inventories.map((inventory) => {
             return {

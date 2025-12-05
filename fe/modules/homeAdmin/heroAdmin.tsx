@@ -6,7 +6,7 @@ import Image from "next/image";
 import ModalAdminDashboard from "@/components/Modal/ModalAdminDashboard";
 import ModalBorrowedItem from "@/components/Modal/ModalBorrowedItem";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
-import { Reserve } from "../../types";
+import { Reserve, TimeSession } from "../../types";
 import { useSession } from "next-auth/react";
 import LoadingSpinner from "@/components/Loading/LoadingSpinner";
 import SkeletonTable from "@/components/Loading/SkeletonTable";
@@ -87,13 +87,16 @@ export default function HeroAdmin({
   const [laboratoriesData, setLaboratoriesData] = useState<{ [key: number]: string }>({});
   // roomsData used to map room ids to names; fetched in useEffect below
   const [roomsData, setRoomsData] = useState<{ [key: number]: string }>({});
+  // timeSessionsData used to map time session ids to start times; fetched in useEffect below
+  const [timeSessionsData, setTimeSessionsData] = useState<{ [key: number]: string }>({});
   // Loading states
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingLabs, setLoadingLabs] = useState(true);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [loadingTimeSessions, setLoadingTimeSessions] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
-  const isLoading = loadingSubjects || loadingLabs || loadingRooms || loadingOrders;
+  const isLoading = loadingSubjects || loadingLabs || loadingRooms || loadingTimeSessions || loadingOrders;
 
   const ordersToUse = fetchedOrders
 
@@ -264,16 +267,16 @@ export default function HeroAdmin({
     lab: laboratoriesData[reserve.inventories?.labolatory_id] || "Unknown Lab",
     serialNumber: reserve.inventories?.no_item || "N/A",
     purpose: reserve.inventories?.type || "N/A",
-    session: reserve.session_id?.toString() || "N/A",
+    session: timeSessionsData[reserve.session_id ?? -1] || "N/A",
     borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
       : reserve.reserve_user_created?.username || "Unknown",
-    room: roomsData[reserve.inventories?.room_id] || "Unknown Room",
+    room: roomsData[reserve.inventories?.room_id?? -1] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     condition: reserve.inventories?.condition || "N/A",
-    subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsData[sub.subject_id] || sub.subject_id).join(", ") || "N/A",
+    subject: subjectsData[reserve.subject_id ?? -1] || "N/A",
     image: reserve.inventories?.inventory_galleries?.[0]?.filepath || "", // Kosong jika tidak ada
-  })), [pendingOrders, subjectsData, laboratoriesData, roomsData]);
+  })), [pendingOrders, subjectsData, laboratoriesData, roomsData, timeSessionsData]);
 
   // Filter orders yang sedang dipinjam (status "waiting_to_be_return")
   const borrowedOrders = useMemo(() => ordersToUse.filter(order => order.status === 'waiting_to_be_return'), [ordersToUse]);
@@ -291,12 +294,12 @@ export default function HeroAdmin({
     condition: reserve.inventories?.condition || "good",
     borrowed_date: reserve.tanggal ? new Date(reserve.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date",
     sessionId: reserve.session_id || 0,
-    room: roomsData[reserve.inventories?.room_id] || "Unknown Room",
+    room: roomsData[reserve.inventories?.room_id ?? -1] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     purpose: reserve.inventories?.type || "N/A",
-    subject: reserve.inventories?.inventory_subjects?.map(sub => subjectsData[sub.subject_id] || sub.subject_id).join(", ") || "N/A",
+    subject: subjectsData[reserve.subject_id ?? -1] || "N/A",
     inventory_id: reserve.inventories?.id || 0,
-  })), [borrowedOrders, subjectsData, laboratoriesData, roomsData]);
+  })), [borrowedOrders, subjectsData, laboratoriesData, roomsData, timeSessionsData]);
 
   // gunakan data dari API jika ada, kosong jika tidak
   const displayBorrowedItems = borrowedItemsDetail;
@@ -479,6 +482,41 @@ export default function HeroAdmin({
     };
 
     fetchRooms();
+  }, [session?.user?.accessToken]);
+
+  // Fetch time sessions data
+  useEffect(() => {
+    const fetchTimeSessions = async () => {
+      if (!session?.user?.accessToken) return;
+      
+      setLoadingTimeSessions(true);
+      try {
+        const response = await fetch(`${
+          process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"
+        }/time-sessions`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+          cache: "no-store",
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const timeSessionsMap: { [key: number]: string } = {};
+          data.data.forEach((timeSession: TimeSession) => {
+            timeSessionsMap[timeSession.id] = timeSession.start;
+          });
+          setTimeSessionsData(timeSessionsMap);
+        }
+      } catch (error) {
+        console.error("Error fetching time sessions:", error);
+      } finally {
+        setLoadingTimeSessions(false);
+      }
+    };
+
+    fetchTimeSessions();
   }, [session?.user?.accessToken]);
 
 

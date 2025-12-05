@@ -45,12 +45,15 @@ const getReserveOnGoingUser = async (user_id) => {
 
 
 
-const getReserveOnGoingAdmin = async () => {
+const getReserveOnGoingAdmin = async (lab_id) => {
     try {
         const reserves = await prisma.reserves.findMany({
             where: {
                 status: {
                     in: ["process", "approve", "waiting_to_be_return"]
+                },
+                inventories: {
+                    labolatory_id: lab_id
                 }
             },
             include: {
@@ -97,12 +100,15 @@ const getReserveHistoryUser = async (user_id) => {
     }
 }
 
-const getReserveHistoryAdmin = async () => {
+const getReserveHistoryAdmin = async (lab_id) => {
     try {
         const reserves = prisma.reserves.findMany({
           where: {
             status: {
                 in: ["done", "canceled", "rejected"]
+            },
+            inventories: {
+                labolatory_id: lab_id
             }
           },  
           include: {
@@ -137,9 +143,14 @@ const getReservesUserOnProcess = async (dataInput) => {
     }
 }
 
-const getReservesAdmin = async () => {
+const getReservesAdmin = async (lab_id) => {
     try {
         const reserves = await prisma.reserves.findMany({
+            where: {
+                inventories: {
+                    labolatory_id: lab_id
+                }
+            },
             include: {
                 inventories: {
                     include: {
