@@ -325,7 +325,53 @@ export default function ModalViewAll({
         </div>
 
         {/* Confirmation Modal (popup) */}
-        {pendingAction && (
+        {/* {pendingAction && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingAction(null)}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200"
+            >
+              <p className="text-sm text-gray-800">Apakah anda yakin ingin <span className="font-semibold">{pendingAction.label}</span> barang?</p>
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setPendingAction(null)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!pendingAction?.handler) return;
+                    try {
+                      await pendingAction.handler();
+                      setNotificationType("success");
+                      setNotificationMessage(
+                        pendingAction.type === "cancel"
+                          ? "Reservasi berhasil dibatalkan"
+                          : "Barang berhasil dikembalikan ke status waiting to be return"
+                      );
+                      setShowNotification(true);
+                      setPendingAction(null);
+                      onClose();
+                      setTimeout(() => window.location.reload(), 1200);
+                    } catch (err) {
+                      console.error(err);
+                      setNotificationType("error");
+                      setNotificationMessage("Terjadi kesalahan. Silakan coba lagi.");
+                      setShowNotification(true);
+                      setPendingAction(null);
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-900"
+                >
+                  Ya, Konfirmasi
+                </button>
+              </div>
+            </div>
+          </div>
+        )} */}
+      </div>
+      {pendingAction && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setPendingAction(null)}>
             <div
               onClick={(e) => e.stopPropagation()}
@@ -370,7 +416,6 @@ export default function ModalViewAll({
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

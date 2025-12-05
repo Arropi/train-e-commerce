@@ -2,7 +2,8 @@ const { getInventoriesService, createInventoryService, addInventoriesSubjectServ
 
 const getInventories = async (req, res) => {
     try {
-        const inventories = await getInventoriesService()       
+        const user = req.user
+        const inventories = await getInventoriesService(user.lab_id)       
         return res.status(200).json({
             message: 'Getting data inventory succesfull',
             inventories

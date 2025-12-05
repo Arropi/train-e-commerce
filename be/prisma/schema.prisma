@@ -589,6 +589,7 @@ model users {
   login_status                              users_login_status @default(off)
   last_login                                DateTime?          @db.Timestamp(0)
   remember_token                            String?            @db.VarChar(100)
+  updated_by                                BigInt?            @db.UnsignedBigInt
   created_at                                DateTime?          @db.Timestamp(0)
   updated_at                                DateTime?          @db.Timestamp(0)
   lab_id                                    BigInt?            @db.UnsignedBigInt

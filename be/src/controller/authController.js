@@ -7,7 +7,8 @@ const authController = async (req, res)=> {
         return res.status(login.status).json({
             'message': login.message,
             'token': login.token,
-            'role': login.role
+            'role': login.role,
+            'lab': login.lab
         })
     } catch (error) {
         return res.status(500).json({

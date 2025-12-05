@@ -34,7 +34,8 @@ const getReservesUserOngoing = async (req, res) => {
 
 const getReservesAdminOngoing = async (req, res) => {
     try {
-        const reserves = await getReservesAdminOngoingService()
+        const user = req.user
+        const reserves = await getReservesAdminOngoingService(user.lab_id)
         return res.status(200).json({
             'message': 'Getting ongoing reserves data successfully',
             'data': reserves
@@ -71,7 +72,8 @@ const getReservesUserHistory = async (req, res) => {
 
 const getReservesHistoryAdmin = async (req, res) => {
     try {
-        const reserves = await getReservesAdminHistoryService()
+        const user = req.user
+        const reserves = await getReservesAdminHistoryService(user.lab_id)
         return res.status(200).json({
             'message': 'Getting reserve history data successfully',
             'data': reserves
@@ -92,7 +94,8 @@ const getReservesHistoryAdmin = async (req, res) => {
 
 const getReservesAdmin = async (req, res) => {
     try {
-        const reserves = await getReservesAdminService()
+        const user = req.user
+        const reserves = await getReservesAdminService(user.lab_id)
         return res.status(200).json({
             'message': 'Getting data successfully',
             'data': reserves
@@ -114,7 +117,6 @@ const getReservesAdmin = async (req, res) => {
 const getReservesInUse = async (req, res) => {
     try {
         const tanggal = req.query.tanggal
-        console.log(tanggal)
         const reserves = await getReservesInUseService(tanggal)
         return res.status(200).json({
             'message': 'Getting reserve data successfully',

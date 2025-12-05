@@ -21,9 +21,9 @@ const getReservesUserOngoingService = async (user_id) => {
     }
 }
 
-const getReservesAdminOngoingService = async () => {
+const getReservesAdminOngoingService = async (lab_id) => {
     try {
-        const reserves = await getReserveOnGoingAdmin()
+        const reserves = await getReserveOnGoingAdmin(lab_id)
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
     } catch (error) {
@@ -41,9 +41,9 @@ const getReservesUserHistoryService = async (user_id) => {
     }
 }
 
-const getReservesAdminService = async () => {
+const getReservesAdminService = async (lab_id) => {
     try {
-        const reserves = await getReservesAdmin()
+        const reserves = await getReservesAdmin(lab_id)
         const clearReserves = bigintToNumber(reserves)
         return clearReserves
     } catch (error) {
@@ -51,9 +51,9 @@ const getReservesAdminService = async () => {
     }
 }
 
-const getReservesAdminHistoryService = async () => {
+const getReservesAdminHistoryService = async (lab_id) => {
     try {
-        const reserves = await getReserveHistoryAdmin()
+        const reserves = await getReserveHistoryAdmin(lab_id)
         const reserveClear = bigintToNumber(reserves)
         return reserveClear
     } catch (error) {
