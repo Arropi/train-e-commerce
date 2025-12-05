@@ -59,6 +59,11 @@ export default function ItemModal({
       setSelectedTime(timeSessions.find(ts => ts.special_session === item?.special_session)?.id)
     }
   }, [isOpen, item, timeSessions]);
+
+  // ✅ Reset checkbox selection ketika ganti jam
+  useEffect(() => {
+    setSelectedInventory([]);
+  }, [selectedTime]);
   
   if (!isOpen || !item) return null;
 
@@ -103,11 +108,12 @@ export default function ItemModal({
         </div>
 
         <div className="flex justify-center mb-6">
-          <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-lg">
+          <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
             <img
               src={item.inventory_galleries[0]?.filepath ?? "/images/osiloskop.png"}
               alt={item.item_name}
-              className="max-h-full object-contain"
+              loading="lazy"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>

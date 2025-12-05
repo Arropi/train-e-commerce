@@ -6,6 +6,7 @@ import FloatingButton from "@/components/FloatingButton/FloatingButton";
 import { useSidebar } from "@/contexts/SidebarContext";
 import ModalViewAll from "@/components/Modal/ModalViewAll";
 import { Reserve, Subject } from "@/types";
+import Pagination from "@/components/Pagination/Pagination";
 
 // ✅ Tambahkan field type ke interface
 interface Item {
@@ -42,6 +43,8 @@ export default function ViewAllPage({ slug, inventories, subjects }: ViewAllPage
   const { openSidebar, isSidebarOpen } = useSidebar();
   const [selectedItem, setSelectedItem] = useState<Reserve | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const pageConfig = {
     ongoing: {
@@ -70,6 +73,22 @@ export default function ViewAllPage({ slug, inventories, subjects }: ViewAllPage
     openSidebar(null);
   };
 
+  // Pagination calculations
+  const totalPages = Math.ceil(inventories.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = inventories.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1);
+  };
+
   return (
     <>
       <div
@@ -86,15 +105,28 @@ export default function ViewAllPage({ slug, inventories, subjects }: ViewAllPage
             {inventories.length === 0 ? (
               <p className="text-gray-500">{config.emptyMessage}</p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-4">
-                {inventories.map((inventory) => (
-                  <ItemCard
-                    key={inventory.id}
-                    item={inventory}
-                    onClick={() => handleItemClick(inventory)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {currentItems.map((inventory) => (
+                    <ItemCard
+                      key={inventory.id}
+                      item={inventory}
+                      onClick={() => handleItemClick(inventory)}
+                      variant="grid"
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination - Always show */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  itemsPerPage={itemsPerPage}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  totalItems={inventories.length}
+                />
+              </>
             )}
           </div>
         </div>

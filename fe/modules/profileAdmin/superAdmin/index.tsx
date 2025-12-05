@@ -165,14 +165,15 @@ export default function SuperAdminProfile(profileProps: {
   const [newAdmin, setNewAdmin] = useState({
     email: "",
     lab: "",
-    password: "",
   });
 
-  // Dummy labs for UI testing (no backend fetching)
+  // Labs untuk pilihan lab admin
   const [labs] = useState<string[]>([
-    "Lab Komputer",
-    "Lab Fisika",
-    "Lab Kimia",
+    "IDK",
+    "RPL",
+    "TAJ",
+    "Elektronika",
+    "TL",
   ]);
 
   // State untuk sidebar
@@ -199,7 +200,7 @@ export default function SuperAdminProfile(profileProps: {
 
   // repurpose the button to open the Add Admin modal (per request)
   const handleEdit = () => {
-    setNewAdmin({ email: "", lab: "", password: "" });
+    setNewAdmin({ email: "", lab: "" });
     setIsAddModalOpen(true);
     setError(null);
   };
@@ -220,16 +221,16 @@ export default function SuperAdminProfile(profileProps: {
     }
 
     // basic validation
-    if (!newAdmin.email || !newAdmin.lab || !newAdmin.password) {
+    if (!newAdmin.email || !newAdmin.lab) {
       showToast("Harap isi semua field", "error");
       return;
     }
 
-    // email format validation
-    const emailRegex = /@(gmail\.com|mail\.ugm\.ac\.id)$/;
+    // email format validation - hanya email UGM
+    const emailRegex = /@mail\.ugm\.ac\.id$/;
     if (!emailRegex.test(newAdmin.email)) {
       showToast(
-        "Email harus berformat @gmail.com atau @mail.ugm.ac.id",
+        "Email harus berformat @mail.ugm.ac.id",
         "error"
       );
       return;
@@ -237,11 +238,40 @@ export default function SuperAdminProfile(profileProps: {
 
     setIsSaving(true);
     try {
-      // Simulate success for testing without fetching
-      await new Promise((r) => setTimeout(r, 400));
-      showToast("Admin added", "success");
+      const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+
+      const res = await fetch(`${backendUrl}/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.accessToken}`,
+        },
+        body: JSON.stringify({
+          email: newAdmin.email,
+          lab: newAdmin.lab,
+          role: "admin",
+        }),
+      });
+
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("POST response bukan JSON:", text.substring(0, 500));
+        throw new Error("Backend tidak mengembalikan JSON saat menambah admin.");
+      }
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(
+          errorData?.message || `HTTP ${res.status}: Gagal menambahkan admin`
+        );
+      }
+
+      const data = await res.json();
+      showToast("Admin berhasil ditambahkan", "success");
       setIsAddModalOpen(false);
-      setNewAdmin({ email: "", lab: "", password: "" });
+      setNewAdmin({ email: "", lab: "" });
     } catch (err: unknown) {
       console.error("Add admin error:", err);
       showToast(
@@ -349,47 +379,50 @@ export default function SuperAdminProfile(profileProps: {
               className="absolute inset-0 bg-black/50"
               onClick={closeAddModal}
             />
-            <div className="relative bg-white rounded-2xl w-full max-w-3xl p-8 z-10 shadow-lg">
+            <div className="relative bg-white rounded-2xl w-full max-w-2xl p-8 z-10 shadow-lg mt-20">
               <h3 className="text-2xl font-semibold text-[#004CB0] mb-6">
-                Add Admin
+                Tambah Admin Baru
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    New admin email
-                  </p>
+                  <label className="text-sm font-bold text-gray-700 mb-2 block">
+                    Email UGM
+                  </label>
                   <input
                     name="email"
                     type="email"
                     value={newAdmin.email}
                     onChange={handleNewAdminChange}
-                    placeholder="Add email..."
-                    className="w-full px-4 py-3 border rounded-full border-[#0A58CA] focus:outline-none"
+                    placeholder="nama@mail.ugm.ac.id"
+                    className="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Masukkan email UGM
+                  </p>
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    Lab buat admin barunya
-                  </p>
+                  <label className="text-sm font-bold text-gray-700 mb-2 block">
+                    Pilih Lab
+                  </label>
                   <div className="relative">
                     <select
                       name="lab"
                       value={newAdmin.lab}
                       onChange={handleNewAdminChange}
-                      className="w-full px-4 py-3 pr-10 border rounded-full border-[#0A58CA] bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#004CB0]"
+                      className="w-full px-4 py-3 pr-10 border rounded-lg border-gray-300 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent cursor-pointer"
                     >
-                      <option value="">Choose lab nya</option>
+                      <option value="">Pilih laboratorium...</option>
                       {labs.map((l) => (
                         <option key={l} value={l}>
-                          {l}
+                          Lab {l}
                         </option>
                       ))}
                     </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-5 pointer-events-none">
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                       <svg
-                        className="w-5 h-5 text-[#004CB0]"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -405,33 +438,20 @@ export default function SuperAdminProfile(profileProps: {
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    Your password
-                  </p>
-                  <input
-                    name="password"
-                    value={newAdmin.password}
-                    onChange={handleNewAdminChange}
-                    type="password"
-                    placeholder="Enter your password..."
-                    className="w-full px-4 py-3 border rounded-full border-[#0A58CA] focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-4">
+                <div className="flex justify-end gap-3 pt-4">
                   <button
                     onClick={closeAddModal}
-                    className="px-6 py-1 bg-white hover:bg-[#004CB0] border-2 border-[#004CB0] hover:text-white transition-colors duration-200 text-[#004CB0] rounded-full"
+                    disabled={isSaving}
+                    className="px-6 py-2 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200 text-gray-700 rounded-lg font-medium disabled:opacity-50"
                   >
-                    Cancel
+                    Batal
                   </button>
                   <button
                     onClick={handleAddAdmin}
                     disabled={isSaving}
-                    className="px-6 py-1 bg-[#004CB0] text-white hover:bg-blue-900 transition-colors duration-200 rounded-full"
+                    className="px-6 py-2 bg-[#004CB0] text-white hover:bg-blue-900 transition-colors duration-200 rounded-lg font-medium disabled:opacity-50"
                   >
-                    Add
+                    {isSaving ? "Menambahkan..." : "Tambah Admin"}
                   </button>
                 </div>
               </div>
