@@ -310,30 +310,36 @@ export default function RequestForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Subject
               </label>
-              <select
-                value={activeInventory.subject_id?? 0}
-                onChange={(e) =>{
-                  console.log(e.target.value) 
-                  updateFormByIndex(showIndex, "subject_id", Number(e.target.value))
-                }
-                }
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Pilih subject...</option>
-                {!subjects ? (
-                  <option>Loading...</option>
-                ) : (
-                  informationCard.inventories.inventory_subjects.map((inventorySubject) => (
-                    <option value={inventorySubject.subject_id} key={inventorySubject.id}>
-                      {subjects.find((s) => s.id === inventorySubject.subject_id)?.subject_name}
-                    </option>
-                  ))
-                )}
-              </select>
+              <div className="relative">
+                <select
+                  value={activeInventory.subject_id ?? 0}
+                  onChange={(e) => updateFormByIndex(showIndex, "subject_id", Number(e.target.value))}
+                  className="w-full px-4 py-3 pr-10 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                >
+                  <option value="">Pilih subject...</option>
+                  {!subjects ? (
+                    <option>Loading...</option>
+                  ) : (
+                    informationCard.inventories.inventory_subjects.map((inventorySubject) => (
+                      <option value={inventorySubject.subject_id} key={inventorySubject.id}>
+                        {subjects.find((s) => s.id === inventorySubject.subject_id)?.subject_name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                {/* Custom caret so icon can be positioned with spacing */}
+                <svg
+                  className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </div>
 
-           
-            
+
               <div
                 className="space-y-4 pb-4 border-b last:border-b-0"
               >

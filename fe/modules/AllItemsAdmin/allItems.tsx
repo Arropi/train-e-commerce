@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ChevronDown, Plus, CheckCircle } from "lucide-react";
+import { ChevronDown, Plus, CheckCircle, Search } from "lucide-react";
 import Image from "next/image";
 import { Session } from "next-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import SidebarAdmin from "@/modules/sideBarAdmin/sideBarAdmin";
 import { useAdminSidebar } from "@/contexts/AdminSidebarContext";
 import SkeletonCard from "@/components/Loading/SkeletonCard";
+import { Laboratory } from "../../types";
 
 interface RawInventory {
   id: number;
@@ -16,7 +17,9 @@ interface RawInventory {
   condition: string;
   alat_bhp: string;
   labolatory_id: number;
+  room_id: number | null;
   inventory_galleries: { filepath: string }[];
+  rooms?: { id: number; name: string } | null;
 }
 
 interface Item {
@@ -24,6 +27,8 @@ interface Item {
   name: string;
   lab: string;
   labId: number;
+  roomId: number | null;
+  roomName: string;
   image: string;
   serialNumber: string;
   category: string;
@@ -33,6 +38,7 @@ interface Item {
 interface AllItemsAdminProps {
   session: Session;
   inventories: RawInventory[];
+  laboratories: Laboratory[]
 }
 
 // Success Notification Component (inline)
@@ -61,31 +67,34 @@ function SuccessNotification({
   );
 }
 
-export default function AllItemsAdmin({ session, inventories }: AllItemsAdminProps) {
+export default function AllItemsAdmin({ session, inventories , laboratories}: AllItemsAdminProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isSidebarOpen } = useAdminSidebar();
-  const [selectedLab, setSelectedLab] = useState("semua");
-  const [sortBy, setSortBy] = useState("name");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("semua");
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("Item successfully added");
   const [fetchedItems, setFetchedItems] = useState<Item[]>([]);
-  const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
-  const [loadingLabs, setLoadingLabs] = useState(true);
+  const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [adminLabId, setAdminLabId] = useState<number | null>(null);
 
-  const isLoading = loadingLabs || loadingItems;
+  const isLoading = loadingRooms || loadingItems;
 
   const mappedInventories = useMemo(() => (Array.isArray(inventories) ? inventories : []).map((inv: RawInventory) => ({
     id: inv.id,
     name: inv.item_name,
-    lab: labs.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+    lab: laboratories.find(lab => lab.id === inv.labolatory_id)?.title || "Lab",
     labId: inv.labolatory_id,
+    roomId: inv.room_id || null,
+    roomName: inv.rooms?.name || "No Room",
     image: inv.inventory_galleries?.[0]?.filepath || "",
     serialNumber: inv.no_item,
     category: inv.alat_bhp || "alat",
     condition: inv.condition || "good",
-  })), [inventories, labs]);
+  })), [inventories, laboratories]);
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -101,27 +110,39 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
     }
   }, [searchParams, router]);
 
-  // Fetch laboratories from API
+  // Extract lab_id dari JWT token
   useEffect(() => {
-    const fetchLabs = async () => {
-      setLoadingLabs(true);
+    if (session?.user?.accessToken) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+        const payload = JSON.parse(atob(session.user.accessToken.split('.')[1]));
+        setAdminLabId(payload.lab_id || null);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, [session]);
+
+  // Fetch rooms from API
+  useEffect(() => {
+    const fetchRooms = async () => {
+      setLoadingRooms(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/rooms`, {
           headers: {
             Authorization: `Bearer ${session?.user?.accessToken}`,
           },
         });
         if (response.ok) {
           const data = await response.json();
-          setLabs(data.data || data.laboratories || []);
+          setRooms(data.data || data.rooms || []);
         }
       } catch (error) {
-        console.error("Error fetching laboratories:", error);
+        console.error("Error fetching rooms:", error);
       } finally {
-        setLoadingLabs(false);
+        setLoadingRooms(false);
       }
     };
-    fetchLabs();
+    fetchRooms();
   }, [session]);
 
   useEffect(() => {
@@ -135,11 +156,18 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
         });
         if (response.ok) {
           const data = await response.json();
-          const mappedItems: Item[] = data.inventories.map((inv: RawInventory) => ({
+          // Filter items berdasarkan lab_id admin
+          const filteredInventories = adminLabId 
+            ? data.inventories.filter((inv: RawInventory) => inv.labolatory_id === adminLabId)
+            : data.inventories;
+          
+          const mappedItems: Item[] = filteredInventories.map((inv: RawInventory) => ({
             id: inv.id,
             name: inv.item_name,
-            lab: labs.find(lab => lab.id === inv.labolatory_id)?.name || "Unknown Lab",
+            lab: laboratories.find(lab => lab.id === inv.labolatory_id)?.title || "Lab",
             labId: inv.labolatory_id,
+            roomId: inv.room_id || null,
+            roomName: inv.rooms?.name || "No Room",
             image: inv.inventory_galleries?.[0]?.filepath || "",
             serialNumber: inv.no_item,
             category: inv.alat_bhp || "alat",
@@ -153,37 +181,36 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
         setLoadingItems(false);
       }
     };
-    if (labs.length > 0) {
+    if (adminLabId !== null) {
       fetchItems();
     }
-  }, [session, labs]);
+  }, [session, adminLabId, laboratories]);
 
-  const displayItems = fetchedItems.length > 0 ? fetchedItems : mappedInventories;
+  // Filter mapped inventories by admin lab_id
+  const filteredMappedInventories = useMemo(() => {
+    if (!adminLabId) return mappedInventories;
+    return mappedInventories.filter(item => item.labId === adminLabId);
+  }, [mappedInventories, adminLabId]);
 
-  const filteredItems = useMemo(() => {
-    if (selectedLab === "semua") return displayItems;
-    return displayItems.filter(item => item.labId === parseInt(selectedLab));
-  }, [displayItems, selectedLab]);
+  const displayItems = fetchedItems.length > 0 ? fetchedItems : filteredMappedInventories;
 
-  const sortedItems = useMemo(() => {
-    const sorted = [...filteredItems];
-    switch (sortBy) {
-      case "name":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "lab":
-        sorted.sort((a, b) => a.labId - b.labId);
-        break;
-      case "condition":
-        sorted.sort((a, b) => a.condition.localeCompare(b.condition));
-        break;
-      case "status":
-      default:
-        sorted.sort((a, b) => a.id - b.id);
-        break;
+  const filteredAndSearchedItems = useMemo(() => {
+    let filtered = displayItems;
+    
+    // Filter by room
+    if (selectedRoom !== "semua") {
+      filtered = filtered.filter(item => item.roomId === parseInt(selectedRoom));
     }
-    return sorted;
-  }, [filteredItems, sortBy]);
+    
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [displayItems, selectedRoom, searchQuery]);
 
   const handleAddClick = () => {
     router.push("/admin/allItems/add");
@@ -224,36 +251,33 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
               <h1 className="text-3xl font-bold text-[#004CB0] mb-4 sm:mb-0">All Items</h1>
 
-              {/* Filters */}
+              {/* Search and Filters */}
               <div className={`flex flex-col sm:flex-row gap-4 ${isSidebarOpen ? 'mr-4' : ''}`}>
-                {/* Lab Filter */}
+                {/* Search Input */}
                 <div className="relative">
-                  <select
-                    value={selectedLab}
-                    onChange={(e) => setSelectedLab(e.target.value)}
-                    className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
-                  >
-                    <option value="semua">Semua lab</option>
-                    {labs.map((lab) => (
-                      <option key={lab.id} value={lab.id.toString()}>
-                        Lab {lab.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search items..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 border-2 border-[#004CB0] rounded-full text-gray-700 font-medium bg-white focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-64"
+                  />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0]" />
                 </div>
 
-                {/* Sort Filter */}
+                {/* Room Filter */}
                 <div className="relative">
                   <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                    value={selectedRoom}
+                    onChange={(e) => setSelectedRoom(e.target.value)}
                     className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
-                    <option value="name">Sort by Name</option>
-                    <option value="lab">Sort by Lab</option>
-                    <option value="condition">Sort by Condition</option>
-                    <option value="status">Sort by Status</option>
+                    <option value="semua">Semua ruangan</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id.toString()}>
+                        {room.name}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
                 </div>
@@ -269,7 +293,7 @@ export default function AllItemsAdmin({ session, inventories }: AllItemsAdminPro
               </div>
             ) : (
               <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 justify-items-center ${isSidebarOpen ? 'mr-4' : ''}`}>
-                {sortedItems.map((item) => (
+                {filteredAndSearchedItems.map((item) => (
                 <div
                   key={`${item.id}-${item.serialNumber}`}
                   onClick={() => handleEditClick(item.id)}

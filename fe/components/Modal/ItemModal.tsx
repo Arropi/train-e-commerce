@@ -26,9 +26,9 @@ export default function ItemModal({
   rooms,
   timeSessions
 }: ItemModalProps) {
-  const [selectedInventory, setSelectedInventory] = useState<Inventory[]>(
-    []
-  ); // ✅ NEW
+  const [selectedInventoryBySession, setSelectedInventoryBySession] = useState<Record<number, Inventory[]>>(
+    {}
+  ); // ✅ Store selections per session
   const [selectedTime, setSelectedTime] = useState<number | undefined>();
   const { addItem } = useSidebar();
   
@@ -52,18 +52,13 @@ export default function ItemModal({
     }
   }, [isOpen]);
   
-  // ✅ NEW: Reset selection saat modal dibuka
+  // ✅ Reset selection saat modal dibuka
   useEffect(() => {
     if (isOpen) {
-      setSelectedInventory([]);
+      setSelectedInventoryBySession({});
       setSelectedTime(timeSessions.find(ts => ts.special_session === item?.special_session)?.id)
     }
   }, [isOpen, item, timeSessions]);
-
-  // ✅ Reset checkbox selection ketika ganti jam
-  useEffect(() => {
-    setSelectedInventory([]);
-  }, [selectedTime]);
   
   if (!isOpen || !item) return null;
 
@@ -75,14 +70,22 @@ export default function ItemModal({
   );
   
   const handleAddItem = () => {
-    if (selectedInventory.length === 0 || !selectedTime) {
+    // ✅ Add items from all selected sessions
+    const hasSelections = Object.keys(selectedInventoryBySession).length > 0 && 
+                          Object.values(selectedInventoryBySession).some(items => items.length > 0);
+    
+    if (!hasSelections) {
       alert("Please select at least one inventory unit and time");
       return;
     }
 
-    selectedInventory.forEach(inv => {
-      addItem(inv.id, selectedTime, tanggal);
+    // Add items for each session
+    Object.entries(selectedInventoryBySession).forEach(([sessionId, inventories]) => {
+      inventories.forEach(inv => {
+        addItem(inv.id, Number(sessionId), tanggal);
+      });
     });
+    
     onClose();
   };
   const checkAvailability = (invId: number) => {
@@ -150,6 +153,9 @@ export default function ItemModal({
           <div className="space-y-2 mb-6">
             {availableUnits.map((inv) => {
               const roomName = rooms.find(room => room.id === inv.room_id)?.name;
+              const currentSessionInventories = selectedTime ? (selectedInventoryBySession[selectedTime] || []) : [];
+              const isChecked = currentSessionInventories.some(selected => selected.id === inv.id);
+              
               return (
               <label
                 key={inv.id}
@@ -169,14 +175,22 @@ export default function ItemModal({
                     type="checkbox"
                     name="inventory"
                     value={inv.id}
-                    checked={selectedInventory.some(selected => selected.id === inv.id)}
+                    checked={isChecked}
                     onChange={(e) => {
-                      if (!checkAvailability(inv.id)) {
+                      if (!checkAvailability(inv.id) && selectedTime) {
                         const isSelected = e.target.checked;
+                        const currentSelections = selectedInventoryBySession[selectedTime] || [];
+                        
                         if (isSelected) {
-                          setSelectedInventory([...selectedInventory, inv]);
+                          setSelectedInventoryBySession({
+                            ...selectedInventoryBySession,
+                            [selectedTime]: [...currentSelections, inv]
+                          });
                         } else {
-                          setSelectedInventory(selectedInventory.filter(selected => selected.id !== inv.id));
+                          setSelectedInventoryBySession({
+                            ...selectedInventoryBySession,
+                            [selectedTime]: currentSelections.filter(selected => selected.id !== inv.id)
+                          });
                         }
                       }
                     }}
@@ -184,12 +198,20 @@ export default function ItemModal({
                   />
                   <div
                     onClick={() => {
-                      if (!checkAvailability(inv.id)) {
-                        const isSelected = selectedInventory.some(selected => selected.id === inv.id);
+                      if (!checkAvailability(inv.id) && selectedTime) {
+                        const currentSelections = selectedInventoryBySession[selectedTime] || [];
+                        const isSelected = currentSelections.some(selected => selected.id === inv.id);
+                        
                         if (isSelected) {
-                          setSelectedInventory(selectedInventory.filter(selected => selected.id !== inv.id));
+                          setSelectedInventoryBySession({
+                            ...selectedInventoryBySession,
+                            [selectedTime]: currentSelections.filter(selected => selected.id !== inv.id)
+                          });
                         } else {
-                          setSelectedInventory([...selectedInventory, inv]);
+                          setSelectedInventoryBySession({
+                            ...selectedInventoryBySession,
+                            [selectedTime]: [...currentSelections, inv]
+                          });
                         }
                       }
                     }}
@@ -197,7 +219,7 @@ export default function ItemModal({
                       checkAvailability(inv.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                   >
-                    {selectedInventory.some(selected => selected.id === inv.id) && (
+                    {isChecked && (
                       <div className="w-2 h-2 bg-[#004CB0] rounded-full"></div>
                     )}
                   </div>
@@ -209,7 +231,7 @@ export default function ItemModal({
           <button
             onClick={handleAddItem}
             className="w-25 bg-[#004CB0] text-white py-0 text-md rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300"
-            disabled={selectedInventory.length === 0 || !selectedTime}
+            disabled={Object.keys(selectedInventoryBySession).length === 0 || !selectedTime}
           >
             Add
           </button>

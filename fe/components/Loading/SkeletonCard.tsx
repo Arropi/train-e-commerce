@@ -1,6 +1,6 @@
 export default function SkeletonCard() {
   return (
-    <div className="bg-white rounded-3xl shadow-md p-6 h-80 w-50 animate-pulse">
+    <div className="bg-white rounded-3xl shadow-md p-6 h-80 w-56 animate-pulse">
       {/* Image placeholder */}
       <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg bg-gray-200"></div>
       

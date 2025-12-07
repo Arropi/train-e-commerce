@@ -1,7 +1,17 @@
+import Image from "next/image";
+
+
 export default function NotFoundPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-      <h1 className="text-4xl font-bold text-gray-800">404 - Not Found</h1>
+    <div className="flex flex-col gap-15 items-center justify-center min-h-screen bg-white">
+      <Image
+        src="/images/notFoundd.webp"
+        alt="404 Not Found"
+        width={500}
+        height={500}
+        className="object-contain"
+      />
     </div>
+
   );
 }
