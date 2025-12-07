@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, CheckCircle, XCircle } from "lucide-react";
+import { Upload, CheckCircle, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
@@ -45,6 +45,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [labs, setLabs] = useState<{ id: number; name: string }[]>([]);
+  const [adminLabName, setAdminLabName] = useState<string>("");
+  const [isOtherRoom, setIsOtherRoom] = useState(false);
+  const [otherRoomName, setOtherRoomName] = useState("");
+  const [isOtherSubject, setIsOtherSubject] = useState(false);
+  const [otherSubjectInput, setOtherSubjectInput] = useState("");
   const [notification, setNotification] = useState<{
     show: boolean;
     type: "success" | "error";
@@ -55,7 +60,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   useEffect(() => {
     if (notification.show) {
       const timer = setTimeout(() => {
-        setNotification({ ...notification, show: false });
+        setNotification(prev => ({ ...prev, show: false }));
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -69,6 +74,22 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       if (!accessToken) return;
 
       try {
+        // Fetch admin profile dulu
+        const profileRes = await fetch(`${backendUrl}/user`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          cache: "no-store",
+        });
+
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          const user = profileData.datas || profileData.data || profileData.user || profileData;
+          console.log("Admin profile data:", user);
+          setAdminLabName(user.lab_name);
+        }
+
         const [labsRes, roomsRes, subjectsRes] = await Promise.all([
           fetch(`${backendUrl}/laboratories`, {
             method: "GET",
@@ -140,13 +161,16 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     image: null as File | null,
   });
 
-  const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<File | null>(null);
 
   const { startUpload } = useUploadThing("imageUploader", {
     onUploadError(e) {
       console.error("Upload error:", e);
-      setError(e.message);
+      setNotification({
+        show: true,
+        type: "error",
+        message: e.message,
+      });
     },
   });
 
@@ -178,17 +202,65 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     });
   };
 
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
+  const handleRoomChange = (value: string) => {
+    if (value === "lainnya") {
+      setIsOtherRoom(true);
+      setFormData({ ...formData, room: "" });
+    } else {
+      setIsOtherRoom(false);
+      setOtherRoomName("");
+      setFormData({ ...formData, room: value });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validasi field kosong
+    if (!formData.name.trim()) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Item name is required",
+      });
+      return;
+    }
+
+    if (!formData.inventoryNumber.trim()) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Inventory number is required",
+      });
+      return;
+    }
+
+    if (!formData.room && !isOtherRoom) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Please select a room",
+      });
+      return;
+    }
+
+    if (isOtherRoom && !otherRoomName.trim()) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Please enter room name",
+      });
+      return;
+    }
+
+    if (formData.subject.length === 0) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Please select at least one subject",
+      });
+      return;
+    }
 
     // Check if any field has changed
     const hasChanged =
@@ -223,16 +295,131 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
+    // Handle creating new room/subjects if needed
+    let mergedSubjects = [...subjects];
+    let finalRoomId: number;
+
+    try {
+      // Create new subjects if provided
+      const newSubjects = formData.subject.filter(
+        (entry) => !mergedSubjects.some((s) => s.id.toString() === entry || s.name === entry)
+      );
+
+      if (newSubjects.length > 0) {
+        const subjectsRes = await fetch(`${backendUrl}/subjects`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ subject_name: newSubjects }),
+        });
+
+        if (!subjectsRes.ok) {
+          const err = await subjectsRes.json().catch(() => ({}));
+          setNotification({
+            show: true,
+            type: "error",
+            message: `Failed to create subjects: ${err.message || subjectsRes.statusText}`,
+          });
+          return;
+        }
+
+        const createdSubjects = await subjectsRes.json();
+        const createdArray = createdSubjects.data || createdSubjects;
+        if (Array.isArray(createdArray)) {
+          const formatted = createdArray.map((s: any) => ({ id: s.id, name: s.subject_name || s.name }));
+          setSubjects((prev) => [...prev, ...formatted]);
+          mergedSubjects = [...mergedSubjects, ...formatted];
+        }
+      }
+
+      // Create new room if provided
+      if (isOtherRoom) {
+        if (!otherRoomName.trim()) {
+          setNotification({
+            show: true,
+            type: "error",
+            message: "Please enter room name",
+          });
+          return;
+        }
+
+        const roomRes = await fetch(`${backendUrl}/rooms`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ room_name: otherRoomName }),
+        });
+
+        if (!roomRes.ok) {
+          const err = await roomRes.json().catch(() => ({}));
+          setNotification({
+            show: true,
+            type: "error",
+            message: `Failed to create room: ${err.message || roomRes.statusText}`,
+          });
+          return;
+        }
+
+        const createdRoom = await roomRes.json();
+        const roomData = createdRoom.data || createdRoom;
+        const newRoom = Array.isArray(roomData) ? roomData[0] : roomData;
+        if (newRoom && newRoom.id) {
+          setRooms((prev) => [...prev, { id: newRoom.id, name: newRoom.room_name || newRoom.name }]);
+          finalRoomId = newRoom.id;
+          setFormData({ ...formData, room: newRoom.id.toString() });
+          setIsOtherRoom(false);
+          setOtherRoomName("");
+        } else {
+          setNotification({
+            show: true,
+            type: "error",
+            message: "Failed to get new room ID",
+          });
+          return;
+        }
+      } else {
+        finalRoomId = parseInt(formData.room);
+        if (isNaN(finalRoomId)) {
+          setNotification({
+            show: true,
+            type: "error",
+            message: "Invalid room selection",
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Error creating related data:", error);
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Failed to create related resources",
+      });
+      return;
+    }
+
     // Map form data to API format
     const updateData: UpdateData = {
       item_name: formData.name,
       no_inventory: formData.inventoryNumber,
-      room_id: parseInt(formData.room),
-      laboratory_id: parseInt(formData.laboratory),
+      room_id: finalRoomId,
+      laboratory_id: parseInt(lab?.id.toString() || "0"),
       type: formData.purpose === "Practical Class" ? "praktikum" : "projek",
       condition: formData.condition.toLowerCase(),
       special_session: formData.session === "Session per Hour",
-      subjects: formData.subject.map(name => subjects.find(s => s.name === name)?.id).filter(Boolean) as number[],
+      subjects: formData.subject
+        .map((entry) => {
+          const byId = mergedSubjects.find((s) => s.id.toString() === entry);
+          if (byId) return byId.id;
+          const byName = mergedSubjects.find((s) => s.name === entry);
+          if (byName) return byName.id;
+          return undefined;
+        })
+        .filter(Boolean) as number[],
     };
 
     // Handle image if uploaded
@@ -240,13 +427,21 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       try {
         const uploadImage = await startUpload([files]);
         if (!uploadImage || !uploadImage[0] || !uploadImage[0].ufsUrl) {
-          setError("Image upload failed");
+          setNotification({
+            show: true,
+            type: "error",
+            message: "Image upload failed",
+          });
           return;
         }
         updateData.img_url = uploadImage[0].ufsUrl;
       } catch (error) {
         console.error("Error uploading image:", error);
-        alert("Failed to process image");
+        setNotification({
+          show: true,
+          type: "error",
+          message: "Failed to process image",
+        });
         return;
       }
     }
@@ -281,6 +476,8 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     }
   };
 
+  const lab = labs.find(l => l.name === adminLabName);
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Notification */}
@@ -289,20 +486,16 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
           <div
             className={`${
               notification.type === "success"
-                ? "bg-white border-2 border-green-500"
-                : "bg-white border-2 border-red-500"
-            } text-gray-800 px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3`}
+                ? "bg-green-500"
+                : "bg-red-500"
+            } text-white px-6 py-4 rounded-full shadow-lg flex items-center gap-3`}
           >
             {notification.type === "success" ? (
-              <div className="bg-green-500 rounded-full p-1">
-                <CheckCircle className="w-5 h-5 text-white" strokeWidth={3} />
-              </div>
+              <CheckCircle className="w-6 h-6" />
             ) : (
-              <div className="bg-red-500 rounded-full p-1">
-                <XCircle className="w-5 h-5 text-white" strokeWidth={3} />
-              </div>
+              <AlertCircle className="w-6 h-6" />
             )}
-            <span className="font-semibold text-base">{notification.message}</span>
+            <span className="font-medium">{notification.message}</span>
           </div>
         </div>
       )}
@@ -315,10 +508,6 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
           avatar: session?.user?.image || undefined,
         }}
       />
-      {error && (<div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow">
-        {error}
-      </div>
-      )}
 
       {/* Main Content */}
       <div
@@ -425,21 +614,44 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Room
                     </label>
-                    <select
-                      value={formData.room}
-                      onChange={(e) =>
-                        setFormData({ ...formData, room: e.target.value })
-                      }
-                      className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
-                      required
-                    >
-                      <option value="">Choose room</option>
-                      {rooms.map((room) => (
-                        <option key={room.id} value={room.id.toString()}>
-                          {room.name}
-                        </option>
-                      ))}
-                    </select>
+                    {!isOtherRoom ? (
+                      <select
+                        value={formData.room}
+                        onChange={(e) => handleRoomChange(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
+                        required
+                      >
+                        <option value="">Choose room</option>
+                        {rooms.map((room) => (
+                          <option key={room.id} value={room.id.toString()}>
+                            {room.name}
+                          </option>
+                        ))}
+                        <option value="lainnya">Lainnya</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter room name"
+                          value={otherRoomName}
+                          onChange={(e) => setOtherRoomName(e.target.value)}
+                          className="flex-1 px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0]"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsOtherRoom(false);
+                            setOtherRoomName("");
+                            setFormData({ ...formData, room: "" });
+                          }}
+                          className="px-4 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Session */}
@@ -490,12 +702,14 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       onChange={(e) =>
                         setFormData({ ...formData, laboratory: e.target.value })
                       }
-                      className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
+                      className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-gray-200 cursor-not-allowed"
                       required
+                      disabled
                     >
-                      {labs.map((lab) => (
-                        <option key={lab.id} value={lab.id.toString()}>
-                          {lab.name}
+                      <option value={lab ? lab.id.toString() : ""}>{lab ? lab.name : "Choose lab"}</option>
+                      {labs.map((labItem) => (
+                        <option key={labItem.id} value={labItem.id.toString()}>
+                          {labItem.name}
                         </option>
                       ))}
                     </select>
@@ -544,28 +758,65 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Subject
                     </label>
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (
-                          e.target.value &&
-                          !formData.subject.includes(e.target.value)
-                        ) {
-                          setFormData({
-                            ...formData,
-                            subject: [...formData.subject, e.target.value],
-                          });
-                        }
-                      }}
-                      className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
-                    >
-                      <option value="">Add Subject</option>
-                      {subjects.map((subject) => (
-                        <option key={subject.id} value={subject.name}>
-                          {subject.name}
-                        </option>
-                      ))}
-                    </select>
+                    {!isOtherSubject ? (
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value === "lainnya") {
+                            setIsOtherSubject(true);
+                          } else if (
+                            e.target.value &&
+                            !formData.subject.includes(e.target.value)
+                          ) {
+                            setFormData({
+                              ...formData,
+                              subject: [...formData.subject, e.target.value],
+                            });
+                          }
+                        }}
+                        className="w-full px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
+                      >
+                        <option value="">Add Subject</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.name}>
+                            {subject.name}
+                          </option>
+                        ))}
+                        <option value="lainnya">Lainnya</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter subject name and press Enter"
+                          value={otherSubjectInput}
+                          onChange={(e) => setOtherSubjectInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              if (otherSubjectInput.trim() && !formData.subject.includes(otherSubjectInput.trim())) {
+                                setFormData({
+                                  ...formData,
+                                  subject: [...formData.subject, otherSubjectInput.trim()],
+                                });
+                                setOtherSubjectInput("");
+                              }
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 border-2 border-[#004CB0] rounded-full focus:outline-none focus:ring-2 focus:ring-[#004CB0]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsOtherSubject(false);
+                            setOtherSubjectInput("");
+                          }}
+                          className="px-4 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-2 mt-3">
                       {formData.subject.map((subject) => (
                         <span

@@ -122,7 +122,15 @@ export default function Sidebar({
                         onClick={() => removeItem(it.inventories.id)}
                         className="text-xs text-red-600 hover:underline"
                       >
-                        Remove
+                            <div>
+                              <img
+                                src="/icons/removeIcon.svg"
+                                alt="Remove Icon"
+                                width={25}
+                                height={25}
+                                className="object-contain hover:scale-110 transition-transform duration-100"
+                              />
+                            </div>
                       </button>
                     </div>
                   </div>

@@ -19,7 +19,7 @@ export default function Section({
         {viewAllHref && (
           <Link
             href={viewAllHref}
-            className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            className="relative text-[#004CB0] hover:text-blue-900 font-medium no-underline bg-[linear-gradient(90deg,#004CB0,#004CB0)] bg-no-repeat bg-left-bottom bg-[length:0%_2px] hover:bg-[length:100%_2px] transition-all duration-200"
           >
             View All →
           </Link>

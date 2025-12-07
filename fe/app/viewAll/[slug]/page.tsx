@@ -4,6 +4,7 @@ import ViewAllPage from "@/modules/viewall";
 import { notFound, redirect } from "next/navigation";
 import Navbar from "../../../modules/Navbar/navbar";
 import { getDataSubjects } from "@/data/subjects";
+import { getDataRooms } from "../../../data/rooms";
 
 interface PageProps {
   params: {
@@ -24,6 +25,7 @@ export default async function ViewAllServerPage({ params }: PageProps) {
     redirect("/login");
   }
   const subjects = await getDataSubjects(session.user.accessToken);
+  const rooms = await getDataRooms(session.user.accessToken);
   const dataOngoing = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reserves/user/ongoing`, {
     method: "GET",
     headers: {
@@ -322,7 +324,7 @@ export default async function ViewAllServerPage({ params }: PageProps) {
   return (
     <>
       <Navbar />
-      <ViewAllPage slug={slug} inventories={inventories.data} subjects={subjects}/>
+      <ViewAllPage slug={slug} inventories={inventories.data} subjects={subjects} rooms={rooms} />
     </>
   );
 }

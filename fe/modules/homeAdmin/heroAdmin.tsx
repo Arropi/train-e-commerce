@@ -42,7 +42,7 @@ interface BorrowedItem {
 
 interface BorrowedItemDetail extends BorrowedItem {
   borrowed_date: string;
-  sessionId: number;
+  session: string;
   room: string;
   personInCharge: string;
   purpose: string;
@@ -293,7 +293,7 @@ export default function HeroAdmin({
       : reserve.reserve_user_created?.username || "Unknown",
     condition: reserve.inventories?.condition || "good",
     borrowed_date: reserve.tanggal ? new Date(reserve.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date",
-    sessionId: reserve.session_id || 0,
+    session: timeSessionsData[reserve.session_id ?? -1] || "N/A",
     room: roomsData[reserve.inventories?.room_id ?? -1] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     purpose: reserve.inventories?.type || "N/A",
@@ -682,21 +682,28 @@ export default function HeroAdmin({
                         {/* Header with Image and Title side by side */}
                         <div className="flex items-start gap-4 mb-4">
                           {/* Item Image */}
-                          <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
-                            {item.img_url ? (
-                              <Image
-                                src={item.img_url}
-                                alt={item.item_name}
-                                width={96}
-                                height={96}
-                                className="object-contain"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                                No Image
-                              </div>
-                            )}
+                          <div className="flex-shrink-0">
+                            <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                              {item.img_url ? (
+                                <Image
+                                  src={item.img_url}
+                                  alt={item.item_name}
+                                  width={96}
+                                  height={96}
+                                  className="w-full h-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 text-xs">
+                                  <svg className="w-6 h-6 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <rect x="3" y="4" width="18" height="16" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="10.5" r="1.5" />
+                                    <path d="M21 15l-5-5L5 21" />
+                                  </svg>
+                                  No Image
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Item Info */}
@@ -713,7 +720,7 @@ export default function HeroAdmin({
 
                         {/* Borrower Info */}
                         <div className="flex items-center justify-between mb-4">
-                          <p className="text-sm text-gray-700 truncate mr-2">
+                          <p className="text-sm font-semibold text-gray-700 truncate mr-2">
                             
                             {item.borrower}
                           </p>
