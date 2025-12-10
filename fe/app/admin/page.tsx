@@ -21,6 +21,23 @@ export default async function AdminPage() {
   console.log("RESERVE ADMIN: ", data);
   const rejectedItems = data.data.filter( (item: any) => item.status  === 'rejected')
   console.log("Ini ketolak: ", rejectedItems)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/user`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
+  if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(
+            errorData?.message || `HTTP ${res.status}: Failed to fetch profile`
+          );
+        }
+
+        const dataUser = await res.json();
+        const user = dataUser.datas;
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -35,7 +52,7 @@ export default async function AdminPage() {
 
       {/* Main Content */}
       <div className="flex-1">
-        <HeroAdmin orders={data.data} borrowedItems={[]} />
+        <HeroAdmin orders={data.data} borrowedItems={[]} labAdmin={user.lab_name} />
       </div>
     </div>
   );

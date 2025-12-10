@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authConfig } from "@/lib/auth";
 import ViewAllPage from "@/modules/viewall";
 import { notFound, redirect } from "next/navigation";
-import Navbar from "../../../modules/Navbar/navbar";
+import Navbar from "../../../../modules/Navbar/navbar";
 import { getDataSubjects } from "@/data/subjects";
 
 interface PageProps {

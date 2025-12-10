@@ -378,7 +378,7 @@ export default function RequestForm({
                             src={
                               informationCard?.inventories?.inventory_galleries?.length > 0
                                 ? informationCard.inventories.inventory_galleries[0].filepath
-                                : "/images/osiloskop.png"
+                                : "/images/default_img_card.webp"
                             }
                             alt={informationCard?.inventories?.item_name || "Default Image"}
                             fill
@@ -515,7 +515,7 @@ export default function RequestForm({
                       >
                         <div className="relative w-12 h-12 flex-shrink-0">
                           <Image
-                            src={item.inventories.inventory_galleries[0].filepath ?? "/images/osiloskop.png"}
+                            src={item.inventories.inventory_galleries[0].filepath ?? "/images/default_img_card.webp"}
                             alt={item.inventories.item_name}
                             fill
                             className="object-contain"

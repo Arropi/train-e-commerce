@@ -53,10 +53,12 @@ interface BorrowedItemDetail extends BorrowedItem {
 interface HeroAdminProps {
   orders: Reserve[];
   borrowedItems: BorrowedItem[];
+  labAdmin: string;
 }
 
 export default function HeroAdmin({
   orders = [],
+  labAdmin = "",
 }: HeroAdminProps) {
   const { isSidebarOpen } = useAdminSidebar();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -275,7 +277,7 @@ export default function HeroAdmin({
     personInCharge: reserve.pic || "N/A",
     condition: reserve.inventories?.condition || "N/A",
     subject: subjectsData[reserve.subject_id ?? -1] || "N/A",
-    image: reserve.inventories?.inventory_galleries?.[0]?.filepath || "", // Kosong jika tidak ada
+    image: reserve.inventories?.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp", // fallback default image
   })), [pendingOrders, subjectsData, laboratoriesData, roomsData, timeSessionsData]);
 
   // Filter orders yang sedang dipinjam (status "waiting_to_be_return")
@@ -286,7 +288,7 @@ export default function HeroAdmin({
     id: reserve.id,
     item_name: reserve.inventories?.item_name || "Unknown Item",
     no_item: reserve.inventories?.no_item || "N/A",
-    img_url: reserve.inventories?.inventory_galleries?.[0]?.filepath || reserve.inventories?.img_url || "",
+    img_url: reserve.inventories?.inventory_galleries?.[0]?.filepath || reserve.inventories?.img_url || "/images/default_img_card.webp",
     lab: laboratoriesData[reserve.inventories?.labolatory_id] || "Unknown Lab",
     borrower: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
       ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
@@ -545,7 +547,7 @@ export default function HeroAdmin({
               {/* Header */}
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-[#004CB0]">
-                  Dashboard Admin Lab IDK
+                  Dashboard Admin Lab { labAdmin}
                 </h1>
               </div>
 
@@ -683,20 +685,14 @@ export default function HeroAdmin({
                         <div className="flex items-start gap-4 mb-4">
                           {/* Item Image */}
                           <div className="flex-shrink-0 w-24 h-24 flex items-center justify-center">
-                            {item.img_url ? (
-                              <Image
-                                src={item.img_url}
-                                alt={item.item_name}
-                                width={96}
-                                height={96}
-                                className="object-contain"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-24 h-24 bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                                No Image
-                              </div>
-                            )}
+                            <Image
+                              src={item.img_url || "/images/default_img_card.webp"}
+                              alt={item.item_name}
+                              width={96}
+                              height={96}
+                              className="object-contain"
+                              unoptimized
+                            />
                           </div>
 
                           {/* Item Info */}

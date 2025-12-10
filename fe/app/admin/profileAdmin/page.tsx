@@ -17,7 +17,6 @@ export default async function AdminProfile() {
           },
           cache: "no-store",
         });
-  console.log(session)
   if (!res.ok) {
           const errorData = await res.json();
           throw new Error(

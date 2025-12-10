@@ -5,13 +5,13 @@ import "./globals.css";
 import FooterComponent from "../components/Footer/footer";
 import Sidebar from "@/modules/SideBar";
 import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const normalizedPath = pathname.toLowerCase();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
-
+  
   // ✅ Halaman tanpa footer (termasuk semua route admin)
   const noFooterPages = [
     "/",
