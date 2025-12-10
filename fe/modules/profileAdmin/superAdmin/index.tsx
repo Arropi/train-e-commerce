@@ -171,8 +171,11 @@ export default function SuperAdminProfile(profileProps: {
 
   // Labs untuk pilihan lab admin
   const [labs, setLabs] = useState<Laboratory[]>([]);
+  const [labsFetched, setLabsFetched] = useState(false);
+  
   useEffect(() => {
-    if (!session?.user?.accessToken) return;
+    if (!session?.user?.accessToken || labsFetched) return;
+    
     const fetchLabs = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
@@ -184,18 +187,20 @@ export default function SuperAdminProfile(profileProps: {
         }); 
         if (res.ok) {
           const data = await res.json();
-          for (const lab of data.data) {
-            console.log(lab)
-            const formatingLab = {'title': lab.name, ...lab}
-            setLabs((prevLabs) => [...prevLabs, formatingLab]);
-          }
+          const formattedLabs = data.data.map((lab: any) => ({
+            ...lab,
+            title: lab.name
+          }));
+          setLabs(formattedLabs);
+          setLabsFetched(true);
         }
       } catch (err) {
         console.error("Fetch labs error:", err);
       }
     };
+    
     fetchLabs();
-  }, [session]);
+  }, [session?.user?.accessToken, labsFetched]);
   console.log('labs: ', labs);
 
   // State untuk sidebar
