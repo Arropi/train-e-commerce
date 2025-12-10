@@ -38,6 +38,12 @@ const updateUserData = async (req, res) => {
                     'message': 'Forbidden Access'
                 })
             }
+            // Cek apakah admin mencoba menambahkan email sendiri
+            if (body.email.toLowerCase() === user.email.toLowerCase()) {
+                return res.status(400).json({
+                    'message': 'Tidak dapat menambahkan email Anda sendiri sebagai admin'
+                })
+            }
             datas = await updateAdminDataService(body.email, body.lab_id, user.id)
         } else {
             datas = await updateUserDataService(user.email, body.nim, body.prodi)

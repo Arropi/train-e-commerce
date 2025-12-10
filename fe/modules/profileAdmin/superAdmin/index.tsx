@@ -262,6 +262,15 @@ export default function SuperAdminProfile(profileProps: {
       return;
     }
 
+    // Cek apakah email yang diinput adalah email admin sendiri
+    if (newAdmin.email.toLowerCase() === session?.user?.email?.toLowerCase()) {
+      showToast(
+        "Tidak dapat menambahkan email Anda sendiri sebagai admin",
+        "error"
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       const backendUrl =
@@ -283,14 +292,19 @@ export default function SuperAdminProfile(profileProps: {
       if (!contentType.includes("application/json")) {
         const text = await res.text();
         console.error("POST response bukan JSON:", text.substring(0, 500));
-        throw new Error("Backend tidak mengembalikan JSON saat menambah admin.");
+        const errorLog = `Response Error: ${text.substring(0, 200)}`;
+        showToast(`Backend error: ${errorLog}`, "error");
+        setIsSaving(false);
+        return;
       }
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(
-          errorData?.message || `HTTP ${res.status}: Gagal menambahkan admin`
-        );
+        console.error("Backend error response:", errorData);
+        const errorMessage = errorData?.message || errorData?.error || `HTTP ${res.status}: Gagal menambahkan admin`;
+        showToast(errorMessage, "error");
+        setIsSaving(false);
+        return;
       }
 
       const data = await res.json();
@@ -299,10 +313,15 @@ export default function SuperAdminProfile(profileProps: {
       setNewAdmin({ email: "", lab: 0 });
     } catch (err: unknown) {
       console.error("Add admin error:", err);
-      showToast(
-        err instanceof Error ? err.message : "Gagal menambahkan admin",
-        "error"
-      );
+      let errorMessage = "Gagal menambahkan admin";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        // Tampilkan stack trace jika ada
+        if (err.stack) {
+          console.error("Error stack:", err.stack);
+        }
+      }
+      showToast(errorMessage, "error");
     } finally {
       setIsSaving(false);
     }
