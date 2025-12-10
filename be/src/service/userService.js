@@ -53,6 +53,17 @@ const updateUserDataService = async (email, nim, prodi) => {
 const updateAdminDataService = async(email, lab_id, user_id) => {
     try {
         const oldData = await getUserByEmail(email)
+        
+        // Cek apakah user tidak ditemukan
+        if (!oldData) {
+            throw new Error('Email tidak terdaftar dalam sistem')
+        }
+        
+        // Cek apakah user sudah menjadi admin
+        if (oldData.role === 'admin') {
+            throw new Error('Email ini sudah terdaftar sebagai admin')
+        }
+        
         const dataSensitive = await updateAdminByEmail(email, lab_id, user_id, oldData)
         return {
             'id': Number(dataSensitive.id),
