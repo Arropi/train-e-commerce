@@ -165,7 +165,7 @@ export default async function EditItemPage({ params }: PageProps) {
     session: inventory.special_session ? "Session per Hour" : "2 Session",
     purpose: inventory.type === "praktikum" ? "Practical Class" : "Project",
     condition: mapCondition(inventory.condition),
-    image: inventory.inventory_galleries?.[0]?.filepath || "https://placehold.co/150x150/png?text=Item",
+    image: inventory.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp",
   };
 
   return (

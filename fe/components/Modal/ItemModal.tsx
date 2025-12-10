@@ -113,7 +113,7 @@ export default function ItemModal({
         <div className="flex justify-center mb-6">
           <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
             <img
-              src={item.inventory_galleries[0]?.filepath ?? "/images/osiloskop.png"}
+              src={item.inventory_galleries[0]?.filepath ?? "/images/default_img_card.webp"}
               alt={item.item_name}
               loading="lazy"
               className="w-full h-full object-cover"
