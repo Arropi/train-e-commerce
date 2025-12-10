@@ -3,6 +3,12 @@ import { authConfig } from "../../../lib/auth";
 import { getServerSession } from "next-auth/next";
 import AllItemsAdmin from "../../../modules/AllItemsAdmin/allItems";
 
+
+interface LaboratoryResponse {
+  id: number;
+  name: string;
+}
+
 export default async function AllItemsPage() {
   const session = await getServerSession(authConfig);
 
@@ -24,12 +30,30 @@ export default async function AllItemsPage() {
     redirect("/");
   }
 
+
   const result = await res.json();
 
   // Pass raw inventories data to client component (assuming result is { inventories: [...] })
   const inventories = result.inventories || [];
   console.log("Barang nya: ", inventories);
   console.log(inventories[inventories.length - 1]);
+  const resLab = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/laboratories`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${session.user.accessToken}`,
+    },
+    cache: "no-store",
+  });
 
-  return <AllItemsAdmin session={session} inventories={inventories} />;
+  let laboratories = [];
+  if (resLab.ok) {
+    const resultLab = await resLab.json();
+    laboratories = resultLab.data.map((lab: LaboratoryResponse) => ({
+      id: lab.id,
+      title: lab.name,
+    })) || [];
+  }
+  console.log("Laboratories:", laboratories);
+
+  return <AllItemsAdmin session={session} inventories={inventories} laboratories={laboratories} />;
 }

@@ -42,7 +42,7 @@ interface BorrowedItem {
 
 interface BorrowedItemDetail extends BorrowedItem {
   borrowed_date: string;
-  sessionId: number;
+  session: string;
   room: string;
   personInCharge: string;
   purpose: string;
@@ -295,7 +295,7 @@ export default function HeroAdmin({
       : reserve.reserve_user_created?.username || "Unknown",
     condition: reserve.inventories?.condition || "good",
     borrowed_date: reserve.tanggal ? new Date(reserve.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : "Unknown Date",
-    sessionId: reserve.session_id || 0,
+    session: timeSessionsData[reserve.session_id ?? -1] || "N/A",
     room: roomsData[reserve.inventories?.room_id ?? -1] || "Unknown Room",
     personInCharge: reserve.pic || "N/A",
     purpose: reserve.inventories?.type || "N/A",
@@ -709,7 +709,7 @@ export default function HeroAdmin({
 
                         {/* Borrower Info */}
                         <div className="flex items-center justify-between mb-4">
-                          <p className="text-sm text-gray-700 truncate mr-2">
+                          <p className="text-sm font-semibold text-gray-700 truncate mr-2">
                             
                             {item.borrower}
                           </p>

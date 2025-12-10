@@ -13,7 +13,7 @@ interface BorrowedItemDetail {
   borrower: string;
   condition: "good" | "bad";
   borrowed_date: string;
-  sessionId: number;
+  session: string;
   room: string;
   personInCharge: string;
   purpose: string;
@@ -121,7 +121,7 @@ export default function ModalBorrowedItem({
               </div>
               <div>
                 <h3 className="text-gray-600 font-semibold mb-1">Session</h3>
-                <p className="text-gray-800">{item.sessionId}</p>
+                <p className="text-gray-800">{item.session}</p>
               </div>
             </div>
 
