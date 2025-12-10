@@ -837,7 +837,15 @@ export default function AddItemForm({ session }: AddItemFormProps) {
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-end mt-8 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="px-8 py-3 border-2 border-[#004CB0] text-[#004CB0] rounded-full font-medium hover:bg-[#004CB0] hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  
                   <button
                     type="submit"
                     className="px-8 py-3 bg-[#004CB0] text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
