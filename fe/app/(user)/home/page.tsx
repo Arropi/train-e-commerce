@@ -2,10 +2,10 @@ import Hero from "@/modules/home/hero";
 import { authConfig } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import Navbar from "../../modules/Navbar/navbar";
-import { getDataRooms } from "../../data/rooms";
-import { getDataSubjects } from "../../data/subjects";
-import { getDataLaboratory } from "../../data/laboratory";
+import Navbar from "../../../modules/Navbar/navbar";
+import { getDataRooms } from "../../../data/rooms";
+import { getDataSubjects } from "../../../data/subjects";
+import { getDataLaboratory } from "../../../data/laboratory";
 
 export default async function Home() {
   const session = await getServerSession(authConfig);

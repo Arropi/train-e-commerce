@@ -57,15 +57,11 @@ export default function ItemCard({
         }`}
       >
         <div className="relative w-full h-full rounded-xl overflow-hidden">
-          {item.inventories.inventory_galleries?.[0]?.filepath ? (
-            <img
-              src={item.inventories.inventory_galleries[0].filepath}
-              alt={item.inventories.item_name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-300 rounded-xl"></div>
-          )}
+          <img
+            src={item.inventories.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp"}
+            alt={item.inventories.item_name}
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 

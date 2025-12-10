@@ -48,7 +48,7 @@ export const authConfig: NextAuthOptions = {
       session.user.role = token.role
       session.user.accessToken = token.accessToken
       return session
-    }
+    },
   },
   pages: {
     signIn: "/login",

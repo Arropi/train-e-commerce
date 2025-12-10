@@ -190,7 +190,7 @@ export default async function DetailHistoryPage({ params }: PageProps) {
         }) : "Unknown Date",
         // Additional fields for detail view
         itemName: reserve.inventories?.item_name || itemName,
-        itemImage: reserve.inventories?.inventory_galleries?.[0]?.filepath || "",
+        itemImage: reserve.inventories?.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp",
         itemSerialNumber: reserve.inventories?.no_item || "N/A",
         lab: labsMap.get(reserve.inventories?.labolatory_id || 0) || "Unknown Lab",
         purpose: reserve.inventories?.type || "Unknown Purpose",

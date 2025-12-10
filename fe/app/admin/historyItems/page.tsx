@@ -166,7 +166,7 @@ export default async function HistoryItemsPage() {
       .map((reserve: Reserve) => ({
         id: reserve.id,
         itemName: reserve.inventories?.item_name || "Unknown Item",
-        itemImage: reserve.inventories?.inventory_galleries?.[0]?.filepath || "",
+        itemImage: reserve.inventories?.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp",
         borrowerName: reserve.reserve_user_created?.first_name && reserve.reserve_user_created?.last_name
           ? `${reserve.reserve_user_created.first_name} ${reserve.reserve_user_created.last_name}`
           : reserve.reserve_user_created?.username || "Unknown",
