@@ -16,6 +16,7 @@ interface RawInventory {
   no_item: string;
   condition: string;
   alat_bhp: string;
+  type: string;
   labolatory_id: number;
   room_id: number | null;
   inventory_galleries: { filepath: string }[];
@@ -33,6 +34,7 @@ interface Item {
   serialNumber: string;
   category: string;
   condition: string;
+  type: string;
 }
 
 interface AllItemsAdminProps {
@@ -73,6 +75,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
   const { isSidebarOpen } = useAdminSidebar();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("semua");
+  const [selectedPurpose, setSelectedPurpose] = useState("semua");
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("Item successfully added");
   const [fetchedItems, setFetchedItems] = useState<Item[]>([]);
@@ -94,6 +97,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
     serialNumber: inv.no_item,
     category: inv.alat_bhp || "alat",
     condition: inv.condition || "good",
+    type: inv.type || "praktikum",
   })), [inventories, laboratories]);
 
   useEffect(() => {
@@ -172,6 +176,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
             serialNumber: inv.no_item,
             category: inv.alat_bhp || "alat",
             condition: inv.condition || "good",
+            type: inv.type || "praktikum",
           }));
           setFetchedItems(mappedItems);
         }
@@ -202,6 +207,11 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
       filtered = filtered.filter(item => item.roomId === parseInt(selectedRoom));
     }
     
+    // Filter by purpose
+    if (selectedPurpose !== "semua") {
+      filtered = filtered.filter(item => item.type === selectedPurpose);
+    }
+    
     // Filter by search query
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter(item => 
@@ -210,7 +220,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
     }
     
     return filtered;
-  }, [displayItems, selectedRoom, searchQuery]);
+  }, [displayItems, selectedRoom, selectedPurpose, searchQuery]);
 
   const handleAddClick = () => {
     router.push("/admin/allItems/add");
@@ -265,6 +275,20 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0]" />
                 </div>
 
+                {/* Purpose Filter */}
+                <div className="relative">
+                  <select
+                    value={selectedPurpose}
+                    onChange={(e) => setSelectedPurpose(e.target.value)}
+                    className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
+                  >
+                    <option value="semua">Purpose</option>
+                    <option value="praktikum">Partial Class</option>
+                    <option value="projek">Project</option>
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#004CB0] pointer-events-none" />
+                </div>
+
                 {/* Room Filter */}
                 <div className="relative">
                   <select
@@ -272,7 +296,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                     onChange={(e) => setSelectedRoom(e.target.value)}
                     className="appearance-none px-4 py-2 pr-10 border-2 border-[#004CB0] rounded-full text-gray-500 font-medium bg-white cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#004CB0] w-full sm:w-auto"
                   >
-                    <option value="semua">Semua ruangan</option>
+                    <option value="semua">All Rooms</option>
                     {rooms.map((room) => (
                       <option key={room.id} value={room.id.toString()}>
                         {room.name}
