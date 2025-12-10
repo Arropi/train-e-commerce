@@ -226,7 +226,7 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
                     <div className="relative w-full h-full rounded-xl overflow-hidden">
                       <Image
                         src={
-                          item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/icons/osiloskop.png"
+                          item.inventory_galleries[0]?.filepath ? item.inventory_galleries[0].filepath : "/images/default_img_card.webp"
                         }
                         alt={item.item_name}
                         fill

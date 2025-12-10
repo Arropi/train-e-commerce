@@ -214,19 +214,13 @@ export default function ModalViewAll({
         {/* Header dengan Image */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-32 h-32 flex items-center justify-center mb-6">
-            {item.inventories.inventory_galleries?.[0]?.filepath ? (
-              <Image
+            <Image
                 width={128}
                 height={128}
-                src={item.inventories.inventory_galleries[0].filepath}
+                src={item.inventories.inventory_galleries[0]?.filepath ?? "/images/default_img_card.webp"}
                 alt={item.inventories.item_name}
                 className="max-w-full max-h-full object-contain"
               />
-            ) : (
-              <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-5xl">📦</span>
-              </div>
-            )}
           </div>
 
           <h2 className="text-xl font-bold text-center mb-2">{item.inventories.item_name}</h2>
