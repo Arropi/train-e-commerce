@@ -60,7 +60,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
   useEffect(() => {
     if (notification.show) {
       const timer = setTimeout(() => {
-        setNotification(prev => ({ ...prev, show: false }));
+        setNotification((prev) => ({ ...prev, show: false }));
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -68,8 +68,10 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
-      const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+      const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+      const accessToken =
+        sessionData?.user?.accessToken || session?.user?.accessToken;
 
       if (!accessToken) return;
 
@@ -85,7 +87,11 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
 
         if (profileRes.ok) {
           const profileData = await profileRes.json();
-          const user = profileData.datas || profileData.data || profileData.user || profileData;
+          const user =
+            profileData.datas ||
+            profileData.data ||
+            profileData.user ||
+            profileData;
           console.log("Admin profile data:", user);
           setAdminLabName(user.lab_name);
         }
@@ -126,7 +132,14 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
 
         if (subjectsRes.ok) {
           const subjectsData = await subjectsRes.json();
-          setSubjects(subjectsData.data.map((item: { id: number; subject_name: string }) => ({ id: item.id, name: item.subject_name })) || []);
+          setSubjects(
+            subjectsData.data.map(
+              (item: { id: number; subject_name: string }) => ({
+                id: item.id,
+                name: item.subject_name,
+              })
+            ) || []
+          );
         }
       } catch (error) {
         console.error("Failed to fetch dropdown data:", error);
@@ -134,7 +147,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     };
 
     fetchData();
-    
+
     // Set initial form data from itemData when component mounts
     setFormData({
       name: itemData.name,
@@ -268,7 +281,8 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       formData.inventoryNumber !== itemData.inventoryNumber ||
       formData.room !== itemData.room ||
       formData.laboratory !== itemData.laboratory ||
-      JSON.stringify(formData.subject.sort()) !== JSON.stringify(itemData.subject.sort()) ||
+      JSON.stringify(formData.subject.sort()) !==
+        JSON.stringify(itemData.subject.sort()) ||
       formData.session !== itemData.session ||
       formData.purpose !== itemData.purpose ||
       formData.condition !== itemData.condition ||
@@ -283,7 +297,8 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       return;
     }
 
-    const accessToken = sessionData?.user?.accessToken || session?.user?.accessToken;
+    const accessToken =
+      sessionData?.user?.accessToken || session?.user?.accessToken;
     if (!accessToken) {
       setNotification({
         show: true,
@@ -293,7 +308,8 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
       return;
     }
 
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
 
     // Handle creating new room/subjects if needed
     let mergedSubjects = [...subjects];
@@ -302,7 +318,10 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     try {
       // Create new subjects if provided
       const newSubjects = formData.subject.filter(
-        (entry) => !mergedSubjects.some((s) => s.id.toString() === entry || s.name === entry)
+        (entry) =>
+          !mergedSubjects.some(
+            (s) => s.id.toString() === entry || s.name === entry
+          )
       );
 
       if (newSubjects.length > 0) {
@@ -320,7 +339,9 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
           setNotification({
             show: true,
             type: "error",
-            message: `Failed to create subjects: ${err.message || subjectsRes.statusText}`,
+            message: `Failed to create subjects: ${
+              err.message || subjectsRes.statusText
+            }`,
           });
           return;
         }
@@ -328,7 +349,10 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
         const createdSubjects = await subjectsRes.json();
         const createdArray = createdSubjects.data || createdSubjects;
         if (Array.isArray(createdArray)) {
-          const formatted = createdArray.map((s: any) => ({ id: s.id, name: s.subject_name || s.name }));
+          const formatted = createdArray.map((s: any) => ({
+            id: s.id,
+            name: s.subject_name || s.name,
+          }));
           setSubjects((prev) => [...prev, ...formatted]);
           mergedSubjects = [...mergedSubjects, ...formatted];
         }
@@ -359,7 +383,9 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
           setNotification({
             show: true,
             type: "error",
-            message: `Failed to create room: ${err.message || roomRes.statusText}`,
+            message: `Failed to create room: ${
+              err.message || roomRes.statusText
+            }`,
           });
           return;
         }
@@ -368,7 +394,10 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
         const roomData = createdRoom.data || createdRoom;
         const newRoom = Array.isArray(roomData) ? roomData[0] : roomData;
         if (newRoom && newRoom.id) {
-          setRooms((prev) => [...prev, { id: newRoom.id, name: newRoom.room_name || newRoom.name }]);
+          setRooms((prev) => [
+            ...prev,
+            { id: newRoom.id, name: newRoom.room_name || newRoom.name },
+          ]);
           finalRoomId = newRoom.id;
           setFormData({ ...formData, room: newRoom.id.toString() });
           setIsOtherRoom(false);
@@ -463,7 +492,9 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
         setNotification({
           show: true,
           type: "error",
-          message: `Failed to update item: ${errorData.message || 'Unknown error'}`,
+          message: `Failed to update item: ${
+            errorData.message || "Unknown error"
+          }`,
         });
       }
     } catch (error) {
@@ -476,7 +507,72 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
     }
   };
 
-  const lab = labs.find(l => l.name === adminLabName);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // open a styled modal instead of browser confirm
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  // when user confirms inside modal, execute deletion
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
+
+    const accessToken =
+      sessionData?.user?.accessToken || session?.user?.accessToken;
+    if (!accessToken) {
+      setNotification({
+        show: true,
+        type: "error",
+        message: "No access token available",
+      });
+      return;
+    }
+
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040";
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${backendUrl}/inventories/${itemData.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        setNotification({
+          show: true,
+          type: "success",
+          message: "Item deleted successfully",
+        });
+        router.push("/admin/allItems?deleted=true");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setNotification({
+          show: true,
+          type: "error",
+          message: `Failed to delete item: ${err.message || res.statusText}`,
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      setNotification({
+        show: true,
+        type: "error",
+        message: "Error deleting item",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+
+
+  const lab = labs.find((l) => l.name === adminLabName);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -485,9 +581,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[60] animate-slide-down">
           <div
             className={`${
-              notification.type === "success"
-                ? "bg-green-500"
-                : "bg-red-500"
+              notification.type === "success" ? "bg-green-500" : "bg-red-500"
             } text-white px-6 py-4 rounded-full shadow-lg flex items-center gap-3`}
           >
             {notification.type === "success" ? (
@@ -496,6 +590,46 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
               <AlertCircle className="w-6 h-6" />
             )}
             <span className="font-medium">{notification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center">
+          <div
+            className="fixed inset-0 bg-black/40"
+            onClick={() => setShowDeleteModal(false)}
+          />
+
+          <div className="relative bg-white rounded-2xl shadow-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Delete Item
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete this item? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className={`px-4 py-2 rounded-full font-medium transition-colors ${
+                  isDeleting
+                    ? "bg-red-300 text-white cursor-not-allowed"
+                    : "bg-red-500 text-white hover:bg-red-700"
+                }`}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -706,7 +840,9 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                       required
                       disabled
                     >
-                      <option value={lab ? lab.id.toString() : ""}>{lab ? lab.name : "Choose lab"}</option>
+                      <option value={lab ? lab.id.toString() : ""}>
+                        {lab ? lab.name : "Choose lab"}
+                      </option>
                       {labs.map((labItem) => (
                         <option key={labItem.id} value={labItem.id.toString()}>
                           {labItem.name}
@@ -794,10 +930,18 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
-                              if (otherSubjectInput.trim() && !formData.subject.includes(otherSubjectInput.trim())) {
+                              if (
+                                otherSubjectInput.trim() &&
+                                !formData.subject.includes(
+                                  otherSubjectInput.trim()
+                                )
+                              ) {
                                 setFormData({
                                   ...formData,
-                                  subject: [...formData.subject, otherSubjectInput.trim()],
+                                  subject: [
+                                    ...formData.subject,
+                                    otherSubjectInput.trim(),
+                                  ],
                                 });
                                 setOtherSubjectInput("");
                               }
@@ -861,21 +1005,42 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
                     </div>
                   </div>
                 </div>
+                
+                <div className="flex justify-between items-center mt-6 sm:mt-8">
 
-                {/* Submit Button */}
-                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2 mt-6 sm:mt-8">
+                {/* button delete */}
+
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className={`px-6 sm:px-8 py-3 rounded-full font-medium transition-colors ${
+                      isDeleting
+                        ? "bg-red-300 text-white cursor-not-allowed"
+                        : "bg-red-500 text-white hover:bg-red-700 cursor-pointer"
+                    }` }
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Item"}
+                  </button>
+
+                {/* Button KAnan */}
+                <div className="flex gap-2">
+                  {/* button cancel */}
                   <button
                     onClick={() => router.back()}
                     className="px-6 sm:px-8 py-3 border-2 border-[#004CB0] text-[#004CB0] rounded-full font-medium cursor-pointer hover:bg-[#004CB0] hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
+
+                  {/* button save */}
                   <button
                     type="submit"
                     className="px-6 sm:px-8 py-3 bg-[#004CB0] text-white rounded-full font-medium hover:bg-blue-900 cursor-pointer transition-colors"
                   >
                     Save Changes
                   </button>
+                </div>
                 </div>
               </form>
             </div>

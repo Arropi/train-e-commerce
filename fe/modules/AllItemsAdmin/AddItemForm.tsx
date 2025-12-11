@@ -848,7 +848,7 @@ export default function AddItemForm({ session }: AddItemFormProps) {
                   
                   <button
                     type="submit"
-                    className="px-8 py-3 bg-[#004CB0] text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
+                    className="px-8 py-3 bg-[#004CB0] text-white rounded-full font-medium hover:bg-blue-900 transition-colors"
                   >
                     Add
                   </button>
