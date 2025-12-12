@@ -93,7 +93,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
     labId: inv.labolatory_id,
     roomId: inv.room_id || null,
     roomName: inv.rooms?.name || "No Room",
-    image: inv.inventory_galleries?.[0]?.filepath || "",
+    image: inv.inventory_galleries?.[0]?.filepath || "images/default_img_card.webp",
     serialNumber: inv.no_item,
     category: inv.alat_bhp || "alat",
     condition: inv.condition || "good",
@@ -325,9 +325,8 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                 >
                   {/* Item Image */}
                   <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
-                    {item.image ? (
-                      <Image
-                        src={item.image}
+                    <Image
+                        src={item.image? item.image : "/images/default_img_card.webp"}
                         alt={item.name}
                         width={150}
                         height={120}
@@ -335,11 +334,6 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                         loading="lazy"
                         unoptimized
                       />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs rounded-lg">
-                        No Image
-                      </div>
-                    )}
                   </div>
 
                   {/* Item Info and Edit Button */}

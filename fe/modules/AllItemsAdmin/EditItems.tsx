@@ -670,7 +670,7 @@ export default function EditItems({ session, itemData }: EditItemsProps) {
               <form onSubmit={handleSubmit}>
                 {/* Image Upload */}
                 <div className="flex flex-col items-center mb-6 sm:mb-8">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden relative">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden relative border-2">
                     {imagePreview ? (
                       <Image
                         src={imagePreview}

@@ -100,7 +100,7 @@ export default function Sidebar({
                   >
                     <div className="w-14 h-14 bg-white rounded overflow-hidden flex items-center justify-center">
                       <img
-                        src={it.inventories.inventory_galleries[0]?.filepath ?? "/images/osiloskop.png"}
+                        src={it.inventories.inventory_galleries[0]?.filepath ?? "/images/default_img_card.webp"}
                         alt={it.inventories.item_name}
                         className="object-contain max-h-full"
                       />
