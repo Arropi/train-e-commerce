@@ -248,15 +248,15 @@ export default function SuperAdminProfile(profileProps: {
 
     // basic validation
     if (!newAdmin.email || !newAdmin.lab) {
-      showToast("Harap isi semua field", "error");
+      showToast("Please fill in all fields", "error");
       return;
     }
 
     // email format validation - hanya email UGM
-    const emailRegex = /@mail\.ugm\.ac\.id$/;
+    const emailRegex = /@(mail\.)?ugm\.ac\.id$/i;
     if (!emailRegex.test(newAdmin.email)) {
       showToast(
-        "Email harus berformat @mail.ugm.ac.id",
+        "Email must be in the format @ugm.ac.id or @mail.ugm.ac.id",
         "error"
       );
       return;
@@ -265,7 +265,7 @@ export default function SuperAdminProfile(profileProps: {
     // Cek apakah email yang diinput adalah email admin sendiri
     if (newAdmin.email.toLowerCase() === session?.user?.email?.toLowerCase()) {
       showToast(
-        "Tidak dapat menambahkan email Anda sendiri sebagai admin",
+        "Can't add your own email as admin",
         "error"
       );
       return;
@@ -425,7 +425,7 @@ export default function SuperAdminProfile(profileProps: {
             />
             <div className="relative bg-white rounded-2xl w-full max-w-2xl p-8 z-10 shadow-lg mt-20">
               <h3 className="text-2xl font-semibold text-[#004CB0] mb-6">
-                Tambah Admin Baru
+                Add New Admin
               </h3>
 
               <div className="space-y-6">
@@ -438,17 +438,14 @@ export default function SuperAdminProfile(profileProps: {
                     type="email"
                     value={newAdmin.email}
                     onChange={handleNewAdminChange}
-                    placeholder="nama@mail.ugm.ac.id"
+                    placeholder="nama@ugm.ac.id"
                     className="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Masukkan email UGM
-                  </p>
                 </div>
 
                 <div>
                   <label className="text-sm font-bold text-gray-700 mb-2 block">
-                    Pilih Lab
+                    Choose Laboratory
                   </label>
                   <div className="relative">
                     <select
@@ -457,7 +454,7 @@ export default function SuperAdminProfile(profileProps: {
                       onChange={handleNewAdminChange}
                       className="w-full px-4 py-3 pr-10 border rounded-lg border-gray-300 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent cursor-pointer"
                     >
-                      <option value="">Pilih laboratorium...</option>
+                      <option value="">Choose laboratory...</option>
                       {labs.map((l) => (
                         <option key={l.id} value={l.id}>
                           Lab {l.title}
@@ -488,14 +485,14 @@ export default function SuperAdminProfile(profileProps: {
                     disabled={isSaving}
                     className="px-6 py-2 bg-white hover:bg-gray-50 border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200 text-gray-700 rounded-lg font-medium disabled:opacity-50"
                   >
-                    Batal
+                    Cancel
                   </button>
                   <button
                     onClick={handleAddAdmin}
                     disabled={isSaving}
                     className="px-6 py-2 bg-[#004CB0] text-white hover:bg-blue-900 transition-colors duration-200 rounded-lg font-medium disabled:opacity-50"
                   >
-                    {isSaving ? "Menambahkan..." : "Tambah Admin"}
+                    {isSaving ? "Menambahkan..." : "Add Admin"}
                   </button>
                 </div>
               </div>
@@ -558,7 +555,7 @@ export default function SuperAdminProfile(profileProps: {
                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                     />
                   </svg>
-                  Tambah Admin
+                  Add Admin
                 </button>
               )}
             </div>
@@ -593,7 +590,7 @@ export default function SuperAdminProfile(profileProps: {
           <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1" />
             <h3 className="text-xl font-semibold text-[#004CB0] mb-6">
-              Informasi Detail
+              Detail Information
             </h3>
 
             {isLoading && (
@@ -608,7 +605,7 @@ export default function SuperAdminProfile(profileProps: {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
               <div>
-                <p className="text-gray-500 text-sm mb-1">Nama Lengkap</p>
+                <p className="text-gray-500 text-sm mb-1">Name</p>
                 <p className="text-gray-800 font-medium">
                   {profile.name || session?.user?.name || "Gatau siapa"}
                 </p>

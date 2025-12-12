@@ -21,7 +21,7 @@ export const authConfig: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ account, profile }) {
-      if (account?.provider === "google" && profile?.email?.endsWith('@mail.ugm.ac.id')) {
+      if (account?.provider === "google" && (profile?.email?.endsWith('@mail.ugm.ac.id') || profile?.email?.endsWith('@ugm.ac.id'))) {
         return true
       }
       return false 
