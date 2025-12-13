@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Home,
-  Package,
-  History,
-  User,
-  LogOut,
-  Settings,
-} from "lucide-react";
+import { Home, Package, History, User, LogOut, Settings } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -18,7 +11,7 @@ interface SidebarAdminProps {
   user?: {
     name: string;
     role: string;
-    avatar?: string ; 
+    avatar?: string;
   };
 }
 
@@ -38,22 +31,28 @@ export default function SidebarAdmin({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isProfileMenuOpen && !(event.target as Element).closest('.profile-menu')) {
+      if (
+        isProfileMenuOpen &&
+        !(event.target as Element).closest(".profile-menu")
+      ) {
         setIsProfileMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileMenuOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isProfileMenuOpen && !(event.target as Element).closest('.profile-menu')) {
+      if (
+        isProfileMenuOpen &&
+        !(event.target as Element).closest(".profile-menu")
+      ) {
         setIsProfileMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileMenuOpen]);
 
   const menuItems = [
@@ -89,9 +88,9 @@ export default function SidebarAdmin({
       {/* Sidebar */}
       <div
         className={`fixed left-0 top-0 h-full text-white transition-all duration-300 ease-in-out z-50 ${
-          isSidebarOpen ? 'w-64 lg:w-64' : 'w-64 lg:w-20'
+          isSidebarOpen ? "w-64 lg:w-64" : "w-64 lg:w-20"
         } ${
-          isSidebarOpen ? 'translate-x-0' : 'lg:translate-x-0 -translate-x-full'
+          isSidebarOpen ? "translate-x-0" : "lg:translate-x-0 -translate-x-full"
         }`}
         style={{
           backgroundImage: "url('/images/sideBarAdmin.png')",
@@ -205,7 +204,10 @@ export default function SidebarAdmin({
           {/* User Profile at Bottom */}
           <div className="px-6 py-6 border-t border-white/20 relative">
             {isSidebarOpen ? (
-              <div className="flex items-center gap-3 cursor-pointer" onClick={handleProfileClick}>
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={handleProfileClick}
+              >
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
                   {user.avatar ? (
                     <Image
@@ -225,7 +227,10 @@ export default function SidebarAdmin({
                 </div>
               </div>
             ) : (
-              <div className="flex justify-center cursor-pointer" onClick={handleProfileClick}>
+              <div
+                className="flex justify-center cursor-pointer"
+                onClick={handleProfileClick}
+              >
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
                   {user.avatar ? (
                     <Image
@@ -249,7 +254,17 @@ export default function SidebarAdmin({
                   onClick={handleGoToProfile}
                   className="flex items-center gap-2 w-full px-4 py-2 text-left hover:bg-gray-100 text-gray-700"
                 >
-                  <Settings className="w-4 h-4" />
+                  <svg
+                    className="w-5 h-5 text-[#004CB0]"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                   Profile
                 </button>
                 <button

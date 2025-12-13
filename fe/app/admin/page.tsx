@@ -19,7 +19,7 @@ export default async function AdminPage() {
   });
   const data = await reserve.json();
   console.log("RESERVE ADMIN: ", data);
-  const rejectedItems = data.data.filter( (item: any) => item.status  === 'rejected')
+  const rejectedItems = data.data.filter( (item: { status: string }) => item.status  === 'rejected')
   console.log("Ini ketolak: ", rejectedItems)
   const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:4040"}/user`, {
           method: "GET",

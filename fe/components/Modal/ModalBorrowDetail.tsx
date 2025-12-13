@@ -173,7 +173,7 @@ export default function ModalBorrowDetail({
 
             {/* Peminjam */}
             <div>
-              <p className="text-sm text-gray-500 mb-1">Peminjam</p>
+              <p className="text-sm text-gray-500 mb-1">Borrower</p>
               <p className="font-semibold text-gray-800">
                 {detail.borrowerName}
               </p>

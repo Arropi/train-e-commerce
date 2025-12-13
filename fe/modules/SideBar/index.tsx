@@ -83,7 +83,7 @@ export default function Sidebar({
                   Nothing here
                 </p>
                 <p className="text-sm text-gray-500 mt-2 text-center">
-                  Pilih item untuk melihat detail
+                  Your cart is currently empty. Add items to proceed.
                 </p>
               </div>
             ) : (
@@ -143,7 +143,7 @@ export default function Sidebar({
 
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t rounded-b-lg">
             <button
-              className="bg-[#1E40AF] text-white py-3 px-6 rounded-lg w-full font-medium hover:bg-blue-700 transition-colors"
+              className="bg-[#1E40AF] text-white py-3 px-6 rounded-lg w-full font-medium hover:bg-blue-900 transition-colors"
               onClick={() => setIsFormOpen(true)}
             >
               Next

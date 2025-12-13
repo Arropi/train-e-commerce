@@ -138,7 +138,7 @@ export default function DetailHistory({
               <div className="grid grid-cols-[60px_250px_2fr_1fr_1fr_120px] gap-4 font-semibold">
                 <div className="text-left">No</div>
                 <div className="text-left">Name</div>
-                <div className="text-left">ID Barang</div>
+                <div className="text-left">NIM</div>
                 <div className="text-left">Status</div>
                 <div className="text-left">Condition</div>
                 <div className="text-left"></div>
@@ -321,7 +321,7 @@ export default function DetailHistory({
                   {/* Peminjam & Room */}
                   <div className="grid grid-cols-2 gap-x-6">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Peminjam</p>
+                      <p className="text-xs text-gray-500 mb-1">Borrower</p>
                       <p className=" text-gray-800 text-sm truncate">
                         {selectedDetail.borrowerName}
                       </p>
