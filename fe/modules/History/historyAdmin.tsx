@@ -154,7 +154,7 @@ export default function HistoryAdmin({
                   <div
                     key={item.id}
                     onClick={() => handleDetailClick(item.itemName)}
-                    className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col items-center cursor-pointer h-85 w-55"
+                    className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col cursor-pointer h-85 w-55"
                   >
                     {/* Item Image */}
                     <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
@@ -176,22 +176,26 @@ export default function HistoryAdmin({
                     </div>
 
                     {/* Item Info */}
-                    <div className="w-full">
-                      <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2">
-                        {item.itemName}
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-3">{item.lab}</p>
+                    <div className="w-full flex-1 flex flex-col">
+                      <div>
+                        <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2">
+                          {item.itemName}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">{item.lab}</p>
+                      </div>
 
-                      {/* Detail Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDetailClick(item.itemName);
-                        }}
-                        className="px-4 py-0 bg-[#004CB0] text-white text-sm font-medium rounded-full hover:bg-blue-900 transition-colors"
-                      >
-                        Detail
-                      </button>
+                      {/* Detail Button - Fixed at Bottom */}
+                      <div className="mt-auto">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDetailClick(item.itemName);
+                          }}
+                          className="px-4 py-0 bg-[#004CB0] text-white text-sm font-medium rounded-full hover:bg-blue-900 transition-colors"
+                        >
+                          Detail
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))

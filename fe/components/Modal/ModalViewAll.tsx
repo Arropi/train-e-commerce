@@ -324,13 +324,13 @@ export default function ModalViewAll({
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200"
             >
-              <p className="text-sm text-gray-800">Apakah anda yakin ingin <span className="font-semibold">{pendingAction.label}</span> barang?</p>
+              <p className="text-sm text-gray-800">Are you sure you want to <span className="font-semibold">{pendingAction.label}</span> item?</p>
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => setPendingAction(null)}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={async () => {
@@ -340,8 +340,8 @@ export default function ModalViewAll({
                       setNotificationType("success");
                       setNotificationMessage(
                         pendingAction.type === "cancel"
-                          ? "Reservasi berhasil dibatalkan"
-                          : "Barang berhasil dikembalikan ke status waiting to be return"
+                          ? "Reservation cancelled successfully"
+                          : "Item returned to waiting to be return status"
                       );
                       setShowNotification(true);
                       setPendingAction(null);
@@ -350,14 +350,14 @@ export default function ModalViewAll({
                     } catch (err) {
                       console.error(err);
                       setNotificationType("error");
-                      setNotificationMessage("Terjadi kesalahan. Silakan coba lagi.");
+                      setNotificationMessage("An error occurred. Please try again.");
                       setShowNotification(true);
                       setPendingAction(null);
                     }
                   }}
                   className="px-4 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-900"
                 >
-                  Ya, Konfirmasi
+                  Yes, Confirm
                 </button>
               </div>
             </div>
@@ -370,13 +370,13 @@ export default function ModalViewAll({
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200"
             >
-              <p className="text-sm text-gray-800">Apakah anda yakin ingin <span className="font-semibold">{pendingAction.label}</span> barang?</p>
+              <p className="text-sm text-gray-800">Are you sure you want to <span className="font-semibold">{pendingAction.label}</span> item?</p>
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => setPendingAction(null)}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={async () => {
@@ -386,8 +386,8 @@ export default function ModalViewAll({
                       setNotificationType("success");
                       setNotificationMessage(
                         pendingAction.type === "cancel"
-                          ? "Reservasi berhasil dibatalkan"
-                          : "Barang berhasil dikembalikan ke status waiting to be return"
+                          ? "Reservation cancelled successfully"
+                          : "Item returned to waiting to be return status"
                       );
                       setShowNotification(true);
                       setPendingAction(null);
@@ -396,14 +396,14 @@ export default function ModalViewAll({
                     } catch (err) {
                       console.error(err);
                       setNotificationType("error");
-                      setNotificationMessage("Terjadi kesalahan. Silakan coba lagi.");
+                      setNotificationMessage("An error occurred. Please try again.");
                       setShowNotification(true);
                       setPendingAction(null);
                     }
                   }}
                   className="px-4 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-900"
                 >
-                  Ya, Konfirmasi
+                  Yes, Confirm
                 </button>
               </div>
             </div>

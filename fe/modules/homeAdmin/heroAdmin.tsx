@@ -213,7 +213,7 @@ export default function HeroAdmin({
       // Find the inventory id from the borrowed items
       const item = borrowedItemsDetail.find(i => i.id === pendingConditionItemId);
       if (!item) {
-        showToast("Item tidak ditemukan", "error");
+        showToast("Item not found", "error");
         return;
       }
       
@@ -238,11 +238,11 @@ export default function HeroAdmin({
       });
       
       if (inventoryResponse.ok && reserveResponse.ok) {
-        showToast("Kondisi barang berhasil diupdate dan status diubah menjadi done!", "success");
+        showToast("Item condition updated and status changed to done!", "success");
         // Trigger refresh
         setRefreshKey(prev => prev + 1);
       } else {
-        showToast("Gagal update kondisi atau status", "error");
+        showToast("Failed to update condition or status", "error");
       }
     } catch (error) {
       console.error("Error updating condition:", error);
@@ -784,7 +784,7 @@ export default function HeroAdmin({
                   />
                 </svg>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Konfirmasi Persetujuan
+                  Approval Confirmation
                 </h3>
               </div>
               <div className="flex gap-3 justify-center">
@@ -796,13 +796,13 @@ export default function HeroAdmin({
                   }}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={executeApprove}
                   className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                 >
-                  Setujui
+                  Approve
                 </button>
               </div>
             </div>
@@ -830,7 +830,7 @@ export default function HeroAdmin({
                   />
                 </svg>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Konfirmasi Penolakan
+                  Reject Confirmation
                 </h3>
               </div>
               <div className="flex gap-3 justify-center">
@@ -842,13 +842,13 @@ export default function HeroAdmin({
                   }}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={executeReject}
                   className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                 >
-                  Tolak
+                  Reject
                 </button>
               </div>
             </div>
@@ -892,10 +892,10 @@ export default function HeroAdmin({
                   </svg>
                 )}
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Konfirmasi Update Kondisi
+                  Condition Update Confirmation
                 </h3>
                 <p className="text-gray-600">
-                  Update kondisi barang menjadi{" "}
+                  Update item condition to{" "}
                   <span className="font-semibold text-[#004CB0]">
                     {pendingCondition === "good" ? "Good" : "Bad"}
                   </span>
@@ -911,7 +911,7 @@ export default function HeroAdmin({
                   }}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={executeConditionUpdate}
