@@ -202,7 +202,7 @@ export default function ProfilePage(profileProps: {
                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                 />
               </svg>
-              Edit profil
+              Edit profile
             </button>
           ) : (
             <div className="flex gap-2">
@@ -211,14 +211,14 @@ export default function ProfilePage(profileProps: {
                 disabled={isSaving}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                Batal
+                Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="px-4 py-2 bg-[#004CB0] text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-[#004CB0] text-white rounded-lg hover:bg-blue-900 transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                {isSaving ? "Menyimpan..." : "Simpan"}
+                {isSaving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           )}
@@ -252,11 +252,11 @@ export default function ProfilePage(profileProps: {
         <div className="relative bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-8 mt-6 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1" />
           <h3 className="text-xl font-semibold text-[#004CB0] mb-6">
-            Informasi Detail
+            Detail Information
           </h3>
 
           {isLoading && (
-            <p className="text-sm text-gray-500 mb-4">Memuat data...</p>
+            <p className="text-sm text-gray-500 mb-4">Loading data...</p>
           )}
 
           {error && (
@@ -267,9 +267,9 @@ export default function ProfilePage(profileProps: {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
             <div>
-              <p className="text-gray-500 text-sm mb-1">Nama Lengkap</p>
+              <p className="text-gray-500 text-sm mb-1">Name</p>
               <p className="text-gray-800 font-medium">
-                {profile.name || session?.user?.name || "Gatau siapa"}
+                {profile.name || session?.user?.name || "Unknown User"}
               </p>
             </div>
 
@@ -287,7 +287,7 @@ export default function ProfilePage(profileProps: {
               ) : (
                 <p className="text-gray-800 font-medium">
                   {profile.nim || (
-                    <span className="text-gray-400 italic">Belum diisi</span>
+                    <span className="text-gray-400 italic">Not provided</span>
                   )}
                 </p>
               )}
@@ -299,7 +299,7 @@ export default function ProfilePage(profileProps: {
             </div>
 
             <div>
-              <p className="text-gray-500 text-sm mb-1">Prodi</p>
+              <p className="text-gray-500 text-sm mb-1">Program of Study</p>
               {isEditing ? (
                 <input
                   type="text"
@@ -312,7 +312,7 @@ export default function ProfilePage(profileProps: {
               ) : (
                 <p className="text-gray-800 font-medium">
                   {profile.prodi || (
-                    <span className="text-gray-400 italic">Belum diisi</span>
+                    <span className="text-gray-400 italic">Not provided</span>
                   )}
                 </p>
               )}

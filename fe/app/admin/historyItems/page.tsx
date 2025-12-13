@@ -131,7 +131,7 @@ export default async function HistoryItemsPage() {
       cache: 'no-store'
     });
 
-    let labsMap = new Map<number, string>();
+    const labsMap = new Map<number, string>();
     if (labsResponse.ok) {
       const labsData = await labsResponse.json();
       labsData.data?.forEach((lab: Lab) => {
@@ -152,7 +152,7 @@ export default async function HistoryItemsPage() {
       cache: 'no-store'
     });
 
-    let subjectsMap = new Map<number, string>();
+    const subjectsMap = new Map<number, string>();
     if (subjectsResponse.ok) {
       const subjectsData = await subjectsResponse.json();
       subjectsData.data?.forEach((subject: { id: number; subject_name: string }) => {

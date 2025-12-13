@@ -275,7 +275,7 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
           {!isLoading && uniqueItems.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 text-lg">
-                Tidak ada barang yang sesuai dengan filter
+                No items found matching the criteria.
               </p>
             </div>
           )}

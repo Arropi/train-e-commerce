@@ -126,7 +126,7 @@ export default async function DetailHistoryPage({ params }: PageProps) {
       cache: 'no-store'
     });
 
-    let labsMap = new Map<number, string>();
+    const labsMap = new Map<number, string>();
     if (labsResponse.ok) {
       const labsData = await labsResponse.json();
       labsData.data?.forEach((lab: Lab) => {
@@ -147,7 +147,7 @@ export default async function DetailHistoryPage({ params }: PageProps) {
       cache: 'no-store'
     });
 
-    let subjectsMap = new Map<number, string>();
+    const subjectsMap = new Map<number, string>();
     if (subjectsResponse.ok) {
       const subjectsData = await subjectsResponse.json();
       subjectsData.data?.forEach((subject: { id: number; subject_name: string }) => {
@@ -163,7 +163,7 @@ export default async function DetailHistoryPage({ params }: PageProps) {
       cache: 'no-store'
     });
 
-    let roomsMap = new Map<number, string>();
+    const roomsMap = new Map<number, string>();
     if (roomsResponse.ok) {
       const roomsData = await roomsResponse.json();
       roomsData.data?.forEach((room: { id: number; name: string }) => {

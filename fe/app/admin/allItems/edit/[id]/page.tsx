@@ -146,16 +146,17 @@ export default async function EditItemPage({ params }: PageProps) {
     subject: inventory.inventory_subjects 
       ? (() => {
           // Get only the latest version of each subject (by subject_id)
-          const latestSubjects = inventory.inventory_subjects.reduce((acc: any, sub: any) => {
+          type SubjectData = { subject_id: number; created_at: string; deleted_at: string | null };
+          const latestSubjects = inventory.inventory_subjects.reduce((acc: Record<number, SubjectData>, sub: SubjectData) => {
             if (!acc[sub.subject_id] || new Date(sub.created_at) > new Date(acc[sub.subject_id].created_at)) {
               acc[sub.subject_id] = sub;
             }
             return acc;
           }, {});
           
-          return Object.values(latestSubjects)
-            .filter((sub: any) => !sub.deleted_at)
-            .map((sub: any) => {
+          return (Object.values(latestSubjects) as SubjectData[])
+            .filter((sub) => !sub.deleted_at)
+            .map((sub) => {
               const subject = subjects.find((s: { id: number; name: string }) => s.id === sub.subject_id);
               console.log(`Mapping subject_id ${sub.subject_id} to:`, subject);
               return subject ? subject.name : `Subject ${sub.subject_id}`;

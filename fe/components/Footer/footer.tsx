@@ -100,7 +100,7 @@ export default function FooterComponent() {
             {/* Social Media Icons */}
             <div className="flex space-x-4">
               <a
-                href="https://instagram.com/labtedi"
+                href="https://www.instagram.com/dtedi.sv.ugm/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center hover:bg-white hover:text-[#1E40AF] transition-colors"
@@ -115,7 +115,7 @@ export default function FooterComponent() {
               </a>
 
               <a
-                href="https://twitter.com/labtedi"
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center hover:bg-white hover:text-[#1E40AF] transition-colors"
@@ -130,7 +130,7 @@ export default function FooterComponent() {
               </a>
 
               <a
-                href="https://facebook.com/labtedi"
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center hover:bg-white hover:text-[#1E40AF] transition-colors"
@@ -145,7 +145,7 @@ export default function FooterComponent() {
               </a>
 
               <a
-                href="https://linkedin.com/company/labtedi"
+                href="#"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center hover:bg-white hover:text-[#1E40AF] transition-colors"

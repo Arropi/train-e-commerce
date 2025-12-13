@@ -117,11 +117,11 @@ export default function ModalAdminDashboard({
             {/* row 3, borrower dan room */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h3 className="text-gray-600 font-semibold mb-1">Peminjam</h3>
+                <h3 className="text-gray-600 font-semibold mb-1">Borrower</h3>
                 <p className="text-gray-800">{order.borrower}</p>
               </div>
               <div>
-                <h3 className="text-gray-600 font-semibold mb-1">Ruang</h3>
+                <h3 className="text-gray-600 font-semibold mb-1">Room</h3>
                 <p className="text-gray-800">{order.room}</p>
               </div>
             </div>
