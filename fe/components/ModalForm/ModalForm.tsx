@@ -190,7 +190,7 @@ export default function RequestForm({
     
     if (hasEmptyPic || hasEmptySubject) {
       setNotificationType("warning");
-      setNotificationMessage("Mohon lengkapi semua data sebelum submit!");
+      setNotificationMessage("Please complete all data before submitting!");
       setShowNotification(true);
       return;
     }
@@ -201,7 +201,7 @@ export default function RequestForm({
       if (result && !result.success) {
         console.error('Submit failed:', result.error);
         setNotificationType("error");
-        setNotificationMessage("Gagal mengirim pesanan. Silakan coba lagi.");
+        setNotificationMessage("Failed to submit order. Please try again.");
         setShowNotification(true);
       } else {
         // Tutup modal dan sidebar langsung
@@ -210,7 +210,7 @@ export default function RequestForm({
         
         // Tampilkan notifikasi sukses
         setNotificationType("success");
-        setNotificationMessage("Pesanan berhasil dikirim!");
+        setNotificationMessage("Order submitted successfully!");
         setShowNotification(true);
         
         // Refresh cart untuk update UI
@@ -227,7 +227,7 @@ export default function RequestForm({
       await refreshCart();
       
       setNotificationType("success");
-      setNotificationMessage("Pesanan berhasil dikirim!");
+      setNotificationMessage("Order submitted successfully!");
       setShowNotification(true);
     }
   };
@@ -351,7 +351,7 @@ export default function RequestForm({
                     </label>
                     <input
                       type="text"
-                      value={`Sesi - ${timeSession.find(ts => ts.id ===activeInventory.session_id)?.start?? "Tidak Ditemukan"}`}
+                      value={`Session - ${timeSession.find(ts => ts.id ===activeInventory.session_id)?.start?? "Not Found"}`}
                       readOnly
                       className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
                       placeholder="Sesi 2 - 13.30"
@@ -487,7 +487,7 @@ export default function RequestForm({
                     </label>
                     <input
                       type="text"
-                      value={`Sesi - ${timeSession.find(ts => ts.id ===group.items[groupIdx].session_id)?.start?? "Tidak Ditemukan"}`}
+                      value={`Session - ${timeSession.find(ts => ts.id ===group.items[groupIdx].session_id)?.start?? "Not Found"}`}
                       readOnly
                       className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
                       placeholder="Sesi 2 - 13.30"
@@ -571,7 +571,7 @@ export default function RequestForm({
               onClick={onClose}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
             >
-              Batal
+              Cancel
             </button>
             <button
               onClick={handleSubmit}

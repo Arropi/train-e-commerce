@@ -156,11 +156,11 @@ export default function ProfilePage(profileProps: {
 
       setIsEditing(false);
       // use UI toast instead of native alert
-      showToast("Profil berhasil diupdate!", "success");
+      showToast("Profile updated successfully!", "success");
     } catch (err: any) {
       console.error("Update profile error:", err);
       setError(err.message || "Failed to update profile");
-      showToast(err?.message ?? "Gagal memperbarui profil", "error");
+      showToast(err?.message ?? "Failed to update profile", "error");
     } finally {
       setIsSaving(false);
     }
