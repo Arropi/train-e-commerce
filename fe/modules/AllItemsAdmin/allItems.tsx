@@ -321,7 +321,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                 <div
                   key={`${item.id}-${item.serialNumber}`}
                   onClick={() => handleEditClick(item.id)}
-                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow items-center cursor-pointer h-85 w-55"
+                  className="bg-white rounded-3xl shadow-md p-6 hover:shadow-lg transition-shadow flex flex-col cursor-pointer h-85 w-55"
                 >
                   {/* Item Image */}
                   <div className="flex items-center justify-center mb-4 h-40 w-full rounded-lg p-2">
@@ -337,22 +337,26 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
                   </div>
 
                   {/* Item Info and Edit Button */}
-                  <div className="w-full">
-                    <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2">
-                      {item.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-3">{item.lab}</p>
+                  <div className="w-full flex-1 flex flex-col">
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-base mb-1 line-clamp-2">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-3">{item.lab}</p>
+                    </div>
 
-                    {/* Edit Button - Left Aligned */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditClick(item.id);
-                      }}
-                      className="px-4 py-0 bg-[#004CB0] text-white text-sm font-medium rounded-full hover:bg-blue-900 transition-colors"
-                    >
-                      Edit
-                    </button>
+                    {/* Edit Button - Left Aligned, Fixed at Bottom */}
+                    <div className="mt-auto">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(item.id);
+                        }}
+                        className="px-4 py-0 bg-[#004CB0] text-white text-sm font-medium rounded-full hover:bg-blue-900 transition-colors"
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </div>
                 </div>
                 ))}

@@ -306,19 +306,19 @@ export default function SuperAdminProfile(profileProps: {
       if (!res.ok) {
         const errorData = await res.json();
         console.error("Backend error response:", errorData);
-        const errorMessage = errorData?.message || errorData?.error || `HTTP ${res.status}: Gagal menambahkan admin`;
+        const errorMessage = errorData?.message || errorData?.error || `HTTP ${res.status}: Failed to add admin`;
         showToast(errorMessage, "error");
         setIsSaving(false);
         return;
       }
 
       const data = await res.json();
-      showToast("Admin berhasil ditambahkan", "success");
+      showToast("Admin added successfully", "success");
       setIsAddModalOpen(false);
       setNewAdmin({ email: "", lab: 0 });
     } catch (err: unknown) {
       console.error("Add admin error:", err);
-      let errorMessage = "Gagal menambahkan admin";
+      let errorMessage = "Failed to add admin";
       if (err instanceof Error) {
         errorMessage = err.message;
         // Tampilkan stack trace jika ada
@@ -394,12 +394,12 @@ export default function SuperAdminProfile(profileProps: {
 
       setIsEditing(false);
       // use UI toast instead of native alert
-      showToast("Profil berhasil diupdate!", "success");
+      showToast("Profile updated successfully!", "success");
     } catch (err: unknown) {
       console.error("Update profile error:", err);
       setError(err instanceof Error ? err.message : "Failed to update profile");
       showToast(
-        err instanceof Error ? err.message : "Gagal memperbarui profil",
+        err instanceof Error ? err.message : "Failed to update profile",
         "error"
       );
     } finally {
@@ -497,7 +497,7 @@ export default function SuperAdminProfile(profileProps: {
                     disabled={isSaving}
                     className="px-6 py-2 bg-[#004CB0] text-white hover:bg-blue-900 transition-colors duration-200 rounded-lg font-medium disabled:opacity-50"
                   >
-                    {isSaving ? "Menambahkan..." : "Add Admin"}
+                    {isSaving ? "Adding..." : "Add Admin"}
                   </button>
                 </div>
               </div>
@@ -531,14 +531,14 @@ export default function SuperAdminProfile(profileProps: {
                     disabled={isSaving}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    Batal
+                    Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
                     className="px-4 py-2 bg-[#004CB0] text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {isSaving ? "Menyimpan..." : "Simpan"}
+                    {isSaving ? "Saving..." : "Save"}
                   </button>
                 </div>
               ) : (
