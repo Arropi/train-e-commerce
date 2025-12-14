@@ -26,7 +26,7 @@ interface FilterBarProps {
 export default function FilterBar({ onFilterChange }: FilterBarProps) {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedLab, setSelectedLab] = useState("");
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date( Date.now() + 86400000)); // default ke besok
   const [searchTerm, setSearchTerm] = useState("");
   
   // filter akan mengubah ke tanggal real time
@@ -113,6 +113,7 @@ export default function FilterBar({ onFilterChange }: FilterBarProps) {
               // disable tanggal sebelume
               disabled={(date) => {
                 const today = new Date();
+                today.setDate(today.getDate() + 1);
                 today.setHours(0, 0, 0, 0); // set ke awal hari
                 return date < today;
               }}

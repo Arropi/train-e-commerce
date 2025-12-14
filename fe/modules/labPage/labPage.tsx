@@ -26,7 +26,7 @@ export default function LabPage({ slug, inventories, laboratories, subjects, roo
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reservesItem, setReservesItem] = useState<Reserve[] | null>(reserves);
   const [filteredInventories, setFilteredInventories] = useState<Inventory[]>(inventories);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(new Date(Date.now() + 86400000)); // default ke besok
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
