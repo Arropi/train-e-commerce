@@ -48,20 +48,17 @@ export default function RequestForm({
   const [notificationMessage, setNotificationMessage] = useState("");
   useEffect(() => {
       if(!session) return;
-      const nextDayLocal = () => {
+      const nextDay = () => {
         const d = new Date();
         d.setDate(d.getDate() + 1);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
+        return d;
       };
 
       const initial = items.map((item) => ({
         inventories_id: item.inventories.id,
         pic: null,
         subject_id: null,
-        tanggal: nextDayLocal(),
+        tanggal: nextDay(),
         session_id: item.session_id
       }))
       // const nextDayISO = () => {
@@ -144,6 +141,22 @@ export default function RequestForm({
     })
     return group
   }
+
+  // Helper function to format Date to yyyy-mm-dd for input type="date"
+  const formatDateForInput = (date: Date): string => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // Helper function to format Date to dd/mm/yyyy for display
+  const formatDateForDisplay = (date: Date): string => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${dd}/${mm}/${yyyy}`;
+  };
 
   const updateFormByIndex = (index: number, field: keyof ReserveFormInput, value: ReserveFormInput[keyof ReserveFormInput]) => {
     console.log('Updating form at index:', index, 'field:', field, 'value:', value);
@@ -379,10 +392,10 @@ export default function RequestForm({
                       Tanggal Peminjaman
                     </label>
                     <input
-                      type="date"
+                      type="text"
                       readOnly
-                      value={activeInventory.tanggal ?? ""}
-                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
+                      value={activeInventory.tanggal ? formatDateForDisplay(activeInventory.tanggal) : ""}
+                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent bg-gray-100 cursor-not-allowed"
                     />
                   </div>
                 </div>
