@@ -65,7 +65,7 @@ export default function Hero({ session, laboratories, onGoing, history, subjects
             </div>
 
             {/* On Going Section */}
-            <Section title="On Going" viewAllHref="/viewAll/ongoing">
+            <Section title="On Going" viewAllHref="/viewall/ongoing">
               {onGoing.map((item) => (
                 <ItemCard
                   key={item.id}
@@ -76,7 +76,7 @@ export default function Hero({ session, laboratories, onGoing, history, subjects
             </Section>
 
             {/* History Section */}
-            <Section title="History" viewAllHref="/viewAll/history">
+            <Section title="History" viewAllHref="/viewall/history">
               {history.map((item) => (
                 <ItemCard
                   key={item.id}

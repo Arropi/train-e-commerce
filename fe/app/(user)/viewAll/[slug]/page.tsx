@@ -7,13 +7,13 @@ import { getDataSubjects } from "@/data/subjects";
 import { getDataRooms } from "@/data/rooms";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function ViewAllServerPage({ params }: PageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   const session = await getServerSession(authConfig);
   
   // Validasi slug
