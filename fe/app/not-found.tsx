@@ -5,7 +5,7 @@ export default function NotFoundPage() {
   return (
     <div className="flex flex-col gap-15 items-center justify-center min-h-screen bg-white">
       <Image
-        src="/images/notFoundd.webp"
+        src="/images/NotFoundd.webp"
         alt="404 Not Found"
         width={500}
         height={500}
