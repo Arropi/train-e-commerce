@@ -4,6 +4,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { useSidebar } from "@/contexts/SidebarContext";
 import RequestForm from "@/components/ModalForm/ModalForm";
+import LoadingOverlay from "@/components/Loading/LoadingOverlay";
+import Toast from "@/components/Toast/Toast";
+import ConfirmModal from "@/components/Modal/ConfirmModal";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -15,6 +18,8 @@ export default function Sidebar({
   toggleSidebar,
 }: SidebarProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   // konsumsi context
   const {
@@ -24,6 +29,9 @@ export default function Sidebar({
     timeSessions = [],
     rooms = [],
     removeItem,
+    isLoading,
+    toast,
+    hideToast,
   } = useSidebar();
   
   // fallback: props jika diberikan, else gunakan context
@@ -32,8 +40,39 @@ export default function Sidebar({
   const itemsToCheckout = items.map((i) => i.inventories)
   console.log(items)
 
+  const handleRemoveItem = (id: number) => {
+    setItemToDelete(id);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (itemToDelete !== null) {
+      setShowConfirm(false);
+      setItemToDelete(null);
+      await removeItem(itemToDelete);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowConfirm(false);
+    setItemToDelete(null);
+  };
+
   return (
     <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <LoadingOverlay />
+        </div>
+      )}
+      
       <div
         className={`fixed top-4 bottom-4 w-80 sm:w-96 bg-white shadow-2xl z-50 transition-all duration-300 ease-in-out border border-gray-200 rounded-lg ${
           sidebarOpen ? "right-4" : "-right-full"
@@ -119,7 +158,7 @@ export default function Sidebar({
 
                     <div className="flex flex-col items-end gap-2">
                       <button
-                        onClick={() => removeItem(it.inventories.id)}
+                        onClick={() => handleRemoveItem(it.inventories.id)}
                         className="text-xs text-red-600 hover:underline"
                       >
                             <div>
@@ -158,6 +197,13 @@ export default function Sidebar({
         onClose={() => setIsFormOpen(false)}
         items={items}
         timeSession={timeSessions}
+      />
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        message="Are you sure you want to delete this item?"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
       />
     </>
   );

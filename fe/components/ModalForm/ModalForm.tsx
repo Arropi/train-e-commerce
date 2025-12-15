@@ -48,13 +48,36 @@ export default function RequestForm({
   const [notificationMessage, setNotificationMessage] = useState("");
   useEffect(() => {
       if(!session) return;
+      const nextDayLocal = () => {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
       const initial = items.map((item) => ({
-        inventories_id:item.inventories.id,
+        inventories_id: item.inventories.id,
         pic: null,
         subject_id: null,
-        tanggal: item.tanggal,
+        tanggal: nextDayLocal(),
         session_id: item.session_id
       }))
+      // const nextDayISO = () => {
+      //   const d = new Date();
+      //   d.setDate(d.getDate() + 1);
+      //   return d.toISOString();
+      // }
+
+      // const initial = items.map((item) => ({
+      //   inventories_id:item.inventories.id,
+      //   pic: null,
+      //   subject_id: null,
+      //   // tanggal nya jadi H+1
+      //   tanggal: item.tanggal ? new Date(item.tanggal).toISOString() : nextDayISO(),
+      //   session_id: item.session_id
+      // }))
       setFormData(initial)
       const fetchData = async () => {
         const res = await getDataSubjects(session.user.accessToken)
@@ -252,13 +275,7 @@ export default function RequestForm({
     const foundSubject = subjects?.find(s => s.id === invSubject.subject_id)
     console.log(`Subject ID ${invSubject.subject_id} -> Found:`, foundSubject)
   })
-  // {!formData.length ? ( 
-  //   (
-  //     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-  //       <div className="text-white">Loading form...</div>
-  //     </div>
-  //   )
-  // ): }
+  
   return (
     <>
       {/* bg transparan */}
@@ -300,7 +317,7 @@ export default function RequestForm({
                 type="text"
                 value={session.user.name?? "Anonymous"}
                 readOnly
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                 placeholder="Masukkan nama..."
               />
             </div>
@@ -314,7 +331,7 @@ export default function RequestForm({
                 <select
                   value={activeInventory.subject_id ?? 0}
                   onChange={(e) => updateFormByIndex(showIndex, "subject_id", Number(e.target.value))}
-                  className="w-full px-4 py-3 pr-10 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  className="w-full px-4 py-3 pr-10 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] appearance-none bg-white"
                 >
                   <option value="">Pilih subject...</option>
                   {!subjects ? (
@@ -353,7 +370,7 @@ export default function RequestForm({
                       type="text"
                       value={`Session - ${timeSession.find(ts => ts.id ===activeInventory.session_id)?.start?? "Not Found"}`}
                       readOnly
-                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
+                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] bg-gray-100 cursor-not-allowed"
                       placeholder="Sesi 2 - 13.30"
                     />
                   </div>
@@ -364,8 +381,8 @@ export default function RequestForm({
                     <input
                       type="date"
                       readOnly
-                      value={activeInventory.tanggal.toString().split('T')[0] || ""}
-                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={activeInventory.tanggal ?? ""}
+                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -417,7 +434,7 @@ export default function RequestForm({
                 onChange={(e) =>
                   updateFormByIndex(showIndex, "pic", e.target.value)
                 }
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0]"
                 placeholder="Masukkan nama..."
               />
             </div>
@@ -452,7 +469,7 @@ export default function RequestForm({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                 placeholder="Masukkan nama..."
               />
             </div>
@@ -466,7 +483,7 @@ export default function RequestForm({
                 onChange={(e) =>
                   setFormData({ ...formData, subject: e.target.value })
                 }
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0]"
               >
                 <option value="">Pilih subject...</option>
                 <option value="Praktikum Pemrograman Web 2">
@@ -489,7 +506,7 @@ export default function RequestForm({
                       type="text"
                       value={`Session - ${timeSession.find(ts => ts.id ===group.items[groupIdx].session_id)?.start?? "Not Found"}`}
                       readOnly
-                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-gray-100 cursor-not-allowed"
+                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] bg-gray-100 cursor-not-allowed"
                       placeholder="Sesi 2 - 13.30"
                     />
                   </div>
@@ -504,7 +521,7 @@ export default function RequestForm({
                       onChange={(e) =>
                         handleDateChange(groupIdx, e.target.value)
                       }
-                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -558,7 +575,7 @@ export default function RequestForm({
                     responsiblePerson: e.target.value,
                   })
                 }
-                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004CB0]"
                 placeholder="Masukkan nama..."
               />
             </div>
@@ -575,7 +592,7 @@ export default function RequestForm({
             </button>
             <button
               onClick={handleSubmit}
-              className="px-6 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-[#1E40AF] text-white rounded-lg hover:bg-blue-900"
             >
               Submit
             </button>

@@ -18,6 +18,12 @@ interface SideBarItem {
   selectedTime?: number | null;
 }
 
+interface ToastState {
+  isVisible: boolean;
+  message: string;
+  type: "success" | "error" | "warning";
+}
+
 interface SidebarContextType {
   isSidebarOpen: boolean;
   rooms: Rooms[]
@@ -25,12 +31,16 @@ interface SidebarContextType {
   items: InventoryCart[];
   selectedItem: any;
   session:Session | null
+  isLoading: boolean;
+  toast: ToastState;
+  showToast: (message: string, type: "success" | "error" | "warning") => void;
+  hideToast: () => void;
   openSidebar: (item?: any) => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
   setSelectedItem: (item: any) => void;
-  addItem: (inventory_id: number, session_id: number, tanggal: Date) => void;
-  removeItem: (id: number) => void;
+  addItem: (inventory_id: number, session_id: number, tanggal: Date) => Promise<void>;
+  removeItem: (id: number) => Promise<void>;
   clear: () => void;
   refreshCart: () => Promise<void>;
 }
@@ -44,6 +54,12 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<InventoryCart[]>([]);
   const [rooms, setRooms] = useState<Rooms[]>([]);
   const [timeSessions, setTimeSessions] = useState<TimeSession[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<ToastState>({
+    isVisible: false,
+    message: "",
+    type: "success",
+  });
   useEffect(() => {
     if(!session) return;
     const fetchData = async () => {
@@ -94,37 +110,66 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ isVisible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ ...toast, isVisible: false });
+  };
+
   const addItem = async(inventory_id: number, session_id: number, tanggal: Date) => {
-    console.log(JSON.stringify({ inventories: [{inventories_id: inventory_id, session_id: session_id, tanggal: tanggal}] }))
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/cart`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.user.accessToken}`,
-      },
-      body: JSON.stringify({ inventories: [{inventories_id: inventory_id, session_id: session_id, tanggal: tanggal}] }),
-    }).then((data) => {
-      console.log(data.json())
-      if (!data.ok) {
+    setIsLoading(true);
+    try {
+      console.log(JSON.stringify({ inventories: [{inventories_id: inventory_id, session_id: session_id, tanggal: tanggal}] }))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/cart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.user.accessToken}`,
+        },
+        body: JSON.stringify({ inventories: [{inventories_id: inventory_id, session_id: session_id, tanggal: tanggal}] }),
+      });
+      
+      if (response.ok) {
+        await loadCartItems();
+        setIsSidebarOpen(true);
+        showToast('Item berhasil ditambahkan ke keranjang', 'success');
+      } else {
         console.error('Failed to add item to cart')
+        showToast('Gagal menambahkan item ke keranjang', 'error');
       }
-    });
-    await loadCartItems();
-    setIsSidebarOpen(true);
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+      showToast('Terjadi kesalahan saat menambahkan item', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const removeItem = async (id: number) => {
-    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/cart/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${session?.user.accessToken}`,
-      },
-    }).then((data) => {
-      if (!data.ok) {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/cart/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session?.user.accessToken}`,
+        },
+      });
+      
+      if (response.ok) {
+        await loadCartItems();
+        showToast('Item berhasil dihapus dari keranjang', 'success');
+      } else {
         console.error('Failed to remove item from cart')
+        showToast('Gagal menghapus item dari keranjang', 'error');
       }
-    });
-    await loadCartItems();
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
+      showToast('Terjadi kesalahan saat menghapus item', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const clear = () => {
@@ -144,6 +189,10 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
         session,
         timeSessions,
         selectedItem,
+        isLoading,
+        toast,
+        showToast,
+        hideToast,
         openSidebar,
         closeSidebar,
         toggleSidebar,
