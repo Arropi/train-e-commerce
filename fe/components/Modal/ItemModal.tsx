@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Inventory, Reserve, Rooms, TimeSession } from "@/types";
 import { useSidebar } from "@/contexts/SidebarContext";
+import LoadingOverlay from "@/components/Loading/LoadingOverlay";
+import Toast from "@/components/Toast/Toast";
 
 interface ItemModalProps {
   isOpen: boolean;
@@ -30,7 +32,7 @@ export default function ItemModal({
     {}
   ); // ✅ Store selections per session
   const [selectedTime, setSelectedTime] = useState<number | undefined>();
-  const { addItem } = useSidebar();
+  const { addItem, isLoading, toast, hideToast } = useSidebar();
   
   // ✅ Lock body scroll ketika modal terbuka
   useEffect(() => {
@@ -69,7 +71,7 @@ export default function ItemModal({
       inv.item_name?.toLowerCase() === item.item_name?.toLowerCase() 
   );
   
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     // ✅ Add items from all selected sessions
     const hasSelections = Object.keys(selectedInventoryBySession).length > 0 && 
                           Object.values(selectedInventoryBySession).some(items => items.length > 0);
@@ -80,11 +82,11 @@ export default function ItemModal({
     }
 
     // Add items for each session
-    Object.entries(selectedInventoryBySession).forEach(([sessionId, inventories]) => {
-      inventories.forEach(inv => {
-        addItem(inv.id, Number(sessionId), tanggal);
-      });
-    });
+    for (const [sessionId, inventories] of Object.entries(selectedInventoryBySession)) {
+      for (const inv of inventories) {
+        await addItem(inv.id, Number(sessionId), tanggal);
+      }
+    }
     
     onClose();
   };
@@ -93,10 +95,22 @@ export default function ItemModal({
   }
   
   return (
-    <div
-      className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
+    <>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
+      <div
+        className="fixed inset-0 bg-black/35 flex items-center justify-center z-50"
+        onClick={onClose}
+      >
+        {isLoading && (
+          <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100]">
+            <LoadingOverlay />
+          </div>
+        )}
       <div
         className="bg-white overflow-y-auto scrollbar-hide rounded-2xl p-6 max-w-md w-full mx-4 max-h-lvh"
         onClick={(e) => e.stopPropagation()}
@@ -110,8 +124,8 @@ export default function ItemModal({
           </button>
         </div>
 
-        <div className="flex justify-center mb-6">
-          <div className="w-32 h-32 flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
+        <div className="flex justify-center mb-4">
+          <div className="w-24 h-24 flex items-center justify-center bg-gray-50 rounded-2xl overflow-hidden">
             <img
               src={item.inventory_galleries[0]?.filepath ?? "/images/default_img_card.webp"}
               alt={item.item_name}
@@ -121,7 +135,7 @@ export default function ItemModal({
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <h2 className="text-lg font-semibold text-[#004CB0] mb-2 text-center max-w-48 mx-auto leading-tight">
             {item.item_name}
           </h2>
@@ -150,7 +164,7 @@ export default function ItemModal({
           </div>
 
           {/* ✅ NEW: Pilihan Ruang + Nomor Inventaris (ganti room list) */}
-          <div className="space-y-2 mb-6">
+          <div className="max-h-48 overflow-y-auto scrollbar-hide space-y-1 mb-4">
             {availableUnits.map((inv) => {
               const roomName = rooms.find(room => room.id === inv.room_id)?.name;
               const currentSessionInventories = selectedTime ? (selectedInventoryBySession[selectedTime] || []) : [];
@@ -159,7 +173,7 @@ export default function ItemModal({
               return (
               <label
                 key={inv.id}
-                className="flex items-center justify-between p-2 rounded border border-transparent hover:border-gray-100 cursor-pointer"
+                className="flex items-center justify-between p-1 rounded border border-transparent hover:border-gray-100 cursor-pointer"
               >
                 <div>
                   <div className="text-sm text-black font-bold">
@@ -230,14 +244,15 @@ export default function ItemModal({
           <div className="flex justify-end">
           <button
             onClick={handleAddItem}
-            className="w-25 bg-[#004CB0] text-white py-0 text-md rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300"
-            disabled={Object.keys(selectedInventoryBySession).length === 0 || !selectedTime}
+            className="w-25 bg-[#004CB0] text-white py-0 text-md rounded-lg hover:bg-blue-900 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled={Object.keys(selectedInventoryBySession).length === 0 || !selectedTime || isLoading}
           >
-            Add
+            {isLoading ? 'Adding...' : 'Add'}
           </button>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }
