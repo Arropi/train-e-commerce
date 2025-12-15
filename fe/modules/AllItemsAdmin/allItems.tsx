@@ -172,7 +172,7 @@ export default function AllItemsAdmin({ session, inventories , laboratories}: Al
             labId: inv.labolatory_id,
             roomId: inv.room_id || null,
             roomName: inv.rooms?.name || "No Room",
-            image: inv.inventory_galleries?.[0]?.filepath || "images/default_img_card.webp",
+            image: inv.inventory_galleries?.[0]?.filepath || "/images/default_img_card.webp",
             serialNumber: inv.no_item,
             category: inv.alat_bhp || "alat",
             condition: inv.condition || "good",
