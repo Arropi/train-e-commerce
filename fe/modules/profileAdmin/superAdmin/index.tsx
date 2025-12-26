@@ -443,7 +443,7 @@ export default function SuperAdminProfile(profileProps: {
                     type="email"
                     value={newAdmin.email}
                     onChange={handleNewAdminChange}
-                    placeholder="nama@ugm.ac.id"
+                    placeholder="name@ugm.ac.id or name@mail.ugm.ac.id"
                     className="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#004CB0] focus:border-transparent"
                   />
                 </div>

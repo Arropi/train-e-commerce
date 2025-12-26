@@ -17,7 +17,7 @@ const userValidation = (req, res, next) => {
             ? "Field Email Cannot Be Empty"
             : "Invalid input on email",
       })
-      .endsWith("@mail.ugm.ac.id", "Invalid email, please using ugm email")
+      .refine(val => /@(mail\.)?ugm\.ac\.id$/i.test(val), "Invalid email, please use UGM email (@ugm.ac.id or @mail.ugm.ac.id)")
       .parse(req.body.email);
     const img_url = z.string('Invalid input on img_url').optional().parse(req.body.img_url)
     next()
