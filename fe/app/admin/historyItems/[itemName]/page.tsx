@@ -91,7 +91,8 @@ export default async function DetailHistoryPage({ params }: PageProps) {
   }
 
   // Decode item name dari URL
-  const itemName = decodeURIComponent(params.itemName);
+  const { itemName: rawItemName } = await params;
+  const itemName = decodeURIComponent(rawItemName);
 
   // Data lab yang tersedia
   const dataLab: Lab[] = [
